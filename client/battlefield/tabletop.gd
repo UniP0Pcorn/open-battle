@@ -3,6 +3,7 @@ extends Node2D
 
 const Rules = preload("res://rules/movement.gd")
 const Combat = preload("res://rules/combat.gd")
+const ArmyValidation = preload("res://rules/army_validation.gd")
 const SCALE := 15.0
 const OFFSET := Vector2(38, 112)
 const GOLD := Color("e5ba6b")
@@ -10,6 +11,7 @@ const BLUE := Color("68b9db")
 const RED := Color("ff6d79")
 const WHITE := Color("dae5ed")
 var fixture: Dictionary
+var roster: Dictionary = {}
 var models: Array = []
 var selected := -1
 var dragging := false
@@ -31,6 +33,7 @@ var font: Font = ThemeDB.fallback_font
 
 func _ready() -> void:
 	fixture = JSON.parse_string(FileAccess.get_file_as_string("res://data/units/custodian_guard.json"))
+	roster = JSON.parse_string(FileAccess.get_file_as_string("res://data/armies/prototype_gold.json"))
 	mission = JSON.parse_string(FileAccess.get_file_as_string("res://data/missions/control_center.json"))
 	control_radius = float(mission.get("control_radius_inches", 3.0))
 	score_to_win = int(mission.get("score_to_win", 5))
@@ -38,14 +41,14 @@ func _ready() -> void:
 		objectives.append(Vector2(float(objective.position_inches[0]), float(objective.position_inches[1])))
 	combat_rng.seed = 402000
 	reset_table()
-	add_button("＋ 放置底座  [P]", Vector2(976, 425), func(): placing = not placing; dragging = false; queue_redraw())
-	add_button("切换阵营  [TAB]", Vector2(976, 477), func(): team = 1 - team; queue_redraw())
-	add_button("新移动阶段  [N]", Vector2(976, 529), new_phase)
-	add_button("重置棋盘  [R]", Vector2(976, 581), reset_table)
-	add_button("结束回合  [T]", Vector2(976, 633), end_turn)
-	add_button("撤销移动  [U]", Vector2(976, 685), undo_last)
-	add_button("进入射击阶段  [SPACE]", Vector2(976, 737), enter_shooting)
-	add_button("射击最近目标  [F]", Vector2(976, 789), fire_selected)
+	add_button("＋ 放置底座  [P]", Vector2(976, 445), func(): placing = not placing; dragging = false; queue_redraw())
+	add_button("切换阵营  [TAB]", Vector2(976, 485), func(): team = 1 - team; queue_redraw())
+	add_button("新移动阶段  [N]", Vector2(976, 525), new_phase)
+	add_button("重置棋盘  [R]", Vector2(976, 565), reset_table)
+	add_button("结束回合  [T]", Vector2(976, 605), end_turn)
+	add_button("撤销移动  [U]", Vector2(976, 645), undo_last)
+	add_button("进入射击阶段  [SPACE]", Vector2(976, 685), enter_shooting)
+	add_button("射击最近目标  [F]", Vector2(976, 725), fire_selected)
 
 func add_button(title: String, position_px: Vector2, action: Callable) -> void:
 	var button := Button.new()
@@ -339,18 +342,19 @@ func _draw() -> void:
 	label_at(Vector2(976, 135), "原型版本 / 00", 19, GOLD)
 	label_at(Vector2(976, 160), "任务：" + str(mission.get("display_name", "未命名")), 15)
 	label_at(Vector2(976, 178), "Custodian Guard", 23)
-	label_at(Vector2(976, 208), "40mm / %.4f 英寸直径" % (40.0 / 25.4), 15)
-	label_at(Vector2(976, 240), "移动：%.1f 英寸（测试配置）" % float(fixture.movement_inches), 17, GOLD)
-	label_at(Vector2(976, 281), "阵营：" + ("金色" if team == 0 else "蓝色"), 17)
-	label_at(Vector2(976, 309), "比分：金 %d  :  %d 蓝" % [score[0], score[1]], 16, GOLD)
-	label_at(Vector2(976, 341), "当前回合：" + ("金色" if active_team == 0 else "蓝色"), 16, GOLD if active_team == 0 else BLUE)
-	label_at(Vector2(976, 373), "阶段：" + ("移动" if phase == "MOVEMENT" else "射击"), 16, GOLD if phase == "MOVEMENT" else RED)
-	label_at(Vector2(976, 405), "模式：" + ("放置" if placing else "选择 / 拖动"), 16)
+	label_at(Vector2(976, 202), "编成：%d / %d 点" % [ArmyValidation.total_points(roster), int(roster.get("points_limit", 0))], 14)
+	label_at(Vector2(976, 232), "40mm / %.4f 英寸直径" % (40.0 / 25.4), 15)
+	label_at(Vector2(976, 264), "移动：%.1f 英寸（测试配置）" % float(fixture.movement_inches), 17, GOLD)
+	label_at(Vector2(976, 297), "阵营：" + ("金色" if team == 0 else "蓝色"), 17)
+	label_at(Vector2(976, 329), "比分：金 %d  :  %d 蓝" % [score[0], score[1]], 16, GOLD)
+	label_at(Vector2(976, 361), "当前回合：" + ("金色" if active_team == 0 else "蓝色"), 16, GOLD if active_team == 0 else BLUE)
+	label_at(Vector2(976, 393), "阶段：" + ("移动" if phase == "MOVEMENT" else "射击"), 16, GOLD if phase == "MOVEMENT" else RED)
+	label_at(Vector2(976, 425), "模式：" + ("放置" if placing else "选择 / 拖动"), 16)
 	if selected >= 0:
 		var spent := float(models[selected].spent)
 		if dragging:
 			spent += models[selected].position.distance_to(preview)
-		label_at(Vector2(976, 437), "底座 %02d：%.2f / %.1f 英寸" % [selected + 1, spent, float(fixture.movement_inches)], 17, RED if spent > float(fixture.movement_inches) + Rules.EPSILON else GOLD)
+		label_at(Vector2(976, 457), "底座 %02d：%.2f / %.1f 英寸" % [selected + 1, spent, float(fixture.movement_inches)], 17, RED if spent > float(fixture.movement_inches) + Rules.EPSILON else GOLD)
 	label_at(Vector2(976, 824), "移动拖动；射击按 F；S 保存；L 加载。", 14)
 	label_at(Vector2(38, 812), "本地沙盒 / 尚无完整任务规则", 14, BLUE)
 	label_at(Vector2(38, 812), message, 17, RED if "非法" in message else WHITE)
