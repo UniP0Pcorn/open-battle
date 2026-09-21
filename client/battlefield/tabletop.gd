@@ -16,16 +16,16 @@ var placing := false
 var team := 0
 var preview := Vector2.ZERO
 var drag_offset := Vector2.ZERO
-var message := "Select a base to inspect its move budget."
+var message := "选择底座以查看移动额度。"
 var font: Font = ThemeDB.fallback_font
 
 func _ready() -> void:
 	fixture = JSON.parse_string(FileAccess.get_file_as_string("res://data/units/custodian_guard.json"))
 	reset_table()
-	add_button("+ PLACE BASE  [P]", Vector2(976, 425), func(): placing = not placing; dragging = false; queue_redraw())
-	add_button("SWITCH SIDE  [TAB]", Vector2(976, 477), func(): team = 1 - team; queue_redraw())
-	add_button("NEW MOVE PHASE  [N]", Vector2(976, 529), new_phase)
-	add_button("RESET TABLE  [R]", Vector2(976, 581), reset_table)
+	add_button("＋ 放置底座  [P]", Vector2(976, 425), func(): placing = not placing; dragging = false; queue_redraw())
+	add_button("切换阵营  [TAB]", Vector2(976, 477), func(): team = 1 - team; queue_redraw())
+	add_button("新移动阶段  [N]", Vector2(976, 529), new_phase)
+	add_button("重置棋盘  [R]", Vector2(976, 581), reset_table)
 
 func add_button(title: String, position_px: Vector2, action: Callable) -> void:
 	var button := Button.new()
@@ -43,7 +43,7 @@ func reset_table() -> void:
 	for side in range(2):
 		for i in range(10):
 			add_model(Vector2(6 + (i % 5) * 3, 6 + (i / 5) * 3 + side * 29), side)
-	message = "20 bases ready. Local movement sandbox."
+	message = "20 个底座已就绪。当前为本地移动沙盒。"
 	queue_redraw()
 
 func add_model(point: Vector2, side: int) -> void:
@@ -53,7 +53,7 @@ func new_phase() -> void:
 	dragging = false
 	for model in models:
 		model.spent = 0.0
-	message = "Movement budgets reset for both sides."
+	message = "双方底座的移动额度已重置。"
 	queue_redraw()
 
 func to_inches(point: Vector2) -> Vector2:
@@ -80,9 +80,9 @@ func finish_drag() -> void:
 		var distance: float = models[selected].position.distance_to(preview)
 		models[selected].spent += distance
 		models[selected].position = preview
-		message = "Moved %.2f in. Budget is cumulative." % distance
+		message = "本次移动 %.2f 英寸。移动额度按累计值计算。" % distance
 	else:
-		message = "ILLEGAL: %s. Move reverted." % reason
+		message = "非法移动：%s。已还原位置。" % display_reason(reason)
 	dragging = false
 	queue_redraw()
 
@@ -104,7 +104,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_ESCAPE:
 				dragging = false
 				placing = false
-				message = "Cancelled."
+				message = "已取消。"
 			KEY_P:
 				placing = not placing
 				dragging = false
@@ -125,9 +125,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			if reason.is_empty():
 				add_model(point, team)
 				selected = models.size() - 1
-				message = "Placed a 40 mm base."
+				message = "已放置 40mm 底座。"
 			else:
-				message = "ILLEGAL PLACEMENT: " + reason
+				message = "非法放置：" + display_reason(reason)
 		else:
 			selected = pick(point)
 			if selected >= 0:
@@ -139,11 +139,18 @@ func _unhandled_input(event: InputEvent) -> void:
 func label_at(point: Vector2, text: String, size_px: int = 16, color: Color = WHITE) -> void:
 	draw_string(font, point, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size_px, color)
 
+func display_reason(reason: String) -> String:
+	match reason:
+		"MOVE LIMIT EXCEEDED": return "超过移动额度"
+		"OUTSIDE TABLE": return "底座超出桌面"
+		"BASE OVERLAP": return "底座与其他底座重叠"
+	return reason
+
 func _draw() -> void:
 	if fixture.is_empty():
 		return
-	label_at(Vector2(38, 44), "OPEN / BATTLE", 28)
-	label_at(Vector2(38, 76), "MOVEMENT LAB     /     60 x 44 INCH TABLE     /     40 MM BASES", 15, BLUE)
+	label_at(Vector2(38, 44), "开放战场 / OPEN BATTLE", 28)
+	label_at(Vector2(38, 76), "移动实验室     /     60 × 44 英寸桌面     /     40mm 底座", 15, BLUE)
 	draw_rect(Rect2(OFFSET, Rules.BOARD_SIZE * SCALE), Color("142832"))
 	for x in range(61):
 		draw_line(to_screen(Vector2(x, 0)), to_screen(Vector2(x, 44)), Color("36505c") if x % 6 == 0 else Color("1e3540"))
@@ -170,25 +177,26 @@ func _draw() -> void:
 		var color := BLUE if reason.is_empty() else RED
 		draw_line(to_screen(models[selected].position), to_screen(preview), color, 2, true)
 		draw_circle(to_screen(preview), models[selected].radius * SCALE, Color(color, 0.4), true, -1, true)
-		label_at(to_screen(preview) + Vector2(18, -16), "%.2f in | %s" % [models[selected].position.distance_to(preview), "LEGAL" if reason.is_empty() else reason], 16, color)
+		label_at(to_screen(preview) + Vector2(18, -16), "%.2f 英寸 | %s" % [models[selected].position.distance_to(preview), "合法" if reason.is_empty() else display_reason(reason)], 16, color)
 	if placing:
 		var radius := Rules.radius_inches(float(fixture.base_diameter_mm))
 		var color := GOLD if Rules.placement_reason(preview, radius, models).is_empty() else RED
 		draw_arc(to_screen(preview), radius * SCALE, 0, TAU, 48, color, 2, true)
-	label_at(Vector2(976, 135), "PROTOTYPE / 00", 19, GOLD)
+	label_at(Vector2(976, 135), "原型版本 / 00", 19, GOLD)
 	label_at(Vector2(976, 178), "Custodian Guard", 23)
-	label_at(Vector2(976, 208), "40 mm / %.4f in diameter" % (40.0 / 25.4), 15)
-	label_at(Vector2(976, 240), "Move: %.1f in (test fixture)" % float(fixture.movement_inches), 17, GOLD)
-	label_at(Vector2(976, 281), "Side: " + ("GOLD" if team == 0 else "BLUE"), 17)
-	label_at(Vector2(976, 313), "Mode: " + ("PLACE" if placing else "SELECT / DRAG"), 16)
+	label_at(Vector2(976, 208), "40mm / %.4f 英寸直径" % (40.0 / 25.4), 15)
+	label_at(Vector2(976, 240), "移动：%.1f 英寸（测试配置）" % float(fixture.movement_inches), 17, GOLD)
+	label_at(Vector2(976, 281), "阵营：" + ("金色" if team == 0 else "蓝色"), 17)
+	label_at(Vector2(976, 313), "模式：" + ("放置" if placing else "选择 / 拖动"), 16)
 	if selected >= 0:
 		var spent := float(models[selected].spent)
 		if dragging:
 			spent += models[selected].position.distance_to(preview)
-		label_at(Vector2(976, 353), "Base %02d: %.2f / %.1f in" % [selected + 1, spent, float(fixture.movement_inches)], 17, RED if spent > float(fixture.movement_inches) + Rules.EPSILON else GOLD)
-	label_at(Vector2(976, 664), "Drag to move. Esc cancels.", 15)
-	label_at(Vector2(976, 690), "Red = illegal; release reverts.", 15)
-	label_at(Vector2(976, 716), "1 grid square = 1 inch.", 15)
-	label_at(Vector2(976, 752), "Local sandbox / no turn rules", 14, BLUE)
-	label_at(Vector2(38, 812), message, 17, RED if "ILLEGAL" in message else WHITE)
-	label_at(Vector2(38, 841), "AGPL-3.0-only  |  Unofficial community prototype  |  No official artwork or rules text", 13, BLUE)
+		label_at(Vector2(976, 353), "底座 %02d：%.2f / %.1f 英寸" % [selected + 1, spent, float(fixture.movement_inches)], 17, RED if spent > float(fixture.movement_inches) + Rules.EPSILON else GOLD)
+	label_at(Vector2(976, 664), "拖动移动；Esc 取消。", 15)
+	label_at(Vector2(976, 690), "红色表示非法；松开后还原。", 15)
+	label_at(Vector2(976, 716), "每个网格 = 1 英寸。", 15)
+	label_at(Vector2(976, 752), "本地沙盒 / 尚无完整回合规则", 14, BLUE)
+	label_at(Vector2(38, 812), message, 17, RED if "非法" in message else WHITE)
+	label_at(Vector2(38, 841), "AGPL-3.0-only  |  非官方社区原型  |  不含官方美术或规则正文", 13, BLUE)
+
