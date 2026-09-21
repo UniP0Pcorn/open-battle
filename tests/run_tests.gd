@@ -43,6 +43,7 @@ func run() -> void:
 	await process_frame
 	check(scene.models.size() == 20, "scene starts with twenty bases")
 	check(scene.phase == "MOVEMENT" and scene.active_team == 0, "scene starts in gold movement phase")
+	check(scene.objectives.size() == 1 and scene.score == [0, 0], "scene starts with one neutral objective")
 	check(scene.pick(Vector2(6, 6)) == 0, "base selection")
 	for i in range(scene.models.size()):
 		check(Rules.placement_reason(scene.models[i].position, radius, scene.models, i).is_empty(), "initial base %d valid" % i)
@@ -61,13 +62,16 @@ func run() -> void:
 	check(scene.phase == "SHOOTING", "movement can enter shooting phase")
 	scene.end_turn()
 	check(scene.phase == "MOVEMENT", "ending turn starts movement phase")
+	scene.models[1].position = Vector2(30, 22)
+	scene.end_turn()
+	check(scene.score[0] == 1, "objective scores for a controlling team")
 	scene.dragging = true
 	scene.selected = 0
 	scene.preview = Vector2(14, 6)
 	scene.finish_drag()
 	check(scene.models[0].position == Vector2(6, 6) and is_zero_approx(scene.models[0].spent), "illegal drag restores position and budget")
 	scene.dragging = true
-	scene.preview = Vector2(9, 6)
+	scene.preview = Vector2(12, 6)
 	scene.finish_drag()
 	check(scene.models[0].position == Vector2(6, 6), "occupied destination rejected")
 	scene.new_phase()

@@ -19,6 +19,8 @@ var active_team := 0
 var history: Array = []
 var phase := "MOVEMENT"
 var combat_rng := RandomNumberGenerator.new()
+var objectives: Array = [Vector2(30, 22)]
+var score: Array = [0, 0]
 var preview := Vector2.ZERO
 var drag_offset := Vector2.ZERO
 var message := "选择底座以查看移动额度。"
@@ -53,6 +55,7 @@ func reset_table() -> void:
 	active_team = 0
 	history.clear()
 	phase = "MOVEMENT"
+	score = [0, 0]
 	for side in range(2):
 		for i in range(10):
 			add_model(Vector2(6 + (i % 5) * 3, 6 + (i / 5) * 3 + side * 29), side)
@@ -73,10 +76,21 @@ func end_turn() -> void:
 	dragging = false
 	placing = false
 	selected = -1
+	var gained := score_objectives(active_team)
+	score[active_team] += gained
 	active_team = 1 - active_team
 	phase = "MOVEMENT"
-	message = "现在轮到%s方。" % ("金" if active_team == 0 else "蓝")
+	message = "得分 +%d。现在轮到%s方。" % [gained, "金" if active_team == 0 else "蓝"]
 	queue_redraw()
+
+func score_objectives(team_id: int) -> int:
+	var gained := 0
+	for objective in objectives:
+		for model in models:
+			if model.team == team_id and model.position.distance_to(objective) <= 3.0:
+				gained += 1
+				break
+	return gained
 
 func undo_last() -> void:
 	if history.is_empty():
@@ -254,6 +268,11 @@ func _draw() -> void:
 		label_at(to_screen(Vector2(x, 0)) + Vector2(-5, -10), str(x), 12, BLUE)
 	for y in range(6, 45, 6):
 		label_at(to_screen(Vector2(0, y)) + Vector2(-26, 4), str(y), 12, BLUE)
+	for i in range(objectives.size()):
+		var objective_screen := to_screen(objectives[i])
+		draw_circle(objective_screen, 3.0 * SCALE, Color(0.95, 0.78, 0.28, 0.12), true)
+		draw_arc(objective_screen, 3.0 * SCALE, 0, TAU, 64, GOLD, 2, true)
+		label_at(objective_screen + Vector2(-14, 5), "目标 %d" % (i + 1), 12, GOLD)
 	if selected >= 0:
 		var model: Dictionary = models[selected]
 		var remaining := maxf(0, float(fixture.movement_inches) - float(model.spent))
@@ -280,14 +299,15 @@ func _draw() -> void:
 	label_at(Vector2(976, 208), "40mm / %.4f 英寸直径" % (40.0 / 25.4), 15)
 	label_at(Vector2(976, 240), "移动：%.1f 英寸（测试配置）" % float(fixture.movement_inches), 17, GOLD)
 	label_at(Vector2(976, 281), "阵营：" + ("金色" if team == 0 else "蓝色"), 17)
-	label_at(Vector2(976, 313), "当前回合：" + ("金色" if active_team == 0 else "蓝色"), 16, GOLD if active_team == 0 else BLUE)
-	label_at(Vector2(976, 345), "阶段：" + ("移动" if phase == "MOVEMENT" else "射击"), 16, GOLD if phase == "MOVEMENT" else RED)
-	label_at(Vector2(976, 377), "模式：" + ("放置" if placing else "选择 / 拖动"), 16)
+	label_at(Vector2(976, 309), "比分：金 %d  :  %d 蓝" % [score[0], score[1]], 16, GOLD)
+	label_at(Vector2(976, 341), "当前回合：" + ("金色" if active_team == 0 else "蓝色"), 16, GOLD if active_team == 0 else BLUE)
+	label_at(Vector2(976, 373), "阶段：" + ("移动" if phase == "MOVEMENT" else "射击"), 16, GOLD if phase == "MOVEMENT" else RED)
+	label_at(Vector2(976, 405), "模式：" + ("放置" if placing else "选择 / 拖动"), 16)
 	if selected >= 0:
 		var spent := float(models[selected].spent)
 		if dragging:
 			spent += models[selected].position.distance_to(preview)
-		label_at(Vector2(976, 417), "底座 %02d：%.2f / %.1f 英寸" % [selected + 1, spent, float(fixture.movement_inches)], 17, RED if spent > float(fixture.movement_inches) + Rules.EPSILON else GOLD)
+		label_at(Vector2(976, 437), "底座 %02d：%.2f / %.1f 英寸" % [selected + 1, spent, float(fixture.movement_inches)], 17, RED if spent > float(fixture.movement_inches) + Rules.EPSILON else GOLD)
 	label_at(Vector2(976, 824), "移动阶段拖动；射击阶段按 F。", 14)
 	label_at(Vector2(38, 812), "本地沙盒 / 尚无完整任务规则", 14, BLUE)
 	label_at(Vector2(38, 812), message, 17, RED if "非法" in message else WHITE)
