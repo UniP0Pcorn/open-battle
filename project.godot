@@ -1,0 +1,17 @@
+; SPDX-License-Identifier: AGPL-3.0-only
+config_version=5
+
+[application]
+config/name="open-battle"
+run/main_scene="res://client/battlefield/tabletop.tscn"
+config/features=PackedStringArray("4.5", "GL Compatibility")
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=860
+window/stretch/mode="canvas_items"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+environment/defaults/default_clear_color=Color(0.025, 0.04, 0.06, 1)

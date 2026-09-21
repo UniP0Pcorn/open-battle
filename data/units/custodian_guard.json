@@ -1,0 +1,7 @@
+{
+  "id": "custodian_guard_fixture",
+  "display_name": "Custodian Guard",
+  "base_diameter_mm": 40.0,
+  "movement_inches": 6.0,
+  "provenance": "User-requested test identity and base size. Movement is a configurable prototype fixture, not verified official rules. No official rules text or artwork included."
+}
