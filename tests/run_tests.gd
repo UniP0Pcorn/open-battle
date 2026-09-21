@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 extends SceneTree
 const Rules = preload("res://rules/movement.gd")
+const Combat = preload("res://rules/combat.gd")
 var failures := 0
 var checks := 0
 
@@ -31,10 +32,17 @@ func run() -> void:
 	check(Rules.placement_reason(Vector2(5, 5), radius, occupied) == "BASE OVERLAP", "placement overlap rejected")
 	check(Rules.placement_reason(Vector2(5 + radius * 2, 5), radius, occupied).is_empty(), "tangent bases allowed")
 	check(Rules.placement_reason(Vector2(5, 5), radius, occupied, 0).is_empty(), "moving base excluded from collision")
+	check(Combat.wound_target(5, 5) == 4, "equal strength wounds on four")
+	check(Combat.wound_target(10, 5) == 2, "double strength wounds on two")
+	var combat_rng := RandomNumberGenerator.new()
+	combat_rng.seed = 1
+	var combat_result := Combat.resolve_ranged_attack({"attacks": 2, "hit_on": 3, "strength": 5, "damage": 2}, {"toughness": 5}, combat_rng)
+	check(combat_result.has("hits") and combat_result.has("damage"), "combat result has hit and damage totals")
 	var scene = load("res://client/battlefield/tabletop.tscn").instantiate()
 	root.add_child(scene)
 	await process_frame
 	check(scene.models.size() == 20, "scene starts with twenty bases")
+	check(scene.phase == "MOVEMENT" and scene.active_team == 0, "scene starts in gold movement phase")
 	check(scene.pick(Vector2(6, 6)) == 0, "base selection")
 	for i in range(scene.models.size()):
 		check(Rules.placement_reason(scene.models[i].position, radius, scene.models, i).is_empty(), "initial base %d valid" % i)
@@ -49,6 +57,10 @@ func run() -> void:
 	scene.end_turn()
 	check(scene.active_team == 1, "turn passes to the other side")
 	check(scene.pick(Vector2(6, 6)) == 0 and scene.models[0].team != scene.active_team, "opponent base is distinguishable")
+	scene.enter_shooting()
+	check(scene.phase == "SHOOTING", "movement can enter shooting phase")
+	scene.end_turn()
+	check(scene.phase == "MOVEMENT", "ending turn starts movement phase")
 	scene.dragging = true
 	scene.selected = 0
 	scene.preview = Vector2(14, 6)

@@ -2,6 +2,7 @@
 extends Node2D
 
 const Rules = preload("res://rules/movement.gd")
+const Combat = preload("res://rules/combat.gd")
 const SCALE := 15.0
 const OFFSET := Vector2(38, 112)
 const GOLD := Color("e5ba6b")
@@ -16,6 +17,8 @@ var placing := false
 var team := 0
 var active_team := 0
 var history: Array = []
+var phase := "MOVEMENT"
+var combat_rng := RandomNumberGenerator.new()
 var preview := Vector2.ZERO
 var drag_offset := Vector2.ZERO
 var message := "选择底座以查看移动额度。"
@@ -23,6 +26,7 @@ var font: Font = ThemeDB.fallback_font
 
 func _ready() -> void:
 	fixture = JSON.parse_string(FileAccess.get_file_as_string("res://data/units/custodian_guard.json"))
+	combat_rng.seed = 402000
 	reset_table()
 	add_button("＋ 放置底座  [P]", Vector2(976, 425), func(): placing = not placing; dragging = false; queue_redraw())
 	add_button("切换阵营  [TAB]", Vector2(976, 477), func(): team = 1 - team; queue_redraw())
@@ -30,6 +34,8 @@ func _ready() -> void:
 	add_button("重置棋盘  [R]", Vector2(976, 581), reset_table)
 	add_button("结束回合  [T]", Vector2(976, 633), end_turn)
 	add_button("撤销移动  [U]", Vector2(976, 685), undo_last)
+	add_button("进入射击阶段  [SPACE]", Vector2(976, 737), enter_shooting)
+	add_button("射击最近目标  [F]", Vector2(976, 789), fire_selected)
 
 func add_button(title: String, position_px: Vector2, action: Callable) -> void:
 	var button := Button.new()
@@ -46,6 +52,7 @@ func reset_table() -> void:
 	placing = false
 	active_team = 0
 	history.clear()
+	phase = "MOVEMENT"
 	for side in range(2):
 		for i in range(10):
 			add_model(Vector2(6 + (i % 5) * 3, 6 + (i / 5) * 3 + side * 29), side)
@@ -53,7 +60,7 @@ func reset_table() -> void:
 	queue_redraw()
 
 func add_model(point: Vector2, side: int) -> void:
-	models.append({"position": point, "radius": Rules.radius_inches(float(fixture.base_diameter_mm)), "spent": 0.0, "team": side})
+	models.append({"position": point, "radius": Rules.radius_inches(float(fixture.base_diameter_mm)), "spent": 0.0, "team": side, "wounds": int(fixture.wounds)})
 
 func new_phase() -> void:
 	dragging = false
@@ -67,6 +74,7 @@ func end_turn() -> void:
 	placing = false
 	selected = -1
 	active_team = 1 - active_team
+	phase = "MOVEMENT"
 	message = "现在轮到%s方。" % ("金" if active_team == 0 else "蓝")
 	queue_redraw()
 
@@ -80,6 +88,48 @@ func undo_last() -> void:
 	models[change.index].spent = change.spent
 	selected = change.index
 	message = "已撤销底座 %02d 的上一步移动。" % (selected + 1)
+	queue_redraw()
+
+func enter_shooting() -> void:
+	if phase != "MOVEMENT":
+		return
+	dragging = false
+	placing = false
+	phase = "SHOOTING"
+	message = "已进入射击阶段。选择底座后按 F 射击最近目标。"
+	queue_redraw()
+
+func fire_selected() -> void:
+	if phase != "SHOOTING":
+		message = "请先进入射击阶段。"
+		queue_redraw()
+		return
+	if selected < 0 or selected >= models.size() or models[selected].team != active_team:
+		message = "请选择当前阵营的底座。"
+		queue_redraw()
+		return
+	var attacker: Dictionary = models[selected]
+	var target_index := -1
+	var nearest := INF
+	for i in range(models.size()):
+		if models[i].team != active_team:
+			var distance: float = attacker.position.distance_to(models[i].position)
+			if distance <= float(fixture.weapon.range_inches) and distance < nearest:
+				nearest = distance
+				target_index = i
+	if target_index < 0:
+		message = "射程 %.1f 英寸内没有目标。" % float(fixture.weapon.range_inches)
+		queue_redraw()
+		return
+	var result := Combat.resolve_ranged_attack(fixture.weapon, models[target_index], combat_rng)
+	models[target_index].wounds -= int(result.damage)
+	var target_name := "底座 %02d" % (target_index + 1)
+	if models[target_index].wounds <= 0:
+		models.remove_at(target_index)
+		selected = -1 if selected == target_index else selected
+		message = "%s：命中 %d，造成 %d 点伤害，目标被淘汰。" % [target_name, result.hits, result.damage]
+	else:
+		message = "%s：命中 %d，造成 %d 点伤害，剩余 %d 伤口。" % [target_name, result.hits, result.damage, models[target_index].wounds]
 	queue_redraw()
 
 func to_inches(point: Vector2) -> Vector2:
@@ -147,6 +197,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				end_turn()
 			KEY_U:
 				undo_last()
+			KEY_SPACE:
+				enter_shooting()
+			KEY_F:
+				fire_selected()
 		queue_redraw()
 	if event is InputEventMouseMotion:
 		preview = to_inches(get_global_mouse_position()) + (drag_offset if dragging else Vector2.ZERO)
@@ -167,6 +221,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				if models[selected].team != active_team:
 					message = "现在轮到%s方，不能操作另一方的底座。" % ("金" if active_team == 0 else "蓝")
 					selected = -1
+				elif phase != "MOVEMENT":
+					message = "已选中底座；射击阶段不能移动。按 F 射击最近目标。"
 				else:
 					dragging = true
 					drag_offset = models[selected].position - point
@@ -225,16 +281,15 @@ func _draw() -> void:
 	label_at(Vector2(976, 240), "移动：%.1f 英寸（测试配置）" % float(fixture.movement_inches), 17, GOLD)
 	label_at(Vector2(976, 281), "阵营：" + ("金色" if team == 0 else "蓝色"), 17)
 	label_at(Vector2(976, 313), "当前回合：" + ("金色" if active_team == 0 else "蓝色"), 16, GOLD if active_team == 0 else BLUE)
-	label_at(Vector2(976, 345), "模式：" + ("放置" if placing else "选择 / 拖动"), 16)
+	label_at(Vector2(976, 345), "阶段：" + ("移动" if phase == "MOVEMENT" else "射击"), 16, GOLD if phase == "MOVEMENT" else RED)
+	label_at(Vector2(976, 377), "模式：" + ("放置" if placing else "选择 / 拖动"), 16)
 	if selected >= 0:
 		var spent := float(models[selected].spent)
 		if dragging:
 			spent += models[selected].position.distance_to(preview)
-		label_at(Vector2(976, 385), "底座 %02d：%.2f / %.1f 英寸" % [selected + 1, spent, float(fixture.movement_inches)], 17, RED if spent > float(fixture.movement_inches) + Rules.EPSILON else GOLD)
-	label_at(Vector2(976, 750), "拖动移动；Esc 取消。", 15)
-	label_at(Vector2(976, 776), "红色表示非法；松开后还原。", 15)
-	label_at(Vector2(976, 802), "每个网格 = 1 英寸。", 15)
-	label_at(Vector2(38, 812), "本地沙盒 / 尚无完整回合规则", 14, BLUE)
+		label_at(Vector2(976, 417), "底座 %02d：%.2f / %.1f 英寸" % [selected + 1, spent, float(fixture.movement_inches)], 17, RED if spent > float(fixture.movement_inches) + Rules.EPSILON else GOLD)
+	label_at(Vector2(976, 824), "移动阶段拖动；射击阶段按 F。", 14)
+	label_at(Vector2(38, 812), "本地沙盒 / 尚无完整任务规则", 14, BLUE)
 	label_at(Vector2(38, 812), message, 17, RED if "非法" in message else WHITE)
 	label_at(Vector2(38, 841), "AGPL-3.0-only  |  非官方社区原型  |  不含官方美术或规则正文", 13, BLUE)
 
