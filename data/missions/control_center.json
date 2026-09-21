@@ -1,0 +1,10 @@
+{
+  "id": "control_center_prototype",
+  "display_name": "Control Center Prototype",
+  "score_to_win": 5,
+  "control_radius_inches": 3.0,
+  "objectives": [
+    {"id": "center", "position_inches": [30.0, 22.0], "points": 1}
+  ],
+  "provenance": "Original prototype mission structure. It is not a transcription of an official mission."
+}

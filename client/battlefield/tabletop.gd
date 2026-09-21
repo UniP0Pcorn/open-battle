@@ -19,7 +19,10 @@ var active_team := 0
 var history: Array = []
 var phase := "MOVEMENT"
 var combat_rng := RandomNumberGenerator.new()
-var objectives: Array = [Vector2(30, 22)]
+var mission: Dictionary = {}
+var objectives: Array = []
+var control_radius := 3.0
+var score_to_win := 5
 var score: Array = [0, 0]
 var preview := Vector2.ZERO
 var drag_offset := Vector2.ZERO
@@ -28,6 +31,11 @@ var font: Font = ThemeDB.fallback_font
 
 func _ready() -> void:
 	fixture = JSON.parse_string(FileAccess.get_file_as_string("res://data/units/custodian_guard.json"))
+	mission = JSON.parse_string(FileAccess.get_file_as_string("res://data/missions/control_center.json"))
+	control_radius = float(mission.get("control_radius_inches", 3.0))
+	score_to_win = int(mission.get("score_to_win", 5))
+	for objective in mission.get("objectives", []):
+		objectives.append(Vector2(float(objective.position_inches[0]), float(objective.position_inches[1])))
 	combat_rng.seed = 402000
 	reset_table()
 	add_button("＋ 放置底座  [P]", Vector2(976, 425), func(): placing = not placing; dragging = false; queue_redraw())
@@ -81,13 +89,15 @@ func end_turn() -> void:
 	active_team = 1 - active_team
 	phase = "MOVEMENT"
 	message = "得分 +%d。现在轮到%s方。" % [gained, "金" if active_team == 0 else "蓝"]
+	if score[active_team] >= score_to_win:
+		message = "%s方达到 %d 分，任务完成！" % ["金" if active_team == 0 else "蓝", score_to_win]
 	queue_redraw()
 
 func score_objectives(team_id: int) -> int:
 	var gained := 0
 	for objective in objectives:
 		for model in models:
-			if model.team == team_id and model.position.distance_to(objective) <= 3.0:
+			if model.team == team_id and model.position.distance_to(objective) <= control_radius:
 				gained += 1
 				break
 	return gained
@@ -102,6 +112,34 @@ func undo_last() -> void:
 	models[change.index].spent = change.spent
 	selected = change.index
 	message = "已撤销底座 %02d 的上一步移动。" % (selected + 1)
+	queue_redraw()
+
+func save_state() -> void:
+	var serialized_models: Array = []
+	for model in models:
+		serialized_models.append({"x": model.position.x, "y": model.position.y, "team": model.team, "spent": model.spent, "wounds": model.wounds})
+	var state := {"active_team": active_team, "phase": phase, "score": score, "models": serialized_models}
+	var file := FileAccess.open("user://open_battle_save.json", FileAccess.WRITE)
+	file.store_string(JSON.stringify(state))
+	message = "对局已保存。"
+	queue_redraw()
+
+func load_state() -> void:
+	if not FileAccess.file_exists("user://open_battle_save.json"):
+		message = "没有找到保存的对局。"
+		queue_redraw()
+		return
+	var file := FileAccess.open("user://open_battle_save.json", FileAccess.READ)
+	var state: Dictionary = JSON.parse_string(file.get_as_text())
+	active_team = int(state.get("active_team", 0))
+	phase = str(state.get("phase", "MOVEMENT"))
+	score = state.get("score", [0, 0])
+	models.clear()
+	for saved in state.get("models", []):
+		models.append({"position": Vector2(float(saved.x), float(saved.y)), "radius": Rules.radius_inches(float(fixture.base_diameter_mm)), "spent": float(saved.spent), "team": int(saved.team), "wounds": int(saved.wounds)})
+	selected = -1
+	dragging = false
+	message = "对局已加载。"
 	queue_redraw()
 
 func enter_shooting() -> void:
@@ -215,6 +253,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				enter_shooting()
 			KEY_F:
 				fire_selected()
+			KEY_S:
+				save_state()
+			KEY_L:
+				load_state()
 		queue_redraw()
 	if event is InputEventMouseMotion:
 		preview = to_inches(get_global_mouse_position()) + (drag_offset if dragging else Vector2.ZERO)
@@ -270,8 +312,8 @@ func _draw() -> void:
 		label_at(to_screen(Vector2(0, y)) + Vector2(-26, 4), str(y), 12, BLUE)
 	for i in range(objectives.size()):
 		var objective_screen := to_screen(objectives[i])
-		draw_circle(objective_screen, 3.0 * SCALE, Color(0.95, 0.78, 0.28, 0.12), true)
-		draw_arc(objective_screen, 3.0 * SCALE, 0, TAU, 64, GOLD, 2, true)
+		draw_circle(objective_screen, control_radius * SCALE, Color(0.95, 0.78, 0.28, 0.12), true)
+		draw_arc(objective_screen, control_radius * SCALE, 0, TAU, 64, GOLD, 2, true)
 		label_at(objective_screen + Vector2(-14, 5), "目标 %d" % (i + 1), 12, GOLD)
 	if selected >= 0:
 		var model: Dictionary = models[selected]
@@ -295,6 +337,7 @@ func _draw() -> void:
 		var color := GOLD if Rules.placement_reason(preview, radius, models).is_empty() else RED
 		draw_arc(to_screen(preview), radius * SCALE, 0, TAU, 48, color, 2, true)
 	label_at(Vector2(976, 135), "原型版本 / 00", 19, GOLD)
+	label_at(Vector2(976, 160), "任务：" + str(mission.get("display_name", "未命名")), 15)
 	label_at(Vector2(976, 178), "Custodian Guard", 23)
 	label_at(Vector2(976, 208), "40mm / %.4f 英寸直径" % (40.0 / 25.4), 15)
 	label_at(Vector2(976, 240), "移动：%.1f 英寸（测试配置）" % float(fixture.movement_inches), 17, GOLD)
@@ -308,7 +351,7 @@ func _draw() -> void:
 		if dragging:
 			spent += models[selected].position.distance_to(preview)
 		label_at(Vector2(976, 437), "底座 %02d：%.2f / %.1f 英寸" % [selected + 1, spent, float(fixture.movement_inches)], 17, RED if spent > float(fixture.movement_inches) + Rules.EPSILON else GOLD)
-	label_at(Vector2(976, 824), "移动阶段拖动；射击阶段按 F。", 14)
+	label_at(Vector2(976, 824), "移动拖动；射击按 F；S 保存；L 加载。", 14)
 	label_at(Vector2(38, 812), "本地沙盒 / 尚无完整任务规则", 14, BLUE)
 	label_at(Vector2(38, 812), message, 17, RED if "非法" in message else WHITE)
 	label_at(Vector2(38, 841), "AGPL-3.0-only  |  非官方社区原型  |  不含官方美术或规则正文", 13, BLUE)

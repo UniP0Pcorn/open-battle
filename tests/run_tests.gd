@@ -2,6 +2,7 @@
 extends SceneTree
 const Rules = preload("res://rules/movement.gd")
 const Combat = preload("res://rules/combat.gd")
+const ArmyValidation = preload("res://rules/army_validation.gd")
 var failures := 0
 var checks := 0
 
@@ -38,12 +39,18 @@ func run() -> void:
 	combat_rng.seed = 1
 	var combat_result := Combat.resolve_ranged_attack({"attacks": 2, "hit_on": 3, "strength": 5, "damage": 2}, {"toughness": 5}, combat_rng)
 	check(combat_result.has("hits") and combat_result.has("damage"), "combat result has hit and damage totals")
+	var roster := {"points_limit": 1000, "units": [{"unit_id": "fixture", "count": 10, "points_each": 100}]}
+	check(ArmyValidation.validate_roster(roster).is_empty(), "valid roster passes")
+	check(ArmyValidation.total_points(roster) == 1000, "roster points total")
+	roster.points_limit = 900
+	check(not ArmyValidation.validate_roster(roster).is_empty(), "over-limit roster fails")
 	var scene = load("res://client/battlefield/tabletop.tscn").instantiate()
 	root.add_child(scene)
 	await process_frame
 	check(scene.models.size() == 20, "scene starts with twenty bases")
 	check(scene.phase == "MOVEMENT" and scene.active_team == 0, "scene starts in gold movement phase")
 	check(scene.objectives.size() == 1 and scene.score == [0, 0], "scene starts with one neutral objective")
+	check(scene.mission.id == "control_center_prototype" and scene.score_to_win == 5, "mission data loads from JSON")
 	check(scene.pick(Vector2(6, 6)) == 0, "base selection")
 	for i in range(scene.models.size()):
 		check(Rules.placement_reason(scene.models[i].position, radius, scene.models, i).is_empty(), "initial base %d valid" % i)
@@ -76,6 +83,13 @@ func run() -> void:
 	check(scene.models[0].position == Vector2(6, 6), "occupied destination rejected")
 	scene.new_phase()
 	check(is_zero_approx(scene.models[0].spent), "phase resets budget")
+	scene.models[0].position = Vector2(22, 22)
+	scene.score = [2, 1]
+	scene.save_state()
+	scene.models[0].position = Vector2(1, 1)
+	scene.score = [0, 0]
+	scene.load_state()
+	check(scene.models[0].position.distance_to(Vector2(22, 22)) < 0.001 and int(scene.score[0]) == 2 and int(scene.score[1]) == 1, "saved state restores position and score")
 	scene.add_model(Vector2(30, 22), 1)
 	check(scene.models.size() == 21 and scene.pick(Vector2(30, 22)) == 20, "placed base selectable")
 	scene.reset_table()
