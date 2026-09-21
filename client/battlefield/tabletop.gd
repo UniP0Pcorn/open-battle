@@ -14,6 +14,8 @@ var selected := -1
 var dragging := false
 var placing := false
 var team := 0
+var active_team := 0
+var history: Array = []
 var preview := Vector2.ZERO
 var drag_offset := Vector2.ZERO
 var message := "选择底座以查看移动额度。"
@@ -26,6 +28,8 @@ func _ready() -> void:
 	add_button("切换阵营  [TAB]", Vector2(976, 477), func(): team = 1 - team; queue_redraw())
 	add_button("新移动阶段  [N]", Vector2(976, 529), new_phase)
 	add_button("重置棋盘  [R]", Vector2(976, 581), reset_table)
+	add_button("结束回合  [T]", Vector2(976, 633), end_turn)
+	add_button("撤销移动  [U]", Vector2(976, 685), undo_last)
 
 func add_button(title: String, position_px: Vector2, action: Callable) -> void:
 	var button := Button.new()
@@ -40,6 +44,8 @@ func reset_table() -> void:
 	selected = -1
 	dragging = false
 	placing = false
+	active_team = 0
+	history.clear()
 	for side in range(2):
 		for i in range(10):
 			add_model(Vector2(6 + (i % 5) * 3, 6 + (i / 5) * 3 + side * 29), side)
@@ -54,6 +60,26 @@ func new_phase() -> void:
 	for model in models:
 		model.spent = 0.0
 	message = "双方底座的移动额度已重置。"
+	queue_redraw()
+
+func end_turn() -> void:
+	dragging = false
+	placing = false
+	selected = -1
+	active_team = 1 - active_team
+	message = "现在轮到%s方。" % ("金" if active_team == 0 else "蓝")
+	queue_redraw()
+
+func undo_last() -> void:
+	if history.is_empty():
+		message = "没有可撤销的移动。"
+		queue_redraw()
+		return
+	var change: Dictionary = history.pop_back()
+	models[change.index].position = change.position
+	models[change.index].spent = change.spent
+	selected = change.index
+	message = "已撤销底座 %02d 的上一步移动。" % (selected + 1)
 	queue_redraw()
 
 func to_inches(point: Vector2) -> Vector2:
@@ -78,8 +104,11 @@ func finish_drag() -> void:
 	var reason := preview_reason()
 	if reason.is_empty():
 		var distance: float = models[selected].position.distance_to(preview)
+		var old_position: Vector2 = models[selected].position
+		var old_spent: float = models[selected].spent
 		models[selected].spent += distance
 		models[selected].position = preview
+		history.append({"index": selected, "position": old_position, "spent": old_spent})
 		message = "本次移动 %.2f 英寸。移动额度按累计值计算。" % distance
 	else:
 		message = "非法移动：%s。已还原位置。" % display_reason(reason)
@@ -114,6 +143,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				new_phase()
 			KEY_R:
 				reset_table()
+			KEY_T:
+				end_turn()
+			KEY_U:
+				undo_last()
 		queue_redraw()
 	if event is InputEventMouseMotion:
 		preview = to_inches(get_global_mouse_position()) + (drag_offset if dragging else Vector2.ZERO)
@@ -131,9 +164,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			selected = pick(point)
 			if selected >= 0:
-				dragging = true
-				drag_offset = models[selected].position - point
-				preview = models[selected].position
+				if models[selected].team != active_team:
+					message = "现在轮到%s方，不能操作另一方的底座。" % ("金" if active_team == 0 else "蓝")
+					selected = -1
+				else:
+					dragging = true
+					drag_offset = models[selected].position - point
+					preview = models[selected].position
 		queue_redraw()
 
 func label_at(point: Vector2, text: String, size_px: int = 16, color: Color = WHITE) -> void:
@@ -187,16 +224,17 @@ func _draw() -> void:
 	label_at(Vector2(976, 208), "40mm / %.4f 英寸直径" % (40.0 / 25.4), 15)
 	label_at(Vector2(976, 240), "移动：%.1f 英寸（测试配置）" % float(fixture.movement_inches), 17, GOLD)
 	label_at(Vector2(976, 281), "阵营：" + ("金色" if team == 0 else "蓝色"), 17)
-	label_at(Vector2(976, 313), "模式：" + ("放置" if placing else "选择 / 拖动"), 16)
+	label_at(Vector2(976, 313), "当前回合：" + ("金色" if active_team == 0 else "蓝色"), 16, GOLD if active_team == 0 else BLUE)
+	label_at(Vector2(976, 345), "模式：" + ("放置" if placing else "选择 / 拖动"), 16)
 	if selected >= 0:
 		var spent := float(models[selected].spent)
 		if dragging:
 			spent += models[selected].position.distance_to(preview)
-		label_at(Vector2(976, 353), "底座 %02d：%.2f / %.1f 英寸" % [selected + 1, spent, float(fixture.movement_inches)], 17, RED if spent > float(fixture.movement_inches) + Rules.EPSILON else GOLD)
-	label_at(Vector2(976, 664), "拖动移动；Esc 取消。", 15)
-	label_at(Vector2(976, 690), "红色表示非法；松开后还原。", 15)
-	label_at(Vector2(976, 716), "每个网格 = 1 英寸。", 15)
-	label_at(Vector2(976, 752), "本地沙盒 / 尚无完整回合规则", 14, BLUE)
+		label_at(Vector2(976, 385), "底座 %02d：%.2f / %.1f 英寸" % [selected + 1, spent, float(fixture.movement_inches)], 17, RED if spent > float(fixture.movement_inches) + Rules.EPSILON else GOLD)
+	label_at(Vector2(976, 750), "拖动移动；Esc 取消。", 15)
+	label_at(Vector2(976, 776), "红色表示非法；松开后还原。", 15)
+	label_at(Vector2(976, 802), "每个网格 = 1 英寸。", 15)
+	label_at(Vector2(38, 812), "本地沙盒 / 尚无完整回合规则", 14, BLUE)
 	label_at(Vector2(38, 812), message, 17, RED if "非法" in message else WHITE)
 	label_at(Vector2(38, 841), "AGPL-3.0-only  |  非官方社区原型  |  不含官方美术或规则正文", 13, BLUE)
 

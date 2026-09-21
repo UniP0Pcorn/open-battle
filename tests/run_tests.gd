@@ -43,14 +43,21 @@ func run() -> void:
 	scene.preview = Vector2(7, 6)
 	scene.finish_drag()
 	check(scene.models[0].position == Vector2(7, 6) and is_equal_approx(scene.models[0].spent, 1.0), "legal drag committed")
+	scene.undo_last()
+	check(scene.models[0].position == Vector2(6, 6) and is_zero_approx(scene.models[0].spent), "last move can be undone")
+	scene.selected = -1
+	scene.end_turn()
+	check(scene.active_team == 1, "turn passes to the other side")
+	check(scene.pick(Vector2(6, 6)) == 0 and scene.models[0].team != scene.active_team, "opponent base is distinguishable")
 	scene.dragging = true
+	scene.selected = 0
 	scene.preview = Vector2(14, 6)
 	scene.finish_drag()
-	check(scene.models[0].position == Vector2(7, 6) and is_equal_approx(scene.models[0].spent, 1.0), "illegal drag restores position and budget")
+	check(scene.models[0].position == Vector2(6, 6) and is_zero_approx(scene.models[0].spent), "illegal drag restores position and budget")
 	scene.dragging = true
 	scene.preview = Vector2(9, 6)
 	scene.finish_drag()
-	check(scene.models[0].position == Vector2(7, 6), "occupied destination rejected")
+	check(scene.models[0].position == Vector2(6, 6), "occupied destination rejected")
 	scene.new_phase()
 	check(is_zero_approx(scene.models[0].spent), "phase resets budget")
 	scene.add_model(Vector2(30, 22), 1)
