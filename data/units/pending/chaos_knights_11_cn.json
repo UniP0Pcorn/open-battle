@@ -1,0 +1,16 @@
+{
+  "id": "chaos_knights_11_cn",
+  "display_name": "混沌骑士",
+  "edition": 11,
+  "faction": "chaos_knights_11_cn",
+  "source": {
+    "filename": "混沌骑士11E规则-双子星版V1.0 (1).pdf",
+    "category": "faction",
+    "pages": 52,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

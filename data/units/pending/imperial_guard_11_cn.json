@@ -1,0 +1,16 @@
+{
+  "id": "imperial_guard_11_cn",
+  "display_name": "星界军",
+  "edition": 11,
+  "faction": "imperial_guard_11_cn",
+  "source": {
+    "filename": "星界军11版中文1.01.pdf",
+    "category": "faction",
+    "pages": 92,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

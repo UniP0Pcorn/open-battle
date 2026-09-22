@@ -1,0 +1,486 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+extends SceneTree
+const Rules = preload("res://rules/movement.gd")
+const Combat = preload("res://rules/combat.gd")
+const ArmyValidation = preload("res://rules/army_validation.gd")
+const CommandLog = preload("res://rules/command_log.gd")
+const UnitValidation = preload("res://rules/unit_validation.gd")
+const Dice = preload("res://rules/dice.gd")
+const TurnState = preload("res://rules/turn_state.gd")
+const DatasheetValidation = preload("res://rules/datasheet_validation.gd")
+const Charge = preload("res://rules/charge.gd")
+const Melee = preload("res://rules/melee.gd")
+const Terrain = preload("res://rules/terrain.gd")
+const Visibility = preload("res://rules/visibility.gd")
+const Damage = preload("res://rules/damage.gd")
+const MissionRules = preload("res://rules/mission.gd")
+const CommandPoints = preload("res://rules/command_points.gd")
+const BattleShock = preload("res://rules/battle_shock.gd")
+const ArmyBuilder = preload("res://rules/army_builder.gd")
+const UnitMovement = preload("res://rules/unit_movement.gd")
+const Stratagems = preload("res://rules/stratagems.gd")
+const SourceManifest = preload("res://rules/source_manifest.gd")
+const ProfileCatalog = preload("res://rules/profile_catalog.gd")
+const RosterEditor = preload("res://rules/roster_editor.gd")
+const UnitAbilities = preload("res://rules/unit_abilities.gd")
+const WeaponRules = preload("res://rules/weapon_rules.gd")
+const Replay = preload("res://rules/replay.gd")
+const UnitKeywords = preload("res://rules/unit_keywords.gd")
+const RulesetCatalog = preload("res://rules/ruleset_catalog.gd")
+var failures := 0
+var checks := 0
+
+func check(condition: bool, description: String) -> void:
+	checks += 1
+	if not condition:
+		failures += 1
+		printerr("FAIL: " + description)
+	else:
+		print("PASS: " + description)
+
+func _initialize() -> void:
+	call_deferred("run")
+
+func run() -> void:
+	var radius := Rules.radius_inches(40.0)
+	check(is_equal_approx(radius * 2.0, 1.5748031496), "40 mm conversion")
+	check(Rules.BOARD_SIZE == Vector2(60, 44), "table dimensions")
+	check(Rules.inside_board(Vector2(radius, radius), radius), "tangent to edge is legal")
+	check(not Rules.inside_board(Vector2(radius - 0.01, 5), radius), "whole base must fit")
+	check(not Rules.inside_board(Vector2(60 - radius + 0.01, 5), radius), "right edge")
+	check(not Rules.inside_board(Vector2(5, 44 - radius + 0.01), radius), "bottom edge")
+	check(Rules.movement_reason(Vector2(5, 5), Vector2(11, 5), 0, 6, radius, [], -1).is_empty(), "exactly six inches")
+	check(Rules.movement_reason(Vector2(5, 5), Vector2(11.001, 5), 0, 6, radius, [], -1) == "MOVE LIMIT EXCEEDED", "over budget")
+	check(Rules.movement_reason(Vector2(5, 5), Vector2(8, 9), 1, 6, radius, [], -1).is_empty(), "3-4-5 diagonal plus spent budget")
+	check(Rules.movement_reason(Vector2(5, 5), Vector2(8, 9), 2, 6, radius, [], -1) == "MOVE LIMIT EXCEEDED", "cumulative move enforcement")
+	var occupied: Array = [{"position": Vector2(5, 5), "radius": radius}]
+	check(Rules.placement_reason(Vector2(5, 5), radius, occupied) == "BASE OVERLAP", "placement overlap rejected")
+	check(Rules.placement_reason(Vector2(5 + radius * 2, 5), radius, occupied).is_empty(), "tangent bases allowed")
+	check(Rules.placement_reason(Vector2(5, 5), radius, occupied, 0).is_empty(), "moving base excluded from collision")
+	var blocked_path: Array = [{"position": Vector2(8, 5), "radius": radius}]
+	check(not Rules.path_reason(Vector2(5, 5), Vector2(11, 5), radius, blocked_path).is_empty(), "path crossing is rejected")
+	check(Rules.movement_reason(Vector2(5, 5), Vector2(11, 5), 0, 10, radius, blocked_path, -1) == "PATH BLOCKED", "movement reports blocked path")
+	check(Rules.path_reason(Vector2(5, 5), Vector2(5, 5), radius, blocked_path).is_empty(), "zero-length path is clear")
+	check(Combat.wound_target(5, 5) == 4, "equal strength wounds on four")
+	check(Combat.wound_target(10, 5) == 2, "double strength wounds on two")
+	check(Combat.save_target(4, -1) == 3, "armor penetration modifies saves")
+	check(Combat.save_target(4, -3, 4) == 2, "best invulnerable save is selected")
+	check(Combat.save_target(7, 0) == 7 and not Combat.save_passes(6, 7), "impossible save fails")
+	var attacker := {"team": 0}
+	var enemy := {"team": 1, "toughness": 5}
+	var weapon := {"range_inches": 24.0, "attacks": 1, "hit_on": 4, "strength": 5, "damage": 1}
+	check(Combat.target_reason(attacker, enemy, 12.0, weapon, 0).is_empty(), "enemy in range is a legal target")
+	var lone_operator := {"team": 1, "toughness": 5, "ability_ids": ["lone_operator"]}
+	check(Combat.target_reason(attacker, lone_operator, 13.0, weapon, 0) == "LONE OPERATOR" and Combat.target_reason(attacker, lone_operator, 12.0, weapon, 0).is_empty(), "lone operator limits distant shooting")
+	check(Combat.target_reason(attacker, enemy, 25.0, weapon, 0) == "OUT OF RANGE", "out of range target is rejected")
+	check(Combat.target_reason(attacker, {"team": 0}, 12.0, weapon, 0) == "FRIENDLY TARGET", "friendly target is rejected")
+	var combat_rng := RandomNumberGenerator.new()
+	combat_rng.seed = 1
+	var combat_result := Combat.resolve_ranged_attack({"attacks": 2, "hit_on": 3, "strength": 5, "damage": 2}, {"toughness": 5}, combat_rng)
+	check(combat_result.has("hits") and combat_result.has("damage"), "combat result has hit and damage totals")
+	var roster := {"points_limit": 1000, "units": [{"unit_id": "fixture", "count": 10, "points_each": 100}]}
+	check(ArmyValidation.validate_roster(roster).is_empty(), "valid roster passes")
+	check(ArmyValidation.total_points(roster) == 1000, "roster points total")
+	roster.points_limit = 900
+	check(not ArmyValidation.validate_roster(roster).is_empty(), "over-limit roster fails")
+	var log: Array = []
+	log = CommandLog.append(log, 0, "MOVE", {"model": 1, "distance": 3.0})
+	log = CommandLog.append(log, 0, "SHOOT", {"attacker": 1, "target": 2})
+	check(CommandLog.validate(log).is_empty(), "command log entries validate")
+	check(CommandLog.decode(CommandLog.encode(log)).size() == 2, "command log round trips")
+	var broken_log := log.duplicate(true)
+	broken_log[1].sequence = 4
+	check(CommandLog.validate(broken_log) == "SEQUENCE GAP", "command log detects sequence gaps")
+	var coherent_unit: Array = [
+		{"position": Vector2(10, 10)},
+		{"position": Vector2(11.5, 10)},
+		{"position": Vector2(11.5, 11.5)}
+	]
+	check(UnitValidation.coherency_reason(coherent_unit).is_empty(), "coherent unit passes")
+	var incoherent_unit := coherent_unit.duplicate(true)
+	incoherent_unit[2].position = Vector2(20, 20)
+	check(UnitValidation.coherency_reason(incoherent_unit) == "MODEL OUT OF COHERENCY", "coherency failure is reported")
+	var grouped_models: Array = [
+		{"unit_id": "alpha", "position": Vector2.ZERO},
+		{"unit_id": "alpha", "position": Vector2(1, 0)},
+		{"unit_id": "beta", "position": Vector2(20, 20)}
+	]
+	check(UnitValidation.group_by_unit(grouped_models).size() == 2, "models group by unit id")
+	var dice_rng := RandomNumberGenerator.new()
+	dice_rng.seed = 77
+	var dice_result := Dice.roll_d6(dice_rng, 3, 1)
+	check(dice_result.rolls.size() == 3 and dice_result.total == dice_result.rolls[0] + dice_result.rolls[1] + dice_result.rolls[2] + 1, "dice rolls are deterministic and totaled")
+	var expression := Dice.roll_expression(dice_rng, "D6+2")
+	check(expression.valid and expression.rolls.size() == 1 and expression.total >= 3 and expression.total <= 8, "dice expressions resolve")
+	check(Dice.parse_expression(2.0).valid and Dice.parse_expression(2.0).modifier == 2, "numeric JSON dice values resolve")
+	check(not Dice.parse_expression("D3+bad").valid, "invalid dice expression is rejected")
+	var variable_attack := Combat.resolve_ranged_attack({"attacks": "D3", "hit_on": 7, "strength": 4, "damage": "D6"}, {"toughness": 4, "save_on": 7}, dice_rng)
+	check(variable_attack.attacks >= 1 and variable_attack.attacks <= 3 and variable_attack.attack_roll.valid, "combat accepts variable attack dice")
+	check(Dice.succeeds(4, 4) and not Dice.succeeds(3, 4), "target threshold resolves")
+	check(UnitAbilities.validate(["stealth", "reroll_hit_ones"]).is_empty(), "known abilities validate")
+	check(UnitAbilities.canonical_id("隐匿") == "stealth" and UnitAbilities.canonical_id("深入打击") == "deep_strike", "localized ability aliases normalize")
+	check(UnitAbilities.validate(["隐匿", "斥候6英寸"]).is_empty(), "localized ability aliases validate")
+	var ability_mods := UnitAbilities.modifiers(["stealth", "objective_control_plus_1", "reroll_hit_ones"])
+	check(ability_mods.cover_bonus == 1 and ability_mods.objective_control_bonus == 1 and ability_mods.hit_rerolls == 1, "ability modifiers aggregate")
+	check(UnitAbilities.validate(["not_real"]).size() == 1, "unknown ability is reported")
+	check(UnitKeywords.canonical_id("飞行") == "fly" and UnitKeywords.canonical_id("史诗英雄") == "epic_hero", "localized unit keywords normalize")
+	check(UnitKeywords.validate(["步兵", "fly"]).is_empty(), "known unit keywords validate")
+	var weapon_context := WeaponRules.context({"range_inches": 12.0, "attacks": 2, "hit_on": 4, "abilities": ["喷射", "忽略掩体"]}, 6.0, 1)
+	check(weapon_context.weapon.hit_on == 1 and weapon_context.cover_bonus == 0, "weapon keywords modify hit and cover")
+	var rapid_context := WeaponRules.context({"range_inches": 24.0, "attacks": 2, "hit_on": 3, "abilities": ["速射"]}, 12.0)
+	check(rapid_context.weapon.attacks == 4, "rapid fire doubles attacks at half range")
+	var hazardous_context := WeaponRules.context({"range_inches": 12.0, "attacks": 1, "hit_on": 4, "damage": 2, "abilities": ["危险"]}, 8.0)
+	check(hazardous_context.weapon.hazardous and hazardous_context.weapon.hazardous_damage == 3, "hazardous weapon context is explicit")
+	var blast_context := WeaponRules.context({"range_inches": 24.0, "attacks": 3, "hit_on": 4, "abilities": ["爆炸"]}, 10.0, 0, 10)
+	check(blast_context.weapon.attacks == 5, "blast adds attacks for large units")
+	var devastating_context := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["毁灭伤害"]}, 10.0)
+	check(devastating_context.weapon.devastating_wounds, "devastating wounds context is explicit")
+	var replay_models: Array = [{"unit_id": "u", "team": 0, "position": Vector2(1, 1)}]
+	var replay_log: Array = []
+	replay_log = CommandLog.append(replay_log, 0, "MOVE", {"unit_id": "u", "delta": [2, 0]})
+	var replay_result := Replay.replay(Replay.initial_state(replay_models), replay_log)
+	check(replay_result.ok and replay_result.state.models[0].position == Vector2(3, 1), "replay reconstructs movement")
+	var bad_replay := Replay.replay(Replay.initial_state(replay_models), [{"sequence": 1, "team": 0, "kind": "MOVE", "payload": {}}])
+	check(not bad_replay.ok and bad_replay.reason == "SEQUENCE GAP", "replay rejects sequence gaps")
+	var shock_replay_log: Array = []
+	shock_replay_log = CommandLog.append(shock_replay_log, 0, "BATTLE_SHOCK", {"unit_id": "u", "passed": false})
+	var shock_replay := Replay.replay(Replay.initial_state(replay_models), shock_replay_log)
+	check(shock_replay.ok and shock_replay.state.models[0].battle_shocked and not shock_replay.state.models[0].can_control, "replay applies battle shock")
+	var combat_replay_models: Array = [{"unit_id": "attacker", "team": 0, "wounds": 3}, {"unit_id": "target", "team": 1, "wounds": 4}]
+	var combat_replay_log: Array = []
+	combat_replay_log = CommandLog.append(combat_replay_log, 0, "SHOOT", {"target": 1, "damage": 3})
+	var combat_replay := Replay.replay(Replay.initial_state(combat_replay_models, "SHOOTING", 0), combat_replay_log)
+	check(combat_replay.ok and combat_replay.state.models[1].wounds == 1, "replay applies shooting damage")
+	var turn := TurnState.new_state(0)
+	check(TurnState.is_valid(turn) and turn.phase == "COMMAND", "turn state starts in command phase")
+	for expected in ["MOVEMENT", "SHOOTING", "CHARGE", "FIGHT"]:
+		turn = TurnState.advance(turn)
+		check(turn.phase == expected, "turn advances to %s" % expected)
+	turn = TurnState.advance(turn)
+	check(turn.round == 2 and turn.active_team == 1 and turn.phase == "COMMAND", "turn wraps to next round and side")
+	var profile: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/units/custodian_guard_profile.json"))
+	check(DatasheetValidation.validate_profile(profile).is_empty(), "versioned datasheet validates")
+	check(RulesetCatalog.supported(10) and RulesetCatalog.get_ruleset(11).id == "wh40k_11e" and RulesetCatalog.phases(11).size() == 5, "ruleset catalog exposes supported editions")
+	var unsupported_edition := profile.duplicate(true)
+	unsupported_edition.edition = 12
+	check(DatasheetValidation.validate_profile(unsupported_edition) == "UNSUPPORTED EDITION 12", "datasheet rejects unregistered edition")
+	var invalid_weapon_dice := profile.duplicate(true)
+	invalid_weapon_dice.weapons[0].attacks = "D4"
+	check(DatasheetValidation.validate_profile(invalid_weapon_dice) == "INVALID DICE ATTACKS", "datasheet rejects unsupported weapon dice")
+	check(DatasheetValidation.points_total(profile) == 100, "datasheet points total")
+	var invalid_profile: Dictionary = profile.duplicate(true)
+	invalid_profile.models[0].erase("wounds")
+	check(DatasheetValidation.validate_profile(invalid_profile) == "MODEL MISSING WOUNDS", "datasheet reports missing model field")
+	var ability_profile: Dictionary = profile.duplicate(true)
+	ability_profile.abilities = ["stealth", "reroll_hit_ones"]
+	check(DatasheetValidation.validate_profile(ability_profile).is_empty(), "datasheet validates executable abilities")
+	ability_profile.abilities = ["unknown_ability"]
+	check(DatasheetValidation.validate_profile(ability_profile) == "UNKNOWN ABILITY unknown_ability", "datasheet rejects unknown ability")
+	var keyword_profile: Dictionary = profile.duplicate(true)
+	keyword_profile.keywords = ["步兵", "飞行"]
+	keyword_profile.faction_keywords = ["钛帝国"]
+	check(DatasheetValidation.validate_profile(keyword_profile).is_empty(), "datasheet validates unit keywords")
+	keyword_profile.keywords = ["not_a_keyword"]
+	check(DatasheetValidation.validate_profile(keyword_profile) == "UNKNOWN KEYWORD not_a_keyword", "datasheet rejects unknown keyword")
+	var charge_rng := RandomNumberGenerator.new()
+	charge_rng.seed = 12
+	var charge_roll := Charge.charge_distance(charge_rng)
+	check(charge_roll.rolls.size() == 2 and charge_roll.distance == charge_roll.rolls[0] + charge_roll.rolls[1], "charge rolls 2D6")
+	var charge_attacker := {"team": 0, "base_radius": 0.8}
+	var charge_target := {"team": 1, "base_radius": 0.8}
+	check(Charge.target_reason(charge_attacker, charge_target, 0, 5.0, 8).is_empty(), "charge target in range")
+	check(Charge.target_reason(charge_attacker, charge_target, 0, 15.0, 8) == "OUT OF CHARGE RANGE", "charge target out of range")
+	check(Charge.end_reason(Vector2(10, 10), Vector2(10.8, 10)).is_empty(), "charge ends in engagement")
+	var melee_attacker := {"team": 0, "distance_to_target": 0.8}
+	var melee_target := {"team": 1}
+	check(Melee.target_reason(melee_attacker, melee_target, 0).is_empty(), "melee target is engaged")
+	var obstacles: Array = [{"x": 4.0, "y": 4.0, "width": 2.0, "height": 2.0}]
+	check(Terrain.circle_reason(Vector2(5, 5), 0.5, obstacles) == "TERRAIN BLOCKED", "terrain blocks base placement")
+	check(Terrain.path_reason(Vector2(2, 5), Vector2(8, 5), 0.5, obstacles) == "TERRAIN BLOCKED", "terrain blocks movement path")
+	check(Visibility.blocked(Vector2(2, 5), Vector2(8, 5), obstacles), "terrain blocks line of sight")
+	check(not Visibility.blocked(Vector2(2, 2), Vector2(8, 2), obstacles), "clear line of sight passes")
+	var covered_obstacle: Array = [{"x": 4.0, "y": 4.0, "width": 2.0, "height": 2.0, "cover_bonus": 1}]
+	check(Visibility.cover_bonus(Vector2(2, 5), Vector2(8, 5), covered_obstacle) == 1, "terrain cover bonus is detected")
+	check(Combat.resolve_ranged_attack({"attacks": 0, "hit_on": 4, "strength": 4, "damage": 1}, {"toughness": 4, "save_on": 4, "cover_save_bonus": 1}, combat_rng).save_on == 5, "cover modifies save target")
+	var damage_model := {"wounds": 3}
+	var damage_result := Damage.apply_to_model(damage_model, 2)
+	check(damage_result.wounds_after == 1 and not damage_result.destroyed, "damage reduces model wounds")
+	var damage_unit: Array = [{"wounds": 2}, {"wounds": 1}]
+	var destroyed_result := Damage.allocate_to_unit(damage_unit, 2, 0)
+	check(destroyed_result.destroyed == 1 and damage_unit.size() == 1, "destroyed model is removed from unit")
+	var objective_models: Array = [
+		{"team": 0, "position": Vector2(10, 10)},
+		{"team": 1, "position": Vector2(10.5, 10)}
+	]
+	check(MissionRules.controller(Vector2(10, 10), objective_models, 3.0) == -1, "contested objective has no controller")
+	var shocked_controller := [{"position": Vector2(10, 10), "team": 0, "objective_control": 5, "battle_shocked": true}]
+	check(MissionRules.controller(Vector2(10, 10), shocked_controller, 3.0) == -1, "battle shocked model cannot control objective")
+	objective_models.remove_at(1)
+	check(MissionRules.controller(Vector2(10, 10), objective_models, 3.0) == 0, "objective controller is detected")
+	var mission_score := MissionRules.score_objectives([{"position": Vector2(10, 10), "points": 2}], objective_models, 3.0)
+	check(mission_score.score[0] == 2 and mission_score.controllers[0] == 0, "objective value is scored")
+	check(MissionRules.winner([5, 2], 5) == 0 and MissionRules.winner([2, 2], 5) == -1, "mission winner is detected")
+	var command_points := CommandPoints.new_state()
+	command_points = CommandPoints.gain(command_points, 0)
+	check(command_points[0] == 1 and CommandPoints.can_spend(command_points, 0, 1), "command points are gained")
+	var spent_cp := CommandPoints.spend(command_points, 0, 1)
+	check(spent_cp.ok and spent_cp.points[0] == 0, "command points can be spent")
+	var stratagem := {"id": "prototype_reroll", "cost": 1, "phase": "SHOOTING"}
+	check(CommandPoints.validate_stratagem(stratagem, "SHOOTING", 0, spent_cp.points) == "NOT ENOUGH COMMAND POINTS", "stratagem checks resource")
+	check(TurnState.advance(TurnState.new_state(0)).command_points[0] == 0, "phase advance preserves command points")
+	var shock_rng := RandomNumberGenerator.new()
+	shock_rng.seed = 21
+	var shock_result := BattleShock.test(7, shock_rng)
+	check(shock_result.rolls.size() == 2 and shock_result.total == shock_result.rolls[0] + shock_result.rolls[1], "battle shock rolls 2D6")
+	var shocked_unit := BattleShock.apply({"battle_shocked": false}, {"passed": false})
+	check(shocked_unit.battle_shocked and not BattleShock.can_control_objective(shocked_unit), "failed battle shock blocks objective control")
+	var steady_unit := BattleShock.apply({"battle_shocked": true}, {"passed": true})
+	check(not steady_unit.battle_shocked and BattleShock.can_control_objective(steady_unit), "passed battle shock restores control")
+	check(BattleShock.required(5, 10) and not BattleShock.required(6, 10), "battle shock half-strength threshold")
+	var shocked_models := BattleShock.apply_to_models([{"unit_id": "u1", "can_control": true}, {"unit_id": "u2", "can_control": true}], "u1", {"passed": false})
+	check(not shocked_models[0].can_control and shocked_models[1].can_control, "battle shock applies to one unit")
+	var profiles := {profile.id: profile}
+	var invulnerable_profile := profile.duplicate(true)
+	invulnerable_profile.models[0].invulnerable_save = 4
+	var build_result := ArmyBuilder.build({"edition": 11, "points_limit": 1000, "units": [{"unit_id": profile.id, "count": 1}]}, profiles, 1)
+	var invulnerable_build := ArmyBuilder.build({"edition": 11, "points_limit": 1000, "units": [{"unit_id": invulnerable_profile.id, "count": 1}]}, {invulnerable_profile.id: invulnerable_profile}, 1)
+	check(build_result.valid and build_result.points == 100 and build_result.units[0].models.size() == 1 and build_result.units[0].models[0].has("save_on") and build_result.units[0].models[0].has("weapons"), "army builder expands profile")
+	check(invulnerable_build.valid and invulnerable_build.units[0].models[0].invulnerable_save == 4, "army builder carries invulnerable save")
+	var multi_build := ArmyBuilder.build({"edition": 11, "points_limit": 1000, "units": [{"unit_id": profile.id, "count": 10}]}, profiles, 0)
+	check(multi_build.valid and multi_build.points == 1000 and multi_build.units.size() == 10, "army builder expands unit count")
+	var multi_entry := ArmyBuilder.build({"edition": 11, "points_limit": 1100, "units": [{"unit_id": profile.id, "count": 10}, {"unit_id": profile.id, "count": 1}]}, profiles, 0)
+	check(multi_entry.valid and multi_entry.units.size() == 11 and multi_entry.units[0].unit_id != multi_entry.units[10].unit_id, "army builder keeps multiple entries unique")
+	var wrong_edition := ArmyBuilder.build({"edition": 10, "points_limit": 1000, "units": [{"unit_id": profile.id, "count": 1}]}, profiles)
+	check(not wrong_edition.valid and wrong_edition.errors[0] == "EDITION MISMATCH " + profile.id, "army builder enforces edition")
+	var pending_profile := profile.duplicate(true)
+	pending_profile.id = "pending_profile"
+	pending_profile.import_status = "pending_manual_review"
+	var pending_build := ArmyBuilder.build({"edition": 11, "points_limit": 1000, "units": [{"unit_id": pending_profile.id, "count": 1}]}, {pending_profile.id: pending_profile})
+	check(not pending_build.valid and pending_build.errors[0] == "PROFILE NOT READY pending_profile", "army builder rejects unreviewed profile")
+	var faction_roster := {"edition": 11, "faction": "Other Faction", "points_limit": 1000, "units": [{"unit_id": profile.id, "count": 1}]}
+	check(not ArmyBuilder.build(faction_roster, profiles).valid and ArmyBuilder.build(faction_roster, profiles).errors[0] == "FACTION MISMATCH " + profile.id, "army builder enforces faction")
+	var incomplete_profile := profile.duplicate(true)
+	incomplete_profile.id = "incomplete_profile"
+	incomplete_profile.models = []
+	check(not ArmyBuilder.build({"edition": 11, "points_limit": 1000, "units": [{"unit_id": incomplete_profile.id, "count": 1}]}, {incomplete_profile.id: incomplete_profile}).valid, "army builder rejects incomplete profile")
+	var editable_roster := RosterEditor.create("Test Roster", 11, 1000)
+	var added := RosterEditor.add_unit(editable_roster, profiles, profile.id, 1)
+	check(added.ok and RosterEditor.total_points(added.roster) == 100, "roster editor adds validated unit")
+	var removed := RosterEditor.remove_unit(added.roster, 0)
+	check(removed.ok and removed.roster.units.is_empty(), "roster editor removes unit")
+	var resized := RosterEditor.set_unit_count(added.roster, profiles, 0, 2)
+	check(resized.ok and resized.roster.units[0].count == 2 and RosterEditor.total_points(resized.roster) == 200, "roster editor changes unit count")
+	var lower_limit := RosterEditor.set_points_limit(resized.roster, profiles, 100)
+	check(not lower_limit.ok and lower_limit.roster.points_limit == 1000, "roster editor rejects over-limit edit")
+	var higher_limit := RosterEditor.set_points_limit(resized.roster, profiles, 1200)
+	check(higher_limit.ok and higher_limit.roster.points_limit == 1200, "roster editor changes points limit")
+	var faction_set := RosterEditor.set_faction(resized.roster, profiles, "prototype_gold")
+	check(faction_set.ok and faction_set.roster.faction == "prototype_gold", "roster editor sets faction")
+	var faction_blocked := RosterEditor.set_faction(resized.roster, profiles, "other_faction")
+	check(not faction_blocked.ok and not faction_blocked.roster.has("faction"), "roster editor rolls back faction mismatch")
+	var blocked_add := RosterEditor.add_unit(editable_roster, {pending_profile.id: pending_profile}, pending_profile.id, 1)
+	check(not blocked_add.ok and blocked_add.reason == "PROFILE NOT READY pending_profile", "roster editor blocks unreviewed unit")
+	var roster_json := RosterEditor.encode(resized.roster)
+	var decoded_roster := RosterEditor.decode(roster_json)
+	check(decoded_roster.get("display_name", "") == "Test Roster" and decoded_roster.units[0].count == 2, "roster editor JSON round trip")
+	var moving_unit: Array = [
+		{"position": Vector2(10, 10), "radius": 0.5, "coherency_inches": 2.0},
+		{"position": Vector2(11, 10), "radius": 0.5, "coherency_inches": 2.0}
+	]
+	check(UnitMovement.movement_reason(moving_unit, Vector2(2, 0), 0, 6, moving_unit).is_empty(), "unit movement validates as a group")
+	var moved_unit := UnitMovement.translate(moving_unit, Vector2(2, 0))
+	check(moved_unit[0].position == Vector2(12, 10) and moved_unit[1].position == Vector2(13, 10), "unit translation preserves formation")
+	check(UnitMovement.movement_reason(moving_unit, Vector2(7, 0), 0, 6, moving_unit) == "MOVE LIMIT EXCEEDED", "unit movement enforces allowance")
+	var reroll_points := [1, 0]
+	var reroll_use := Stratagems.use(Stratagems.command_reroll(), "SHOOTING", 0, reroll_points)
+	check(reroll_use.ok and reroll_use.points[0] == 0 and reroll_use.effect == "REROLL_HIT", "command reroll spends resource")
+	var no_reroll := Stratagems.use(Stratagems.command_reroll(), "SHOOTING", 0, reroll_use.points)
+	check(not no_reroll.ok and no_reroll.reason == "NOT ENOUGH COMMAND POINTS", "command reroll requires points")
+	var source_manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/sources/manifest.json"))
+	check(SourceManifest.validate(source_manifest).is_empty() and source_manifest.sources.size() == 30, "PDF source manifest validates")
+	var catalog_profiles: Array = [profile, {"id": "other", "display_name": "Other", "edition": 10, "faction": "other", "models": [], "weapons": []}]
+	var catalog := ProfileCatalog.build(catalog_profiles)
+	check(catalog.size() == 2 and catalog[profile.id].display_name == "Custodian Guard", "profile catalog indexes profiles")
+	check(ProfileCatalog.filter(catalog, 11, "prototype_gold").size() == 1, "profile catalog filters edition and faction")
+	check(ProfileCatalog.load_directory("res://data/units").has("custodian_guard_fixture"), "profile catalog loads unit directory")
+	var tree_catalog := ProfileCatalog.load_tree("res://data/units", true)
+	check(tree_catalog.size() >= 31 and tree_catalog.has("custodian_guard_fixture"), "profile catalog loads nested unit directories")
+	var generated_catalog: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/units/catalog.json"))
+	check(generated_catalog.profiles.size() >= 31 and generated_catalog.profiles[0].path.begins_with("res://data/units/"), "generated profile catalog is complete")
+	var pending_catalog := ProfileCatalog.load_directory("res://data/units/pending", true)
+	check(pending_catalog.size() == 30 and not ProfileCatalog.is_ready(pending_catalog.values()[0]), "pending profile catalog preserves review status")
+	check(ProfileCatalog.ready_only(pending_catalog).is_empty(), "pending profiles excluded from ready catalog")
+	var invalid_ready := profile.duplicate(true)
+	invalid_ready.import_status = "ready"
+	invalid_ready.keywords = ["unsupported_keyword"]
+	check(not ProfileCatalog.is_ready(invalid_ready), "ready catalog rejects structurally invalid profile")
+	var scene = load("res://client/battlefield/tabletop.tscn").instantiate()
+	root.add_child(scene)
+	await process_frame
+	check(scene.models.size() == 20, "scene starts with twenty bases")
+	check(scene.models[0].has("unit_id"), "models carry unit ids")
+	check(scene.phase == "MOVEMENT" and scene.active_team == 0 and TurnState.is_valid(scene.turn_state), "scene starts in gold movement phase")
+	check(scene.objectives.size() == 1 and scene.score == [0, 0], "scene starts with one neutral objective")
+	check(scene.ready_profile_count >= 1 and scene.pending_profile_count == 30, "scene reports profile catalog status")
+	check(scene.ready_profiles.size() == scene.ready_profile_count and scene.unit_profile.id == "custodian_guard_fixture", "scene loads ready profile catalog")
+	check(scene.roster.faction == scene.unit_profile.faction, "scene applies profile faction to roster")
+	check(scene.pending_profile_count == ProfileCatalog.load_tree("res://data/units/pending", true).size(), "scene counts recursive pending profile catalog")
+	check(scene.fixture.weapon.name == scene.unit_profile.weapons[0].name, "scene loads profile weapon")
+	check(scene.models[0].toughness == scene.unit_profile.models[0].toughness and scene.models[0].wounds == scene.unit_profile.models[0].wounds, "scene applies profile defensive stats")
+	check(scene.models[0].has("leadership") and scene.models[0].has("invulnerable_save") and scene.models[0].has("weapons") and scene.models[0].has("keywords"), "scene carries expanded model metadata")
+	check(scene.weapon_for_model(scene.models[0]).name == scene.unit_profile.weapons[0].name, "attacks use model weapon profile")
+	scene.cycle_profile_weapon()
+	check(scene.fixture.weapon.name == scene.unit_profile.weapons[0].name, "scene cycles profile weapon")
+	scene.toggle_roster_panel()
+	check(scene.show_roster_panel, "scene toggles roster panel")
+	scene.toggle_roster_panel()
+	check(scene.terrain.size() == 2, "mission terrain loads")
+	check(scene.mission.id == "control_center_prototype" and scene.score_to_win == 5, "mission data loads from JSON")
+	check(scene.pick(Vector2(6, 6)) == 0, "base selection")
+	for i in range(scene.models.size()):
+		check(Rules.placement_reason(scene.models[i].position, radius, scene.models, i).is_empty(), "initial base %d valid" % i)
+	scene.selected = 0
+	scene.dragging = true
+	scene.preview = Vector2(7, 6)
+	scene.finish_drag()
+	check(scene.models[0].position == Vector2(7, 6) and is_equal_approx(scene.models[0].spent, 1.0), "legal drag committed")
+	check(scene.command_log.size() == 1 and scene.command_log[0].kind == "MOVE", "move is recorded")
+	scene.undo_last()
+	check(scene.models[0].position == Vector2(6, 6) and is_zero_approx(scene.models[0].spent), "last move can be undone")
+	scene.selected = -1
+	scene.end_turn()
+	check(scene.active_team == 1, "turn passes to the other side")
+	check(scene.pick(Vector2(6, 6)) == 0 and scene.models[0].team != scene.active_team, "opponent base is distinguishable")
+	scene.models[10].position = Vector2(8, 6)
+	scene.models[1].position = Vector2(12, 6)
+	scene.selected = 10
+	scene.enter_shooting()
+	check(scene.phase == "SHOOTING" and scene.turn_state.phase_index == TurnState.phase_index("SHOOTING"), "movement can enter shooting phase")
+	scene.enter_charge()
+	check(scene.phase == "CHARGE" and scene.turn_state.phase_index == TurnState.phase_index("CHARGE"), "shooting can enter charge phase")
+	scene.charge_selected()
+	check(scene.command_log[-1].kind == "CHARGE" and scene.models[10].position.distance_to(scene.models[0].position) <= 3.0, "charge action moves into engagement")
+	scene.enter_fight()
+	check(scene.phase == "FIGHT" and scene.turn_state.phase_index == TurnState.phase_index("FIGHT"), "charge can enter fight phase")
+	scene.command_points = [0, 1]
+	scene.turn_state.command_points = [0, 1]
+	scene.use_command_reroll()
+	check(scene.command_points == [0, 0] and scene.turn_state.command_points == [0, 0], "command reroll syncs turn state resources")
+	scene.fight_selected()
+	check(scene.command_log[-1].kind == "FIGHT", "fight action records melee attack")
+	scene.end_turn()
+	check(scene.phase == "MOVEMENT", "ending turn starts movement phase")
+	scene.models[1].position = Vector2(30, 22)
+	scene.end_turn()
+	check(scene.score[0] == 1, "objective scores for a controlling team")
+	scene.dragging = true
+	scene.selected = 0
+	scene.preview = Vector2(14, 6)
+	scene.finish_drag()
+	check(scene.models[0].position == Vector2(6, 6) and is_zero_approx(scene.models[0].spent), "illegal drag restores position and budget")
+	scene.dragging = true
+	scene.preview = Vector2(12, 6)
+	scene.finish_drag()
+	check(scene.models[0].position == Vector2(6, 6), "occupied destination rejected")
+	scene.new_phase()
+	check(is_zero_approx(scene.models[0].spent), "phase resets budget")
+	scene.models[0].position = Vector2(22, 22)
+	scene.score = [2, 1]
+	scene.save_state()
+	scene.models[0].position = Vector2(1, 1)
+	scene.score = [0, 0]
+	scene.load_state()
+	check(scene.models[0].position.distance_to(Vector2(22, 22)) < 0.001 and int(scene.score[0]) == 2 and int(scene.score[1]) == 1, "saved state restores position and score")
+	check(scene.models[0].unit_id == "custodian_guard_fixture_t0_01", "saved state restores unit id")
+	check(CommandLog.validate(scene.command_log).is_empty(), "saved command log validates")
+	scene.add_model(Vector2(30, 22), 1)
+	check(scene.models.size() == 21 and scene.pick(Vector2(30, 22)) == 20, "placed base selectable")
+	scene.models[1].unit_id = scene.models[0].unit_id
+	scene.models[0].position = Vector2(6, 6)
+	scene.models[1].position = Vector2(8, 6)
+	scene.models[10].position = Vector2(30, 30)
+	scene.selected = 0
+	scene.dragging = true
+	scene.preview = Vector2(7, 6)
+	scene.finish_drag()
+	check(scene.models[0].position == Vector2(7, 6) and scene.models[1].position == Vector2(9, 6), "unit drag moves all models")
+	scene.roster.points_limit = 1200
+	scene.add_roster_entry()
+	check(scene.roster.units.size() == 2 and scene.models.size() == 22, "scene adds roster entry")
+	scene.remove_roster_entry()
+	check(scene.roster.units.size() == 1 and scene.models.size() == 20, "scene removes roster entry")
+	scene.adjust_points_limit(-300)
+	check(scene.roster.points_limit == 1200, "scene rejects lower points limit below total")
+	scene.adjust_points_limit(-100)
+	check(scene.roster.points_limit == 1100, "scene lowers points limit within total")
+	scene.adjust_roster_count(-1)
+	check(scene.roster.units[0].count == 9 and scene.models.size() == 18, "scene applies roster count edit")
+	scene.adjust_roster_count(1)
+	check(scene.roster.units[0].count == 10 and scene.models.size() == 20, "scene restores roster count edit")
+	scene.save_state()
+	scene.roster.units[0].count = 1
+	scene.load_state()
+	check(scene.roster.units[0].count == 10 and scene.roster.points_limit == 1100 and scene.unit_profile.id == "custodian_guard_fixture", "saved state restores roster and profile")
+	scene.save_roster()
+	scene.roster.units[0].count = 1
+	scene.load_roster()
+	check(scene.roster.units[0].count == 10 and scene.roster.points_limit == 1100, "roster file round trip")
+	scene.save_state()
+	var corrupt_save := FileAccess.open("user://open_battle_save.json", FileAccess.WRITE)
+	corrupt_save.store_string(JSON.stringify({"command_log": [{"sequence": 4, "team": 0, "kind": "MOVE", "payload": {}}]}))
+	corrupt_save.close()
+	scene.load_state()
+	check(scene.message.begins_with("对局加载失败"), "corrupt save is rejected")
+	scene.save_state()
+	var invalid_phase_save := FileAccess.open("user://open_battle_save.json", FileAccess.WRITE)
+	invalid_phase_save.store_string(JSON.stringify({"active_team": 0, "phase": "UNKNOWN", "command_log": []}))
+	invalid_phase_save.close()
+	scene.load_state()
+	check(scene.message.begins_with("对局加载失败"), "invalid phase save is rejected")
+	scene.save_state()
+	scene.reset_table()
+	check(scene.models.size() == 20 and scene.selected == -1, "reset restores fixture")
+	# Mixed movement values must constrain every member, even when the fast model is selected.
+	var saved_terrain: Array = scene.terrain.duplicate(true)
+	scene.terrain = []
+	scene.models.clear()
+	scene.add_model(Vector2(6, 6), 0, "mixed", {"movement_inches": 8.0, "base_diameter_mm": 25.4, "wounds": 4, "toughness": 9, "save_on": 2, "objective_control": 3, "weapons": [{"name": "Snapshot weapon", "range_inches": 18, "damage": 2}]})
+	scene.add_model(Vector2(8, 6), 0, "mixed", {"movement_inches": 4.0, "base_diameter_mm": 25.4})
+	scene.models[0].spent = 1.0
+	scene.models[1].spent = 1.0
+	scene.selected = 0
+	scene.preview = Vector2(6, 10)
+	check(scene.preview_reason() == "MOVE LIMIT EXCEEDED", "fast leader cannot exceed slower member allowance")
+	check(is_equal_approx(scene.selected_unit_remaining_movement(), 3.0), "movement ring uses limiting member remaining allowance")
+	scene.dragging = true
+	scene.finish_drag()
+	check(scene.models[0].position == Vector2(6, 6) and scene.models[1].position == Vector2(8, 6) and scene.models[0].spent == 1.0, "illegal group move leaves every member unchanged")
+	scene.models[1].movement_inches = 8.0
+	scene.models[1].spent = 6.0
+	scene.preview = Vector2(6, 9)
+	check(scene.preview_reason() == "MOVE LIMIT EXCEEDED", "group movement checks each member spent budget")
+	scene.models[1].movement_inches = 4.0
+	scene.models[1].spent = 1.0
+	check(scene.preview_reason().is_empty(), "group can move exactly slower member remaining allowance")
+	scene.dragging = true
+	scene.finish_drag()
+	check(scene.models[0].position == Vector2(6, 9) and scene.models[1].position == Vector2(8, 9) and scene.models[1].spent == 4.0, "legal group move updates all positions and individual budgets")
+	scene.save_state()
+	scene.models[0].movement_inches = 99.0
+	scene.models[0].weapons = []
+	scene.load_state()
+	check(scene.models[0].movement_inches == 8.0 and scene.models[1].movement_inches == 4.0 and scene.models[1].spent == 4.0, "save restores individual movement allowances and spending")
+	check(scene.models[0].radius == 0.5 and scene.models[0].toughness == 9 and scene.models[0].save_on == 2 and scene.models[0].objective_control == 3 and scene.weapon_for_model(scene.models[0]).name == "Snapshot weapon", "save preserves per-model geometry defense control and weapon")
+	scene.selected = 0
+	scene.preview = Vector2(6, 10)
+	check(scene.preview_reason() == "MOVE LIMIT EXCEEDED" and is_zero_approx(scene.selected_unit_remaining_movement()), "load cannot refresh exhausted group movement budget")
+	scene.models[1].unit_id = "separate"
+	scene.preview = Vector2(6, 13)
+	check(scene.preview_reason().is_empty(), "single model uses own eight-inch allowance instead of fixture six")
+	scene.terrain = saved_terrain
+	scene.reset_table()
+	scene.save_state()
+	scene.queue_free()
+	await process_frame
+	print("RESULT: %d checks, %d failures" % [checks, failures])
+	quit(1 if failures else 0)

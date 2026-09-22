@@ -1,0 +1,16 @@
+{
+  "id": "dark_angels_11_cn",
+  "display_name": "黑暗天使",
+  "edition": 11,
+  "faction": "dark_angels_11_cn",
+  "source": {
+    "filename": "黑暗天使11版中文1.02.pdf",
+    "category": "faction",
+    "pages": 31,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

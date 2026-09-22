@@ -1,0 +1,16 @@
+{
+  "id": "deathwatch_unknown",
+  "display_name": "死亡守望（未标版本）",
+  "edition": 0,
+  "faction": "deathwatch_unknown",
+  "source": {
+    "filename": "死亡守望.pdf",
+    "category": "faction_unknown",
+    "pages": 26,
+    "status": "needs_version_check"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

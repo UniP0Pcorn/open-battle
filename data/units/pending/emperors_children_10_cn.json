@@ -1,0 +1,16 @@
+{
+  "id": "emperors_children_10_cn",
+  "display_name": "帝皇之子",
+  "edition": 10,
+  "faction": "emperors_children_10_cn",
+  "source": {
+    "filename": "帝皇之子10版中文老湿腐版1.06.pdf",
+    "category": "faction",
+    "pages": 42,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

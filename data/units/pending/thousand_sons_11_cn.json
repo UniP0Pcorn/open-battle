@@ -1,0 +1,16 @@
+{
+  "id": "thousand_sons_11_cn",
+  "display_name": "千子军团",
+  "edition": 11,
+  "faction": "thousand_sons_11_cn",
+  "source": {
+    "filename": "千子军团CODEX-双子星版 V1.13.pdf",
+    "category": "faction",
+    "pages": 54,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

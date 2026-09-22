@@ -1,0 +1,16 @@
+{
+  "id": "world_eaters_10_cn",
+  "display_name": "吞世者",
+  "edition": 10,
+  "faction": "world_eaters_10_cn",
+  "source": {
+    "filename": "吞世者10版中文DavidZ版1.05.pdf",
+    "category": "faction",
+    "pages": 49,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

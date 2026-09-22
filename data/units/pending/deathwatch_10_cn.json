@@ -1,0 +1,16 @@
+{
+  "id": "deathwatch_10_cn",
+  "display_name": "死亡守望 10.8",
+  "edition": 10,
+  "faction": "deathwatch_10_cn",
+  "source": {
+    "filename": "死亡守望 10.8.pdf",
+    "category": "faction",
+    "pages": 27,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

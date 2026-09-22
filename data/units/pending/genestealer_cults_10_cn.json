@@ -1,0 +1,16 @@
+{
+  "id": "genestealer_cults_10_cn",
+  "display_name": "基因窃取者",
+  "edition": 10,
+  "faction": "genestealer_cults_10_cn",
+  "source": {
+    "filename": "基因窃取者10版中文DavidZ版1.06.pdf",
+    "category": "faction",
+    "pages": 50,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

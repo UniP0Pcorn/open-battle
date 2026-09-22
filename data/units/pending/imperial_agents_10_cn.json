@@ -1,0 +1,16 @@
+{
+  "id": "imperial_agents_10_cn",
+  "display_name": "帝国特勤",
+  "edition": 10,
+  "faction": "imperial_agents_10_cn",
+  "source": {
+    "filename": "10E-帝国特勤2.0YAZE版.pdf",
+    "category": "faction",
+    "pages": 46,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "id": "custodian_guard_fixture",
+      "path": "res://data/units/custodian_guard_profile.json",
+      "edition": 11,
+      "faction": "prototype_gold",
+      "status": "ready"
+    },
+    {
+      "id": "adepta_sororitas_10_cn",
+      "path": "res://data/units/pending/adepta_sororitas_10_cn.json",
+      "edition": 10,
+      "faction": "adepta_sororitas_10_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "adepta_sororitas_11_unknown_filename",
+      "path": "res://data/units/pending/adepta_sororitas_11_unknown_filename.json",
+      "edition": 11,
+      "faction": "adepta_sororitas_11_unknown_filename",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "adeptus_custodes_10_cn",
+      "path": "res://data/units/pending/adeptus_custodes_10_cn.json",
+      "edition": 10,
+      "faction": "adeptus_custodes_10_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "black_templars_11_cn",
+      "path": "res://data/units/pending/black_templars_11_cn.json",
+      "edition": 11,
+      "faction": "black_templars_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "blood_angels_11_cn",
+      "path": "res://data/units/pending/blood_angels_11_cn.json",
+      "edition": 11,
+      "faction": "blood_angels_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "chaos_daemons_11_cn",
+      "path": "res://data/units/pending/chaos_daemons_11_cn.json",
+      "edition": 11,
+      "faction": "chaos_daemons_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "chaos_knights_11_cn",
+      "path": "res://data/units/pending/chaos_knights_11_cn.json",
+      "edition": 11,
+      "faction": "chaos_knights_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "chaos_marines_11_cn",
+      "path": "res://data/units/pending/chaos_marines_11_cn.json",
+      "edition": 11,
+      "faction": "chaos_marines_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "core_rules_11_cn",
+      "path": "res://data/units/pending/core_rules_11_cn.json",
+      "edition": 11,
+      "faction": "core_rules_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "dark_angels_11_cn",
+      "path": "res://data/units/pending/dark_angels_11_cn.json",
+      "edition": 11,
+      "faction": "dark_angels_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "death_guard_11_cn",
+      "path": "res://data/units/pending/death_guard_11_cn.json",
+      "edition": 11,
+      "faction": "death_guard_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "deathwatch_10_cn",
+      "path": "res://data/units/pending/deathwatch_10_cn.json",
+      "edition": 10,
+      "faction": "deathwatch_10_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "deathwatch_unknown",
+      "path": "res://data/units/pending/deathwatch_unknown.json",
+      "edition": 0,
+      "faction": "deathwatch_unknown",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "drukhari_11_cn",
+      "path": "res://data/units/pending/drukhari_11_cn.json",
+      "edition": 11,
+      "faction": "drukhari_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "emperors_children_10_cn",
+      "path": "res://data/units/pending/emperors_children_10_cn.json",
+      "edition": 10,
+      "faction": "emperors_children_10_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "genestealer_cults_10_cn",
+      "path": "res://data/units/pending/genestealer_cults_10_cn.json",
+      "edition": 10,
+      "faction": "genestealer_cults_10_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "grey_knights_10_cn",
+      "path": "res://data/units/pending/grey_knights_10_cn.json",
+      "edition": 10,
+      "faction": "grey_knights_10_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "imperial_agents_10_cn",
+      "path": "res://data/units/pending/imperial_agents_10_cn.json",
+      "edition": 10,
+      "faction": "imperial_agents_10_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "imperial_guard_11_cn",
+      "path": "res://data/units/pending/imperial_guard_11_cn.json",
+      "edition": 11,
+      "faction": "imperial_guard_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "imperial_knights_11_cn",
+      "path": "res://data/units/pending/imperial_knights_11_cn.json",
+      "edition": 11,
+      "faction": "imperial_knights_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "leagues_votann_11_cn",
+      "path": "res://data/units/pending/leagues_votann_11_cn.json",
+      "edition": 11,
+      "faction": "leagues_votann_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "mechanicus_11_cn",
+      "path": "res://data/units/pending/mechanicus_11_cn.json",
+      "edition": 11,
+      "faction": "mechanicus_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "necrons_11_cn",
+      "path": "res://data/units/pending/necrons_11_cn.json",
+      "edition": 11,
+      "faction": "necrons_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "orks_10_cn",
+      "path": "res://data/units/pending/orks_10_cn.json",
+      "edition": 10,
+      "faction": "orks_10_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "space_marines_11_cn",
+      "path": "res://data/units/pending/space_marines_11_cn.json",
+      "edition": 11,
+      "faction": "space_marines_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "space_wolves_11_cn",
+      "path": "res://data/units/pending/space_wolves_11_cn.json",
+      "edition": 11,
+      "faction": "space_wolves_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "tau_11_cn",
+      "path": "res://data/units/pending/tau_11_cn.json",
+      "edition": 11,
+      "faction": "tau_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "thousand_sons_11_cn",
+      "path": "res://data/units/pending/thousand_sons_11_cn.json",
+      "edition": 11,
+      "faction": "thousand_sons_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "tyranids_11_cn",
+      "path": "res://data/units/pending/tyranids_11_cn.json",
+      "edition": 11,
+      "faction": "tyranids_11_cn",
+      "status": "pending_extraction"
+    },
+    {
+      "id": "world_eaters_10_cn",
+      "path": "res://data/units/pending/world_eaters_10_cn.json",
+      "edition": 10,
+      "faction": "world_eaters_10_cn",
+      "status": "pending_extraction"
+    }
+  ]
+}

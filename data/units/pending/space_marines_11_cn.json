@@ -1,0 +1,16 @@
+{
+  "id": "space_marines_11_cn",
+  "display_name": "星际战士",
+  "edition": 11,
+  "faction": "space_marines_11_cn",
+  "source": {
+    "filename": "星际战士11版中文1.03.pdf",
+    "category": "faction",
+    "pages": 151,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

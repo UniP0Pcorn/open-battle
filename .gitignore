@@ -1,0 +1,14 @@
+.godot/
+builds/
+*.tmp
+
+# Local extraction and review workspace; regenerate with tools in this repository.
+/work/source_candidates/
+/work/profile_drafts/
+/work/imported_test*/
+/work/check_profile.gd
+/work/test_review.csv
+
+# Python bytecode cache
+tools/__pycache__/
+

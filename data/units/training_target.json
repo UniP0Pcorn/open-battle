@@ -1,0 +1,9 @@
+{
+  "id": "training_target_fixture",
+  "display_name": "Training Target",
+  "base_diameter_mm": 40.0,
+  "movement_inches": 0.0,
+  "toughness": 4,
+  "wounds": 3,
+  "provenance": "Original placeholder target for combat tests. Not an official unit or rules profile."
+}

@@ -1,0 +1,16 @@
+{
+  "id": "orks_10_cn",
+  "display_name": "兽人",
+  "edition": 10,
+  "faction": "orks_10_cn",
+  "source": {
+    "filename": "兽人10版中文老湿腐版1.11.pdf",
+    "category": "faction",
+    "pages": 74,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

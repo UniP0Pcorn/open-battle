@@ -1,0 +1,16 @@
+{
+  "id": "space_wolves_11_cn",
+  "display_name": "太空野狼",
+  "edition": 11,
+  "faction": "space_wolves_11_cn",
+  "source": {
+    "filename": "太空野狼11版中文1.01.pdf",
+    "category": "faction",
+    "pages": 34,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

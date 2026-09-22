@@ -1,0 +1,16 @@
+{
+  "id": "adepta_sororitas_10_cn",
+  "display_name": "战斗修女",
+  "edition": 10,
+  "faction": "adepta_sororitas_10_cn",
+  "source": {
+    "filename": "战斗修女10版中文DavidZ版1.08.pdf",
+    "category": "faction",
+    "pages": 52,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

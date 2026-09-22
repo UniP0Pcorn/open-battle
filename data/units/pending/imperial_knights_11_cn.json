@@ -1,0 +1,16 @@
+{
+  "id": "imperial_knights_11_cn",
+  "display_name": "帝国骑士",
+  "edition": 11,
+  "faction": "imperial_knights_11_cn",
+  "source": {
+    "filename": "帝国骑士 护民官版 1.1.pdf",
+    "category": "faction",
+    "pages": 47,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "black_templars_11_cn",
+  "display_name": "黑色圣堂",
+  "edition": 11,
+  "faction": "black_templars_11_cn",
+  "source": {
+    "filename": "黑色圣堂CODEX-双子星版 V1.20.pdf",
+    "category": "faction",
+    "pages": 33,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "mechanicus_11_cn",
+  "display_name": "机械修会",
+  "edition": 11,
+  "faction": "mechanicus_11_cn",
+  "source": {
+    "filename": "机械修会11版中文1.01.pdf",
+    "category": "faction",
+    "pages": 53,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

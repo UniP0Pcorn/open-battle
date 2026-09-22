@@ -1,0 +1,16 @@
+{
+  "id": "drukhari_11_cn",
+  "display_name": "黑暗灵族",
+  "edition": 11,
+  "faction": "drukhari_11_cn",
+  "source": {
+    "filename": "黑暗灵族11版中文1.0.pdf",
+    "category": "faction",
+    "pages": 55,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

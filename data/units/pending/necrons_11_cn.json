@@ -1,0 +1,16 @@
+{
+  "id": "necrons_11_cn",
+  "display_name": "太空死灵",
+  "edition": 11,
+  "faction": "necrons_11_cn",
+  "source": {
+    "filename": "11版太空死灵规则1.01.pdf",
+    "category": "faction",
+    "pages": 103,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

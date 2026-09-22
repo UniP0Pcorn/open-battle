@@ -1,0 +1,16 @@
+{
+  "id": "leagues_votann_11_cn",
+  "display_name": "沃坦",
+  "edition": 11,
+  "faction": "leagues_votann_11_cn",
+  "source": {
+    "filename": "11E沃坦index 分数更新6.17.pdf",
+    "category": "faction_points",
+    "pages": 60,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

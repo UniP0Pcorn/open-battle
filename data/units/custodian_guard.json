@@ -1,0 +1,19 @@
+{
+  "id": "custodian_guard_fixture",
+  "display_name": "Custodian Guard",
+  "base_diameter_mm": 40.0,
+  "model_count": 1,
+  "coherency_inches": 2.0,
+  "movement_inches": 6.0,
+  "toughness": 5,
+  "wounds": 3,
+  "weapon": {
+    "name": "Prototype guardian weapon",
+    "range_inches": 24.0,
+    "attacks": 2,
+    "hit_on": 3,
+    "strength": 5,
+    "damage": 2
+  },
+  "provenance": "User-requested test identity and base size. All combat values are configurable prototype fixtures, not verified official rules. No official rules text or artwork included."
+}

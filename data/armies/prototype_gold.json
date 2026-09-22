@@ -1,0 +1,10 @@
+{
+  "id": "prototype_gold",
+  "display_name": "Gold Prototype Roster",
+  "edition": 11,
+  "points_limit": 1000,
+  "units": [
+    {"unit_id": "custodian_guard_fixture", "count": 10, "points_each": 100}
+  ],
+  "provenance": "Prototype roster data. Points are placeholders and are not official game data."
+}

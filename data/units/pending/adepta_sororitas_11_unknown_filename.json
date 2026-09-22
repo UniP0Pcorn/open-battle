@@ -1,0 +1,16 @@
+{
+  "id": "adepta_sororitas_11_unknown_filename",
+  "display_name": "Adepta Sororitas（文件名 1.pdf）",
+  "edition": 11,
+  "faction": "adepta_sororitas_11_unknown_filename",
+  "source": {
+    "filename": "1.pdf",
+    "category": "faction",
+    "pages": 38,
+    "status": "metadata_identified"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

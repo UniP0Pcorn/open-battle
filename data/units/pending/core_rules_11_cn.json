@@ -1,0 +1,16 @@
+{
+  "id": "core_rules_11_cn",
+  "display_name": "11版核心规则简中",
+  "edition": 11,
+  "faction": "core_rules_11_cn",
+  "source": {
+    "filename": "11版核心规则简中 (2).pdf",
+    "category": "core_rules",
+    "pages": 88,
+    "status": "structure_mapped"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

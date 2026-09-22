@@ -1,0 +1,16 @@
+{
+  "id": "tau_11_cn",
+  "display_name": "钛帝国",
+  "edition": 11,
+  "faction": "tau_11_cn",
+  "source": {
+    "filename": "钛帝国11版规则-20260919.pdf",
+    "category": "faction",
+    "pages": 75,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

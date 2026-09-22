@@ -1,0 +1,16 @@
+{
+  "id": "death_guard_11_cn",
+  "display_name": "死亡守卫",
+  "edition": 11,
+  "faction": "death_guard_11_cn",
+  "source": {
+    "filename": "死亡守卫11版中文咸鱼罐头版v1.0.pdf",
+    "category": "faction",
+    "pages": 66,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

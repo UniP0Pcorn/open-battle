@@ -1,0 +1,4345 @@
+{
+  "schema_version": 1,
+  "source_file": "钛帝国11版规则-20260919.pdf",
+  "candidates": [
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 13,
+      "edition": "11",
+      "name": "影阳指挥官",
+      "statline": {
+        "m": "10”",
+        "t": "4",
+        "sv": "3+",
+        "w": "6",
+        "ld": "6+",
+        "oc": "1"
+      },
+      "weapons": [
+        {
+          "name": "箭弹发射器",
+          "range": "18”",
+          "attacks": "5",
+          "skill": "2+",
+          "strength": "3",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "高能融合炮[热熔2]",
+          "range": "18”",
+          "attacks": "1",
+          "skill": "2+",
+          "strength": "10",
+          "ap": "-4",
+          "damage": "D6",
+          "tags": [
+            "热熔2"
+          ]
+        },
+        {
+          "name": "轻型导弹仓",
+          "range": "24”",
+          "attacks": "2",
+          "skill": "2+",
+          "strength": "7",
+          "ap": "0",
+          "damage": "2",
+          "tags": []
+        },
+        {
+          "name": "脉冲手枪[手枪]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "3+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "手枪"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 100
+        }
+      ],
+      "keywords": [
+        "步兵",
+        "飞行",
+        "人物",
+        "史诗英雄",
+        "战斗服",
+        "影阳指挥官"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 14,
+      "edition": "11",
+      "name": "远见指挥官",
+      "statline": {
+        "m": "10”",
+        "t": "5",
+        "sv": "2+",
+        "w": "8",
+        "ld": "6+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "高能等离子步枪",
+          "range": "24”",
+          "attacks": "2",
+          "skill": "2+",
+          "strength": "8",
+          "ap": "-3",
+          "damage": "3",
+          "tags": []
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "keywords": [
+        "载具",
+        "机甲",
+        "飞行",
+        "人物",
+        "史诗英雄",
+        "战斗服",
+        "远见指挥官"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 15,
+      "edition": "11",
+      "name": "双矛",
+      "statline": {
+        "m": "10”",
+        "t": "6",
+        "sv": "2+",
+        "w": "8",
+        "ld": "6+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "融合歼灭者[热熔2]",
+          "range": "18”",
+          "attacks": "2",
+          "skill": "2+",
+          "strength": "10",
+          "ap": "-4",
+          "damage": "D6",
+          "tags": [
+            "热熔2"
+          ]
+        },
+        {
+          "name": "离子散射炮 — 标准[速射2]",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "2+",
+          "strength": "7",
+          "ap": "-2",
+          "damage": "2",
+          "tags": [
+            "速射2"
+          ]
+        },
+        {
+          "name": "离子散射炮 — 过载[危险，速射2]",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "2+",
+          "strength": "8",
+          "ap": "-3",
+          "damage": "3",
+          "tags": [
+            "危险，速射2"
+          ]
+        },
+        {
+          "name": "破片风暴发射系统[手枪]",
+          "range": "18”",
+          "attacks": "D6",
+          "skill": "2+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "手枪"
+          ]
+        },
+        {
+          "name": "并联脉冲爆裂枪[突击，双联]",
+          "range": "10”",
+          "attacks": "2",
+          "skill": "5+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "1",
+          "tags": [
+            "突击，双联"
+          ]
+        },
+        {
+          "name": "XV脉冲手枪[速射2]",
+          "range": "12”",
+          "attacks": "2",
+          "skill": "2+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "2",
+          "tags": [
+            "速射2"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 2,
+          "points": 205
+        }
+      ],
+      "keywords": [
+        "载具",
+        "机甲",
+        "飞行",
+        "人物",
+        "史诗英雄",
+        "战斗服",
+        "双矛"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 16,
+      "edition": "11",
+      "name": "(XV85)强执战斗服指挥官",
+      "statline": {
+        "m": "8”",
+        "t": "5",
+        "sv": "2+",
+        "w": "6",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "空爆榴弹发射器[爆炸，曲射]",
+          "range": "24”",
+          "attacks": "D6",
+          "skill": "3+",
+          "strength": "3",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "爆炸，曲射"
+          ]
+        },
+        {
+          "name": "爆裂速射炮",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "3+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "循环离子炮 — 标准",
+          "range": "18”",
+          "attacks": "3",
+          "skill": "3+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "循环离子炮 — 过载[危险]",
+          "range": "18”",
+          "attacks": "3",
+          "skill": "3+",
+          "strength": "8",
+          "ap": "-2",
+          "damage": "2",
+          "tags": [
+            "危险"
+          ]
+        },
+        {
+          "name": "融合炮[热熔2]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "3+",
+          "strength": "9",
+          "ap": "-4",
+          "damage": "D6",
+          "tags": [
+            "热熔2"
+          ]
+        },
+        {
+          "name": "导弹仓",
+          "range": "30”",
+          "attacks": "2",
+          "skill": "3+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": []
+        },
+        {
+          "name": "等离子步枪",
+          "range": "18”",
+          "attacks": "1",
+          "skill": "3+",
+          "strength": "8",
+          "ap": "-3",
+          "damage": "3",
+          "tags": []
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "keywords": [
+        "载具",
+        "机甲",
+        "飞行",
+        "人物",
+        "战斗服",
+        "强执战斗服指挥官"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 17,
+      "edition": "11",
+      "name": "(XV86)冷星战斗服指挥官",
+      "statline": {
+        "m": "12”",
+        "t": "5",
+        "sv": "3+",
+        "w": "6",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "空爆榴弹发射器[爆炸，曲射]",
+          "range": "24”",
+          "attacks": "D6",
+          "skill": "3+",
+          "strength": "3",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "爆炸，曲射"
+          ]
+        },
+        {
+          "name": "爆裂速射炮",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "3+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "循环离子炮 — 标准",
+          "range": "18”",
+          "attacks": "3",
+          "skill": "3+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "循环离子炮 — 过载[危险]",
+          "range": "18”",
+          "attacks": "3",
+          "skill": "3+",
+          "strength": "8",
+          "ap": "-2",
+          "damage": "2",
+          "tags": [
+            "危险"
+          ]
+        },
+        {
+          "name": "融合炮[热熔2]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "3+",
+          "strength": "9",
+          "ap": "-4",
+          "damage": "D6",
+          "tags": [
+            "热熔2"
+          ]
+        },
+        {
+          "name": "高输出爆裂速射炮",
+          "range": "18”",
+          "attacks": "8",
+          "skill": "3+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "导弹仓",
+          "range": "30”",
+          "attacks": "2",
+          "skill": "3+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": []
+        },
+        {
+          "name": "等离子步枪",
+          "range": "18”",
+          "attacks": "1",
+          "skill": "3+",
+          "strength": "8",
+          "ap": "-3",
+          "damage": "3",
+          "tags": []
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 95
+        }
+      ],
+      "keywords": [
+        "载具",
+        "机甲",
+        "飞行",
+        "人物",
+        "战斗服",
+        "冷星战斗服指挥官"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 18,
+      "edition": "11",
+      "name": "火刃队长",
+      "statline": {
+        "m": "6”",
+        "t": "3",
+        "sv": "4+",
+        "w": "3",
+        "ld": "7+",
+        "oc": "1"
+      },
+      "weapons": [
+        {
+          "name": "火刃脉冲步枪[速射1]",
+          "range": "30”",
+          "attacks": "1",
+          "skill": "3+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "2",
+          "tags": [
+            "速射1"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 50
+        }
+      ],
+      "keywords": [
+        "步兵",
+        "人物",
+        "手雷",
+        "火刃队长"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 19,
+      "edition": "11",
+      "name": "以太长老",
+      "statline": {
+        "m": "6”",
+        "t": "3",
+        "sv": "5+",
+        "w": "3",
+        "ld": "6+",
+        "oc": "1"
+      },
+      "weapons": [],
+      "points": [
+        {
+          "models": 1,
+          "points": 50
+        }
+      ],
+      "keywords": [
+        "步兵",
+        "人物",
+        "以太长老"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 20,
+      "edition": "11",
+      "name": "暗行者",
+      "statline": {
+        "m": "7”",
+        "t": "3",
+        "sv": "4+",
+        "w": "3",
+        "ld": "7+",
+        "oc": "1"
+      },
+      "weapons": [
+        {
+          "name": "暗影[突击]",
+          "range": "18”",
+          "attacks": "2",
+          "skill": "2+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "2",
+          "tags": [
+            "突击"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 60
+        }
+      ],
+      "keywords": [
+        "步兵",
+        "人物",
+        "史诗英雄",
+        "标记光",
+        "暗行者"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 21,
+      "edition": "11",
+      "name": "打击小队",
+      "statline": {
+        "m": "6”",
+        "t": "3",
+        "sv": "4+",
+        "w": "1",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "脉冲卡宾",
+          "range": "20”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "脉冲手枪[手枪]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "手枪"
+          ]
+        },
+        {
+          "name": "脉冲步枪[速射1]",
+          "range": "30”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "速射1"
+          ]
+        },
+        {
+          "name": "导弹炮台支援系统[曲射，双联]",
+          "range": "30”",
+          "attacks": "2",
+          "skill": "5+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "曲射，双联"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 10,
+          "points": 70
+        }
+      ],
+      "keywords": [
+        "步兵",
+        "战线",
+        "手雷",
+        "标记光",
+        "火战士",
+        "打击小队"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 22,
+      "edition": "11",
+      "name": "破袭小队",
+      "statline": {
+        "m": "6”",
+        "t": "3",
+        "sv": "4+",
+        "w": "1",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "脉冲爆裂枪[突击]",
+          "range": "10”",
+          "attacks": "2",
+          "skill": "3+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "1",
+          "tags": [
+            "突击"
+          ]
+        },
+        {
+          "name": "脉冲手枪[手枪]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "手枪"
+          ]
+        },
+        {
+          "name": "导弹炮台支援系统[曲射，双联]",
+          "range": "30”",
+          "attacks": "2",
+          "skill": "5+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "曲射，双联"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 10,
+          "points": 90
+        }
+      ],
+      "keywords": [
+        "步兵",
+        "战线",
+        "手雷",
+        "标记光",
+        "火战士",
+        "破袭小队"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 23,
+      "edition": "11",
+      "name": "(XV8)危机日铸战斗服小队",
+      "statline": {
+        "m": "10”",
+        "t": "5",
+        "sv": "3+",
+        "w": "4",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "融合炮[热熔2]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "9",
+          "ap": "-4",
+          "damage": "D6",
+          "tags": [
+            "热熔2"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 3,
+          "points": 125
+        },
+        {
+          "models": 3,
+          "points": 135
+        }
+      ],
+      "keywords": [
+        "载具",
+        "机甲",
+        "飞行",
+        "战斗服",
+        "危机",
+        "日铸"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 24,
+      "edition": "11",
+      "name": "(XV8)危机火刃战斗服小队",
+      "statline": {
+        "m": "10”",
+        "t": "5",
+        "sv": "3+",
+        "w": "4",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "导弹仓",
+          "range": "30”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": []
+        },
+        {
+          "name": "等离子步枪",
+          "range": "18”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-3",
+          "damage": "3",
+          "tags": []
+        }
+      ],
+      "points": [
+        {
+          "models": 3,
+          "points": 100
+        },
+        {
+          "models": 3,
+          "points": 110
+        }
+      ],
+      "keywords": [
+        "载具",
+        "机甲",
+        "飞行",
+        "战斗服",
+        "危机",
+        "火刃"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 25,
+      "edition": "11",
+      "name": "(XV8)危机星镰战斗服小队",
+      "statline": {
+        "m": "10”",
+        "t": "5",
+        "sv": "3+",
+        "w": "4",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "爆裂速射炮",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        }
+      ],
+      "points": [
+        {
+          "models": 3,
+          "points": 90
+        },
+        {
+          "models": 3,
+          "points": 100
+        }
+      ],
+      "keywords": [
+        "载具",
+        "机甲",
+        "飞行",
+        "战斗服",
+        "危机",
+        "星镰"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 26,
+      "edition": "11",
+      "name": "(XV26)潜行战斗服小队",
+      "statline": {
+        "m": "8”",
+        "t": "4",
+        "sv": "3+",
+        "w": "2",
+        "ld": "7+",
+        "oc": "1"
+      },
+      "weapons": [
+        {
+          "name": "爆裂速射炮",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "融合炮[热熔2]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "9",
+          "ap": "-4",
+          "damage": "D6",
+          "tags": [
+            "热熔2"
+          ]
+        },
+        {
+          "name": "脉冲手枪[手枪]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "手枪"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 5,
+          "points": 100
+        },
+        {
+          "models": 5,
+          "points": 110
+        }
+      ],
+      "keywords": [
+        "步兵",
+        "飞行",
+        "战斗服",
+        "手雷",
+        "标记光",
+        "潜行"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 27,
+      "edition": "11",
+      "name": "(XV95)鬼覆战斗服",
+      "statline": {
+        "m": "10”",
+        "t": "8",
+        "sv": "2+",
+        "w": "12",
+        "ld": "7+",
+        "oc": "3"
+      },
+      "weapons": [
+        {
+          "name": "循环离子纵射炮 — 标准",
+          "range": "36”",
+          "attacks": "6",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": []
+        },
+        {
+          "name": "循环离子纵射炮 — 过载[危险]",
+          "range": "36”",
+          "attacks": "6",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-2",
+          "damage": "3",
+          "tags": [
+            "危险"
+          ]
+        },
+        {
+          "name": "融合加速炮[热熔2]",
+          "range": "18”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "12",
+          "ap": "-4",
+          "damage": "D6",
+          "tags": [
+            "热熔2"
+          ]
+        },
+        {
+          "name": "并联爆裂速射炮[双联]",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "双联"
+          ]
+        },
+        {
+          "name": "并联融合炮[热熔2，双联]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "9",
+          "ap": "-4",
+          "damage": "D6",
+          "tags": [
+            "热熔2，双联"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 150
+        },
+        {
+          "models": 1,
+          "points": 160
+        }
+      ],
+      "keywords": [
+        "载具",
+        "机甲",
+        "飞行",
+        "烟雾弹",
+        "战斗服",
+        "鬼覆"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 28,
+      "edition": "11",
+      "name": "寻路者小队",
+      "statline": {
+        "m": "7”",
+        "t": "3",
+        "sv": "4+",
+        "w": "1",
+        "ld": "7+",
+        "oc": "1"
+      },
+      "weapons": [
+        {
+          "name": "兵蜂爆裂速射炮",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "5+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "离子步枪 — 标准[重型]",
+          "range": "30”",
+          "attacks": "3",
+          "skill": "5+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "1",
+          "tags": [
+            "重型"
+          ]
+        },
+        {
+          "name": "离子步枪 — 过载[危险，重型]",
+          "range": "30”",
+          "attacks": "3",
+          "skill": "5+",
+          "strength": "8",
+          "ap": "-2",
+          "damage": "2",
+          "tags": [
+            "危险，重型"
+          ]
+        },
+        {
+          "name": "脉冲卡宾",
+          "range": "20”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "脉冲手枪[手枪]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "手枪"
+          ]
+        },
+        {
+          "name": "磁轨步枪[毁灭伤害，重型]",
+          "range": "30”",
+          "attacks": "1",
+          "skill": "5+",
+          "strength": "10",
+          "ap": "-4",
+          "damage": "3",
+          "tags": [
+            "毁灭伤害，重型"
+          ]
+        },
+        {
+          "name": "[针对载具4+，毁灭伤害]",
+          "range": "18”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "3",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "针对载具4+，毁灭伤害"
+          ]
+        },
+        {
+          "name": "半自动榴弹发射器 — 融合手雷",
+          "range": "18”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "3",
+          "tags": []
+        }
+      ],
+      "points": [
+        {
+          "models": 10,
+          "points": 80
+        }
+      ],
+      "keywords": [
+        "步兵",
+        "手雷",
+        "标记光",
+        "寻路者小队"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 29,
+      "edition": "11",
+      "name": "神射手小队",
+      "statline": {
+        "m": "6”",
+        "t": "3",
+        "sv": "4+",
+        "w": "4",
+        "ld": "7+",
+        "oc": "3"
+      },
+      "weapons": [
+        {
+          "name": "长距离脉冲步枪[重型，精准]",
+          "range": "36”",
+          "attacks": "3",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "-1",
+          "damage": "2",
+          "tags": [
+            "重型，精准"
+          ]
+        },
+        {
+          "name": "脉冲手枪[手枪]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "3+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "手枪"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 55
+        }
+      ],
+      "keywords": [
+        "步兵",
+        "人物",
+        "标记光",
+        "神射手小队"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 30,
+      "edition": "11",
+      "name": "胡蜂人尖翼小队",
+      "statline": {
+        "m": "12”",
+        "t": "4",
+        "sv": "4+",
+        "w": "1",
+        "ld": "7+",
+        "oc": "1"
+      },
+      "weapons": [
+        {
+          "name": "中子爆破枪[突击]",
+          "range": "18”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "-2",
+          "damage": "2",
+          "tags": [
+            "突击"
+          ]
+        },
+        {
+          "name": "中子榴弹发射器[针对步兵3+，爆炸]",
+          "range": "18”",
+          "attacks": "D6",
+          "skill": "4+",
+          "strength": "4",
+          "ap": "-1",
+          "damage": "2",
+          "tags": [
+            "针对步兵3+，爆炸"
+          ]
+        },
+        {
+          "name": "中子磁轨步枪[毁灭伤害]",
+          "range": "30”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "10",
+          "ap": "-4",
+          "damage": "3",
+          "tags": [
+            "毁灭伤害"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 5,
+          "points": 70
+        },
+        {
+          "models": 10,
+          "points": 115
+        }
+      ],
+      "keywords": [
+        "步兵",
+        "飞行",
+        "胡蜂人尖翼小队"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 31,
+      "edition": "11",
+      "name": "克鲁特寻迹塑形者",
+      "statline": {
+        "m": "7”",
+        "t": "3",
+        "sv": "6+",
+        "w": "3",
+        "ld": "7+",
+        "oc": "1"
+      },
+      "weapons": [
+        {
+          "name": "克鲁特步枪[速射1]",
+          "range": "24”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "4",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "速射1"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 50
+        }
+      ],
+      "keywords": [
+        "步兵",
+        "人物",
+        "克鲁特",
+        "塑形者",
+        "寻迹塑形者"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 32,
+      "edition": "11",
+      "name": "克鲁特战争塑形者",
+      "statline": {
+        "m": "7”",
+        "t": "3",
+        "sv": "6+",
+        "w": "3",
+        "ld": "7+",
+        "oc": "1"
+      },
+      "weapons": [
+        {
+          "name": "三刃镖弓[针对步兵3+，突击，重型]",
+          "range": "24”",
+          "attacks": "D3+1",
+          "skill": "4+",
+          "strength": "4",
+          "ap": "0",
+          "damage": "2",
+          "tags": [
+            "针对步兵3+，突击，重型"
+          ]
+        },
+        {
+          "name": "克鲁特手枪[手枪]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "4",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "手枪"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 60
+        }
+      ],
+      "keywords": [
+        "步兵",
+        "人物",
+        "克鲁特",
+        "塑形者",
+        "战争塑形者"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 33,
+      "edition": "11",
+      "name": "克鲁特血肉塑形者",
+      "statline": {
+        "m": "7”",
+        "t": "3",
+        "sv": "6+",
+        "w": "3",
+        "ld": "7+",
+        "oc": "1"
+      },
+      "weapons": [
+        {
+          "name": "克鲁特霰弹枪[突击]",
+          "range": "12”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "4",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "突击"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 45
+        }
+      ],
+      "keywords": [
+        "步兵",
+        "人物",
+        "克鲁特",
+        "塑形者",
+        "血肉塑形者"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 34,
+      "edition": "11",
+      "name": "克鲁特独矛",
+      "statline": {
+        "m": "12”",
+        "t": "5",
+        "sv": "5+",
+        "w": "6",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "爆破标枪[突击，爆炸]",
+          "range": "18”",
+          "attacks": "D6",
+          "skill": "4+",
+          "strength": "10",
+          "ap": "-2",
+          "damage": "2",
+          "tags": [
+            "突击，爆炸"
+          ]
+        },
+        {
+          "name": "克鲁特长铳[重型，精准]",
+          "range": "36”",
+          "attacks": "1",
+          "skill": "3+",
+          "strength": "6",
+          "ap": "-2",
+          "damage": "3",
+          "tags": [
+            "重型，精准"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "keywords": [
+        "骑乘",
+        "人物",
+        "克鲁特",
+        "独矛"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 35,
+      "edition": "11",
+      "name": "克鲁特食肉者小队",
+      "statline": {
+        "m": "7”",
+        "t": "3",
+        "sv": "6+",
+        "w": "1",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "纠缠炸弹发射器[爆炸]",
+          "range": "24”",
+          "attacks": "D3",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "爆炸"
+          ]
+        },
+        {
+          "name": "克鲁特手枪[手枪]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "4",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "手枪"
+          ]
+        },
+        {
+          "name": "克鲁特步枪[速射1]",
+          "range": "24”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "4",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "速射1"
+          ]
+        },
+        {
+          "name": "克鲁特卡宾枪",
+          "range": "18”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "4",
+          "ap": "0",
+          "damage": "2",
+          "tags": []
+        }
+      ],
+      "points": [
+        {
+          "models": 10,
+          "points": 65
+        },
+        {
+          "models": 10,
+          "points": 130
+        }
+      ],
+      "keywords": [
+        "步兵",
+        "手雷",
+        "克鲁特",
+        "食肉者小队"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 36,
+      "edition": "11",
+      "name": "克鲁特猿兽骑兵小队",
+      "statline": {
+        "m": "7”",
+        "t": "6",
+        "sv": "5+",
+        "w": "5",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "转轮炮[速射2]",
+          "range": "36”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": [
+            "速射2"
+          ]
+        },
+        {
+          "name": "纠缠炮[爆炸，重型]",
+          "range": "36”",
+          "attacks": "D6+1",
+          "skill": "4+",
+          "strength": "6",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "爆炸，重型"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 45
+        },
+        {
+          "models": 2,
+          "points": 60
+        },
+        {
+          "models": 3,
+          "points": 90
+        }
+      ],
+      "keywords": [
+        "骑乘",
+        "手雷",
+        "克鲁特",
+        "克鲁特猿兽骑兵小队"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 37,
+      "edition": "11",
+      "name": "克鲁特狂兽小队",
+      "statline": {
+        "m": "7”",
+        "t": "6",
+        "sv": "5+",
+        "w": "5",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "克鲁特手枪与狩猎标枪[突击，手枪]",
+          "range": "12”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "4",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "突击，手枪"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 3,
+          "points": 85
+        },
+        {
+          "models": 6,
+          "points": 170
+        },
+        {
+          "models": 3,
+          "points": 95
+        },
+        {
+          "models": 6,
+          "points": 180
+        }
+      ],
+      "keywords": [
+        "骑乘",
+        "手雷",
+        "克鲁特",
+        "克鲁特狂兽骑兵小队"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 38,
+      "edition": "11",
+      "name": "克鲁特猎犬队",
+      "statline": {
+        "m": "12”",
+        "t": "3",
+        "sv": "6+",
+        "w": "1",
+        "ld": "8+",
+        "oc": "0"
+      },
+      "weapons": [],
+      "points": [
+        {
+          "models": 5,
+          "points": 45
+        },
+        {
+          "models": 10,
+          "points": 65
+        }
+      ],
+      "keywords": [
+        "野兽",
+        "克鲁特",
+        "猎犬队"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 40,
+      "edition": "11",
+      "name": "(TX4)水虎鱼",
+      "statline": {
+        "m": "14”",
+        "t": "7",
+        "sv": "4+",
+        "w": "7",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "水虎鱼爆裂速射炮",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "水虎鱼融合炮[热熔4]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "9",
+          "ap": "-4",
+          "damage": "D6",
+          "tags": [
+            "热熔4"
+          ]
+        },
+        {
+          "name": "寻觅者导弹[一次性]",
+          "range": "48”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "14",
+          "ap": "-3",
+          "damage": "D6+1",
+          "tags": [
+            "一次性"
+          ]
+        },
+        {
+          "name": "并联脉冲卡宾[双联，突击]",
+          "range": "20”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "双联，突击"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 65
+        },
+        {
+          "models": 2,
+          "points": 110
+        },
+        {
+          "models": 3,
+          "points": 165
+        },
+        {
+          "models": 1,
+          "points": 75
+        },
+        {
+          "models": 2,
+          "points": 120
+        },
+        {
+          "models": 3,
+          "points": 175
+        }
+      ],
+      "keywords": [
+        "载具",
+        "飞行",
+        "水虎鱼"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 41,
+      "edition": "11",
+      "name": "(XV88)炮击战斗服小队",
+      "statline": {
+        "m": "5”",
+        "t": "6",
+        "sv": "2+",
+        "w": "8",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "重型磁轨枪[重型，毁灭伤害]",
+          "range": "60”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "12",
+          "ap": "-4",
+          "damage": "D6+1",
+          "tags": [
+            "重型，毁灭伤害"
+          ]
+        },
+        {
+          "name": "集束导弹仓[双联]",
+          "range": "30”",
+          "attacks": "6",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": [
+            "双联"
+          ]
+        },
+        {
+          "name": "寻觅者导弹[一次性]",
+          "range": "48”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "14",
+          "ap": "-3",
+          "damage": "D6+1",
+          "tags": [
+            "一次性"
+          ]
+        },
+        {
+          "name": "并联等离子步枪[双联]",
+          "range": "18”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-3",
+          "damage": "3",
+          "tags": [
+            "双联"
+          ]
+        },
+        {
+          "name": "并联智能导弹系统[曲射，双联]",
+          "range": "30”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "曲射，双联"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        },
+        {
+          "models": 2,
+          "points": 150
+        },
+        {
+          "models": 3,
+          "points": 240
+        },
+        {
+          "models": 1,
+          "points": 95
+        },
+        {
+          "models": 2,
+          "points": 170
+        },
+        {
+          "models": 3,
+          "points": 260
+        }
+      ],
+      "keywords": [
+        "载具",
+        "机甲",
+        "战斗服",
+        "炮击"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 42,
+      "edition": "11",
+      "name": "(XV104)激流战斗服",
+      "statline": {
+        "m": "10”",
+        "t": "9",
+        "sv": "2+",
+        "w": "14",
+        "ld": "7+",
+        "oc": "4"
+      },
+      "weapons": [
+        {
+          "name": "重型爆裂速射炮",
+          "range": "36”",
+          "attacks": "12",
+          "skill": "4+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "2",
+          "tags": []
+        },
+        {
+          "name": "离子加速器 — 标准",
+          "range": "72”",
+          "attacks": "6",
+          "skill": "4+",
+          "strength": "9",
+          "ap": "-2",
+          "damage": "3",
+          "tags": []
+        },
+        {
+          "name": "离子加速器 — 过载[危险]",
+          "range": "72”",
+          "attacks": "6",
+          "skill": "4+",
+          "strength": "10",
+          "ap": "-3",
+          "damage": "4",
+          "tags": [
+            "危险"
+          ]
+        },
+        {
+          "name": "并联融合炮[热熔2，双联]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "9",
+          "ap": "-4",
+          "damage": "D6",
+          "tags": [
+            "热熔2，双联"
+          ]
+        },
+        {
+          "name": "并联等离子步枪[双联]",
+          "range": "18”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-3",
+          "damage": "3",
+          "tags": [
+            "双联"
+          ]
+        },
+        {
+          "name": "并联智能导弹系统[曲射，双联]",
+          "range": "30”",
+          "attacks": "3",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "曲射，双联"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 180
+        },
+        {
+          "models": 1,
+          "points": 210
+        }
+      ],
+      "keywords": [
+        "载具",
+        "机甲",
+        "飞行",
+        "战斗服",
+        "激流"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 43,
+      "edition": "11",
+      "name": "锤头鲨炮艇",
+      "statline": {
+        "m": "10”",
+        "t": "10",
+        "sv": "3+",
+        "w": "14",
+        "ld": "7+",
+        "oc": "3"
+      },
+      "weapons": [
+        {
+          "name": "挂载爆裂速射炮",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "离子加农 — 标准[爆炸]",
+          "range": "60”",
+          "attacks": "D6+3",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": [
+            "爆炸"
+          ]
+        },
+        {
+          "name": "离子加农 — 过载[爆炸，危险]",
+          "range": "60”",
+          "attacks": "D6+3",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-2",
+          "damage": "3",
+          "tags": [
+            "爆炸，危险"
+          ]
+        },
+        {
+          "name": "磁轨炮[毁灭伤害，重型]",
+          "range": "72”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "20",
+          "ap": "-5",
+          "damage": "D6+6",
+          "tags": [
+            "毁灭伤害，重型"
+          ]
+        },
+        {
+          "name": "寻觅者导弹[一次性]",
+          "range": "48”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "14",
+          "ap": "-3",
+          "damage": "D6+1",
+          "tags": [
+            "一次性"
+          ]
+        },
+        {
+          "name": "并联脉冲卡宾[突击，双联]",
+          "range": "20”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "突击，双联"
+          ]
+        },
+        {
+          "name": "智能导弹系统[曲射]",
+          "range": "30”",
+          "attacks": "3",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "曲射"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 140
+        },
+        {
+          "models": 1,
+          "points": 150
+        }
+      ],
+      "keywords": [
+        "载具",
+        "飞行",
+        "锤头鲨炮艇"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 44,
+      "edition": "11",
+      "name": "魟",
+      "statline": {
+        "m": "10”",
+        "t": "10",
+        "sv": "3+",
+        "w": "14",
+        "ld": "7+",
+        "oc": "3"
+      },
+      "weapons": [
+        {
+          "name": "挂载爆裂速射炮",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "寻觅者导弹发射架[双联]",
+          "range": "48”",
+          "attacks": "3",
+          "skill": "4+",
+          "strength": "14",
+          "ap": "-3",
+          "damage": "D6+1",
+          "tags": [
+            "双联"
+          ]
+        },
+        {
+          "name": "并联脉冲卡宾[突击，双联]",
+          "range": "20”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "突击，双联"
+          ]
+        },
+        {
+          "name": "智能导弹系统[曲射]",
+          "range": "30”",
+          "attacks": "3",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "曲射"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 140
+        }
+      ],
+      "keywords": [
+        "载具",
+        "飞行",
+        "标记光",
+        "天 炮艇"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 45,
+      "edition": "11",
+      "name": "(TY7)魔鬼鱼",
+      "statline": {
+        "m": "12”",
+        "t": "9",
+        "sv": "3+",
+        "w": "13",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "挂载爆裂速射炮",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "寻觅者导弹[一次性]",
+          "range": "48”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "14",
+          "ap": "-3",
+          "damage": "D6+1",
+          "tags": [
+            "一次性"
+          ]
+        },
+        {
+          "name": "并联脉冲卡宾[突击，双联]",
+          "range": "20”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "突击，双联"
+          ]
+        },
+        {
+          "name": "智能导弹系统[曲射]",
+          "range": "30”",
+          "attacks": "3",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "曲射"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 85
+        }
+      ],
+      "keywords": [
+        "载具",
+        "飞行",
+        "运输",
+        "专属运输",
+        "魔鬼鱼"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 48,
+      "edition": "11",
+      "name": "(KV128)雷暴",
+      "statline": {
+        "m": "8”",
+        "t": "11",
+        "sv": "2+",
+        "w": "20",
+        "ld": "7+",
+        "oc": "6"
+      },
+      "weapons": [
+        {
+          "name": "集束火箭系统[爆炸，重型]",
+          "range": "48”",
+          "attacks": "4D6",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "爆炸，重型"
+          ]
+        },
+        {
+          "name": "毁灭者导弹[重型]",
+          "range": "72”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "16",
+          "ap": "-4",
+          "damage": "D6+2",
+          "tags": [
+            "重型"
+          ]
+        },
+        {
+          "name": "脉冲爆裂炮 — 聚焦[重型]",
+          "range": "24”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "24",
+          "ap": "-6",
+          "damage": "12",
+          "tags": [
+            "重型"
+          ]
+        },
+        {
+          "name": "脉冲爆裂炮 — 散射[重型]",
+          "range": "48”",
+          "attacks": "6",
+          "skill": "4+",
+          "strength": "10",
+          "ap": "-2",
+          "damage": "4",
+          "tags": [
+            "重型"
+          ]
+        },
+        {
+          "name": "脉冲驱动炮[爆炸，重型]",
+          "range": "72”",
+          "attacks": "D6+3",
+          "skill": "4+",
+          "strength": "12",
+          "ap": "-3",
+          "damage": "3",
+          "tags": [
+            "爆炸，重型"
+          ]
+        },
+        {
+          "name": "并联爆裂速射炮[重型，双联]",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "重型，双联"
+          ]
+        },
+        {
+          "name": "并联智能导弹系统[重型，曲射，双联]",
+          "range": "30”",
+          "attacks": "3",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "重型，曲射，双联"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 360
+        },
+        {
+          "models": 1,
+          "points": 385
+        }
+      ],
+      "keywords": [
+        "载具",
+        "机甲",
+        "巨型",
+        "高耸",
+        "雷暴"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 49,
+      "edition": "11",
+      "name": "潮汐护盾墙",
+      "statline": {
+        "m": "4”",
+        "t": "8",
+        "sv": "3+",
+        "w": "10",
+        "ld": "7+",
+        "oc": "0"
+      },
+      "weapons": [],
+      "points": [
+        {
+          "models": 1,
+          "points": 85
+        }
+      ],
+      "keywords": [
+        "工事",
+        "载具",
+        "运输",
+        "飞行",
+        "潮汐护盾墙"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 50,
+      "edition": "11",
+      "name": "潮汐兵蜂平台",
+      "statline": {
+        "m": "4”",
+        "t": "8",
+        "sv": "3+",
+        "w": "10",
+        "ld": "7+",
+        "oc": "0"
+      },
+      "weapons": [
+        {
+          "name": "兵蜂守护者[突击，双联]",
+          "range": "20”",
+          "attacks": "8",
+          "skill": "5+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "突击，双联"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 85
+        }
+      ],
+      "keywords": [
+        "工事",
+        "载具",
+        "运输",
+        "飞行",
+        "潮汐兵蜂平台"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 51,
+      "edition": "11",
+      "name": "潮汐炮台",
+      "statline": {
+        "m": "4”",
+        "t": "8",
+        "sv": "3+",
+        "w": "14",
+        "ld": "7+",
+        "oc": "0"
+      },
+      "weapons": [
+        {
+          "name": "超电磁炮[毁灭伤害，双联]",
+          "range": "72”",
+          "attacks": "1",
+          "skill": "5+",
+          "strength": "20",
+          "ap": "-5",
+          "damage": "D6+6",
+          "tags": [
+            "毁灭伤害，双联"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 90
+        }
+      ],
+      "keywords": [
+        "工事",
+        "载具",
+        "运输",
+        "飞行",
+        "潮汐炮台"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 52,
+      "edition": "11",
+      "name": "虎鲨",
+      "statline": {
+        "m": "-",
+        "t": "11",
+        "sv": "3+",
+        "w": "18",
+        "ld": "7+",
+        "oc": "-"
+      },
+      "weapons": [
+        {
+          "name": "爆裂速射炮",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "循环离子炮 — 标准",
+          "range": "18”",
+          "attacks": "3",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "循环离子炮 — 过载[危险]",
+          "range": "18”",
+          "attacks": "3",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-2",
+          "damage": "2",
+          "tags": [
+            "危险"
+          ]
+        },
+        {
+          "name": "离子加农 — 标准[爆炸]",
+          "range": "60”",
+          "attacks": "D6+3",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": [
+            "爆炸"
+          ]
+        },
+        {
+          "name": "离子加农 — 过载[爆炸，危险]",
+          "range": "60”",
+          "attacks": "D6+3",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-2",
+          "damage": "3",
+          "tags": [
+            "爆炸，危险"
+          ]
+        },
+        {
+          "name": "导弹仓",
+          "range": "30”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": []
+        },
+        {
+          "name": "寻觅者导弹[一次性]",
+          "range": "48”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "14",
+          "ap": "-3",
+          "damage": "D6+1",
+          "tags": [
+            "一次性"
+          ]
+        },
+        {
+          "name": "空矛导弹发射器[针对飞行3+，爆炸]",
+          "range": "72”",
+          "attacks": "D6+1",
+          "skill": "4+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "1",
+          "tags": [
+            "针对飞行3+，爆炸"
+          ]
+        },
+        {
+          "name": "高速爆裂速射炮",
+          "range": "36”",
+          "attacks": "16",
+          "skill": "4+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "高速磁轨炮[毁灭伤害]",
+          "range": "72”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "20",
+          "ap": "-5",
+          "damage": "D6+6",
+          "tags": [
+            "毁灭伤害"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 325
+        },
+        {
+          "models": 1,
+          "points": 375
+        }
+      ],
+      "keywords": [
+        "载具",
+        "飞行器",
+        "飞行",
+        "外壳",
+        "虎鲨"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 53,
+      "edition": "11",
+      "name": "虎鲨AX-1-0",
+      "statline": {
+        "m": "-",
+        "t": "11",
+        "sv": "3+",
+        "w": "18",
+        "ld": "7+",
+        "oc": "-"
+      },
+      "weapons": [
+        {
+          "name": "爆裂速射炮",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "循环离子炮 — 标准",
+          "range": "18”",
+          "attacks": "3",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "循环离子炮 — 过载[危险]",
+          "range": "18”",
+          "attacks": "3",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-2",
+          "damage": "2",
+          "tags": [
+            "危险"
+          ]
+        },
+        {
+          "name": "导弹仓",
+          "range": "30”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": []
+        },
+        {
+          "name": "寻觅者导弹[一次性]",
+          "range": "48”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "14",
+          "ap": "-3",
+          "damage": "D6+1",
+          "tags": [
+            "一次性"
+          ]
+        },
+        {
+          "name": "并联重型磁轨加农[毁灭伤害,双联]",
+          "range": "120”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "26",
+          "ap": "-5",
+          "damage": "12",
+          "tags": [
+            "毁灭伤害,双联"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 315
+        },
+        {
+          "models": 1,
+          "points": 375
+        }
+      ],
+      "keywords": [
+        "载具",
+        "飞行器",
+        "飞行",
+        "外壳",
+        "虎鲨AX-1-0"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 54,
+      "edition": "11",
+      "name": "(KX139)塔'钨钠至高装甲",
+      "statline": {
+        "m": "8”",
+        "t": "13",
+        "sv": "2+",
+        "w": "30",
+        "ld": "7+",
+        "oc": "10"
+      },
+      "weapons": [
+        {
+          "name": "爆裂速射炮",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "集束炮阵[爆炸]",
+          "range": "24”",
+          "attacks": "2D6+6",
+          "skill": "4+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "1",
+          "tags": [
+            "爆炸"
+          ]
+        },
+        {
+          "name": "核融泯灭炮[热熔3]",
+          "range": "24”",
+          "attacks": "5",
+          "skill": "4+",
+          "strength": "10",
+          "ap": "-4",
+          "damage": "D6",
+          "tags": [
+            "热熔3"
+          ]
+        },
+        {
+          "name": "重型磁轨加农炮阵[毁灭伤害，重型]",
+          "range": "120”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "26",
+          "ap": "-5",
+          "damage": "16",
+          "tags": [
+            "毁灭伤害，重型"
+          ]
+        },
+        {
+          "name": "奈克瑟斯导弹发射器",
+          "range": "36”",
+          "attacks": "8",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-3",
+          "damage": "2",
+          "tags": []
+        },
+        {
+          "name": "脉冲炮击系统[针对步兵2+]",
+          "range": "60”",
+          "attacks": "8",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "-1",
+          "damage": "3",
+          "tags": [
+            "针对步兵2+"
+          ]
+        },
+        {
+          "name": "智能导弹系统[曲射]",
+          "range": "30”",
+          "attacks": "3",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "曲射"
+          ]
+        },
+        {
+          "name": "三轴离子加农炮 — 标准[爆炸]",
+          "range": "36”",
+          "attacks": "D6+3",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-2",
+          "damage": "2",
+          "tags": [
+            "爆炸"
+          ]
+        },
+        {
+          "name": "三轴离子加农炮 — 过载[爆炸，危险]",
+          "range": "36”",
+          "attacks": "D6+3",
+          "skill": "4+",
+          "strength": "9",
+          "ap": "-3",
+          "damage": "3",
+          "tags": [
+            "爆炸，危险"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 790
+        },
+        {
+          "models": 1,
+          "points": 890
+        }
+      ],
+      "keywords": [
+        "载具",
+        "机甲",
+        "巨型",
+        "高耸",
+        "外壳",
+        "塔'钨钠至高装甲"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 55,
+      "edition": "11",
+      "name": "蝠鲼",
+      "statline": {
+        "m": "40”",
+        "t": "14",
+        "sv": "2+",
+        "w": "60",
+        "ld": "7+",
+        "oc": "-"
+      },
+      "weapons": [
+        {
+          "name": "重型磁轨加农[毁灭伤害]",
+          "range": "120”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "26",
+          "ap": "-5",
+          "damage": "12",
+          "tags": [
+            "毁灭伤害"
+          ]
+        },
+        {
+          "name": "离子加农 — 标准[爆炸]",
+          "range": "60”",
+          "attacks": "D6+3",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": [
+            "爆炸"
+          ]
+        },
+        {
+          "name": "离子加农 — 过载[爆炸，危险]",
+          "range": "60”",
+          "attacks": "D6+3",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-2",
+          "damage": "3",
+          "tags": [
+            "爆炸，危险"
+          ]
+        },
+        {
+          "name": "长管爆裂速射炮阵列",
+          "range": "24”",
+          "attacks": "32",
+          "skill": "4+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "导弹仓",
+          "range": "30”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": []
+        },
+        {
+          "name": "寻觅者导弹[一次性]",
+          "range": "48”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "14",
+          "ap": "-3",
+          "damage": "D6+1",
+          "tags": [
+            "一次性"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 2100
+        }
+      ],
+      "keywords": [
+        "载具",
+        "飞行器",
+        "飞行",
+        "外壳",
+        "巨型",
+        "运输",
+        "标记光",
+        "蝠鲼"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 56,
+      "edition": "11",
+      "name": "逆戟鲸运输机",
+      "statline": {
+        "m": "20”",
+        "t": "12",
+        "sv": "3+",
+        "w": "28",
+        "ld": "7+",
+        "oc": "-"
+      },
+      "weapons": [
+        {
+          "name": "长管爆裂速射炮",
+          "range": "36”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "导弹仓",
+          "range": "30”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": []
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 275
+        }
+      ],
+      "keywords": [
+        "载具",
+        "飞行器",
+        "飞行",
+        "外壳",
+        "巨型",
+        "运输",
+        "逆戟鲸运输机"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 57,
+      "edition": "11",
+      "name": "重型枪蜂小队",
+      "statline": {
+        "m": "8”",
+        "t": "5",
+        "sv": "4+",
+        "w": "2",
+        "ld": "8+",
+        "oc": "0"
+      },
+      "weapons": [
+        {
+          "name": "爆裂速射炮",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "并联爆裂速射炮[双联]",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "5+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "双联"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 2,
+          "points": 45
+        }
+      ],
+      "keywords": [
+        "载具",
+        "飞行",
+        "重型枪蜂小队"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 58,
+      "edition": "11",
+      "name": "卡纳罗克巨兽",
+      "statline": {
+        "m": "9”",
+        "t": "8",
+        "sv": "4+",
+        "w": "10",
+        "ld": "7+",
+        "oc": "3"
+      },
+      "weapons": [
+        {
+          "name": "中巨兽或载具单位时，直到回合结束",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "12",
+          "ap": "-2",
+          "damage": "3",
+          "tags": []
+        },
+        {
+          "name": "克鲁特步枪[速射1]",
+          "range": "24”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "4",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "速射1"
+          ]
+        },
+        {
+          "name": "并联克鲁特炮[双联]",
+          "range": "36”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "0",
+          "damage": "2",
+          "tags": [
+            "双联",
+            "连击1"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 100
+        }
+      ],
+      "keywords": [
+        "巨兽",
+        "外壳",
+        "克鲁特",
+        "卡纳罗克巨兽"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 59,
+      "edition": "11",
+      "name": "TX-42水虎鱼",
+      "statline": {
+        "m": "14”",
+        "t": "7",
+        "sv": "4+",
+        "w": "7",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "融合炮[热熔2]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "9",
+          "ap": "-4",
+          "damage": "D6",
+          "tags": [
+            "热熔2"
+          ]
+        },
+        {
+          "name": "导弹仓",
+          "range": "30”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": []
+        },
+        {
+          "name": "等离子步枪",
+          "range": "24”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-3",
+          "damage": "3",
+          "tags": []
+        },
+        {
+          "name": "磁轨步枪[毁灭伤害]",
+          "range": "30”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "10",
+          "ap": "-4",
+          "damage": "3",
+          "tags": [
+            "毁灭伤害"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 60
+        }
+      ],
+      "keywords": [
+        "载具",
+        "飞行",
+        "外壳",
+        "TX-42水虎鱼"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 60,
+      "edition": "11",
+      "name": "卡纳罗克骑兵队",
+      "statline": {
+        "m": "7”",
+        "t": "5",
+        "sv": "5+",
+        "w": "4",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "克鲁特步枪[速射1]",
+          "range": "24”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "4",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "速射1"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 3,
+          "points": 110
+        }
+      ],
+      "keywords": [
+        "骑乘",
+        "克鲁特",
+        "卡纳罗克骑兵队"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 61,
+      "edition": "11",
+      "name": "Shas’o R’alai",
+      "statline": {
+        "m": "8”",
+        "t": "6",
+        "sv": "3+",
+        "w": "6",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "试验型脉冲霰弹步枪 — 高密度定装弹",
+          "range": "24”",
+          "attacks": "D6",
+          "skill": "3+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "1",
+          "tags": []
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "keywords": [],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 62,
+      "edition": "11",
+      "name": "XV9灾害战斗服小队",
+      "statline": {
+        "m": "8”",
+        "t": "6",
+        "sv": "3+",
+        "w": "4",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "融合喷射炮[热熔4]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "9",
+          "ap": "-4",
+          "damage": "D6",
+          "tags": [
+            "热熔4"
+          ]
+        },
+        {
+          "name": "相控离子枪",
+          "range": "30”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "并联灾害爆裂速射炮[双联]",
+          "range": "24”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "双联"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 55
+        },
+        {
+          "models": 2,
+          "points": 110
+        }
+      ],
+      "keywords": [
+        "载具",
+        "机甲",
+        "飞行",
+        "战斗服",
+        "XV9灾害"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 63,
+      "edition": "11",
+      "name": "遥感哨塔",
+      "statline": {
+        "m": "-",
+        "t": "8",
+        "sv": "4+",
+        "w": "4",
+        "ld": "8+",
+        "oc": "0"
+      },
+      "weapons": [],
+      "points": [
+        {
+          "models": 1,
+          "points": 50
+        }
+      ],
+      "keywords": [
+        "工事",
+        "外壳",
+        "遥感哨塔"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 64,
+      "edition": "11",
+      "name": "兵蜂哨戒炮",
+      "statline": {
+        "m": "-",
+        "t": "8",
+        "sv": "4+",
+        "w": "4",
+        "ld": "8+",
+        "oc": "0"
+      },
+      "weapons": [
+        {
+          "name": "并联爆裂速射炮[双联]",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "5+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "双联"
+          ]
+        },
+        {
+          "name": "并联融合炮[热熔2，双联]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "5+",
+          "strength": "9",
+          "ap": "-4",
+          "damage": "D6",
+          "tags": [
+            "热熔2，双联"
+          ]
+        },
+        {
+          "name": "并联导弹仓[双联]",
+          "range": "30”",
+          "attacks": "2",
+          "skill": "5+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": [
+            "双联"
+          ]
+        },
+        {
+          "name": "并联等离子步枪[双联]",
+          "range": "24”",
+          "attacks": "1",
+          "skill": "5+",
+          "strength": "8",
+          "ap": "-3",
+          "damage": "3",
+          "tags": [
+            "双联"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 50
+        }
+      ],
+      "keywords": [
+        "工事",
+        "载具",
+        "外壳",
+        "兵蜂哨戒炮"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 65,
+      "edition": "11",
+      "name": "(XV8)危机战斗服指挥官",
+      "statline": {
+        "m": "10”",
+        "t": "5",
+        "sv": "3+",
+        "w": "5",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "空爆榴弹发射器[爆炸，曲射]",
+          "range": "24”",
+          "attacks": "D6",
+          "skill": "3+",
+          "strength": "3",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "爆炸，曲射"
+          ]
+        },
+        {
+          "name": "爆裂速射炮",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "3+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "循环离子炮 — 标准",
+          "range": "18”",
+          "attacks": "3",
+          "skill": "3+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "循环离子炮 — 过载[危险]",
+          "range": "18”",
+          "attacks": "3",
+          "skill": "3+",
+          "strength": "8",
+          "ap": "-2",
+          "damage": "2",
+          "tags": [
+            "危险"
+          ]
+        },
+        {
+          "name": "融合炮[热熔2]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "3+",
+          "strength": "9",
+          "ap": "-4",
+          "damage": "D6",
+          "tags": [
+            "热熔2"
+          ]
+        },
+        {
+          "name": "导弹仓",
+          "range": "30”",
+          "attacks": "2",
+          "skill": "3+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": []
+        },
+        {
+          "name": "等离子步枪",
+          "range": "24”",
+          "attacks": "1",
+          "skill": "3+",
+          "strength": "8",
+          "ap": "-3",
+          "damage": "3",
+          "tags": []
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "keywords": [
+        "载具",
+        "机甲",
+        "飞行",
+        "人物",
+        "战斗服",
+        "危机战斗服指挥官"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 67,
+      "edition": "11",
+      "name": "安’史",
+      "statline": {
+        "m": "6”",
+        "t": "3",
+        "sv": "6+",
+        "w": "3",
+        "ld": "7+",
+        "oc": "1"
+      },
+      "weapons": [],
+      "points": [
+        {
+          "models": 1,
+          "points": 50
+        }
+      ],
+      "keywords": [
+        "步兵",
+        "人物",
+        "史诗英雄",
+        "以太长老",
+        "安’史"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 68,
+      "edition": "11",
+      "name": "遥击",
+      "statline": {
+        "m": "10”",
+        "t": "10",
+        "sv": "3+",
+        "w": "14",
+        "ld": "7+",
+        "oc": "3"
+      },
+      "weapons": [
+        {
+          "name": "挂载爆裂速射炮",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "离子加农 — 标准[爆炸]",
+          "range": "60”",
+          "attacks": "D6+3",
+          "skill": "3+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": [
+            "爆炸"
+          ]
+        },
+        {
+          "name": "离子加农 — 过载[爆炸，危险]",
+          "range": "60”",
+          "attacks": "D6+3",
+          "skill": "3+",
+          "strength": "8",
+          "ap": "-2",
+          "damage": "3",
+          "tags": [
+            "爆炸，危险"
+          ]
+        },
+        {
+          "name": "磁轨炮[毁灭伤害，重型]",
+          "range": "72”",
+          "attacks": "1",
+          "skill": "3+",
+          "strength": "20",
+          "ap": "-5",
+          "damage": "D6+6",
+          "tags": [
+            "毁灭伤害，重型"
+          ]
+        },
+        {
+          "name": "寻觅者导弹[一次性]",
+          "range": "48”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "14",
+          "ap": "-3",
+          "damage": "D6+1",
+          "tags": [
+            "一次性"
+          ]
+        },
+        {
+          "name": "并联脉冲卡宾[突击，双联]",
+          "range": "20”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "突击，双联"
+          ]
+        },
+        {
+          "name": "智能导弹系统[曲射]",
+          "range": "30”",
+          "attacks": "3",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "曲射"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 140
+        }
+      ],
+      "keywords": [
+        "载具",
+        "飞行",
+        "外壳",
+        "人物",
+        "史诗英雄",
+        "遥击"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 69,
+      "edition": "11",
+      "name": "(XV8)危机战斗服小队",
+      "statline": {
+        "m": "10”",
+        "t": "5",
+        "sv": "3+",
+        "w": "4",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "空爆榴弹发射器[爆炸，曲射]",
+          "range": "24”",
+          "attacks": "D6",
+          "skill": "4+",
+          "strength": "3",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "爆炸，曲射"
+          ]
+        },
+        {
+          "name": "爆裂速射炮",
+          "range": "18”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "循环离子炮 — 标准",
+          "range": "18”",
+          "attacks": "3",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "循环离子炮 — 过载[危险]",
+          "range": "18”",
+          "attacks": "3",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-2",
+          "damage": "2",
+          "tags": [
+            "危险"
+          ]
+        },
+        {
+          "name": "融合炮[热熔2]",
+          "range": "12”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "9",
+          "ap": "-4",
+          "damage": "D6",
+          "tags": [
+            "热熔2"
+          ]
+        },
+        {
+          "name": "导弹仓",
+          "range": "30”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": []
+        },
+        {
+          "name": "等离子步枪",
+          "range": "24”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-3",
+          "damage": "3",
+          "tags": []
+        }
+      ],
+      "points": [
+        {
+          "models": 3,
+          "points": 200
+        },
+        {
+          "models": 6,
+          "points": 400
+        }
+      ],
+      "keywords": [
+        "载具",
+        "机甲",
+        "飞行",
+        "战斗服",
+        "危机"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 70,
+      "edition": "11",
+      "name": "(XV107)燃雨战斗服",
+      "statline": {
+        "m": "8”",
+        "t": "10",
+        "sv": "2+",
+        "w": "15",
+        "ld": "7+",
+        "oc": "4"
+      },
+      "weapons": [
+        {
+          "name": "脉冲霰弹加农",
+          "range": "60”",
+          "attacks": "D6+2",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-1",
+          "damage": "2",
+          "tags": []
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 200
+        }
+      ],
+      "keywords": [
+        "载具",
+        "机甲",
+        "飞行",
+        "战斗服",
+        "燃雨"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 71,
+      "edition": "11",
+      "name": "(XV109)焰涌战斗服",
+      "statline": {
+        "m": "10”",
+        "t": "9",
+        "sv": "2+",
+        "w": "15",
+        "ld": "7+",
+        "oc": "4"
+      },
+      "weapons": [
+        {
+          "name": "集束箭形弹仓",
+          "range": "12”",
+          "attacks": "5",
+          "skill": "4+",
+          "strength": "3",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "离子喷射加农 — 标准[爆炸]",
+          "range": "18”",
+          "attacks": "D6+1",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": [
+            "爆炸"
+          ]
+        },
+        {
+          "name": "离子喷射加农 — 过载[爆炸，危险]",
+          "range": "18”",
+          "attacks": "D6+1",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-2",
+          "damage": "3",
+          "tags": [
+            "爆炸，危险"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 210
+        }
+      ],
+      "keywords": [
+        "载具",
+        "机甲",
+        "飞行",
+        "战斗服",
+        "焰涌"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 72,
+      "edition": "11",
+      "name": "脂鲤小队",
+      "statline": {
+        "m": "14”",
+        "t": "7",
+        "sv": "4+",
+        "w": "7",
+        "ld": "7+",
+        "oc": "2"
+      },
+      "weapons": [
+        {
+          "name": "脉冲卡宾[速射1]",
+          "range": "30”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "速射1"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 2,
+          "points": 80
+        },
+        {
+          "models": 4,
+          "points": 160
+        }
+      ],
+      "keywords": [
+        "载具",
+        "飞行",
+        "外壳",
+        "标记光",
+        "脂鲤小队"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 73,
+      "edition": "11",
+      "name": "鮣",
+      "statline": {
+        "m": "16”",
+        "t": "6",
+        "sv": "3+",
+        "w": "5",
+        "ld": "7+",
+        "oc": "0"
+      },
+      "weapons": [
+        {
+          "name": "寻觅者导弹[一次性]",
+          "range": "48”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "14",
+          "ap": "-3",
+          "damage": "D6+1",
+          "tags": [
+            "一次性"
+          ]
+        },
+        {
+          "name": "并联长管爆裂速射炮[双联]",
+          "range": "24”",
+          "attacks": "4",
+          "skill": "4+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "1",
+          "tags": [
+            "双联"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 2,
+          "points": 160
+        }
+      ],
+      "keywords": [
+        "载具",
+        "飞行",
+        "标记光",
+        "鱼隐形兵蜂机队"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 74,
+      "edition": "11",
+      "name": "(AX-5-2)梭鱼",
+      "statline": {
+        "m": "-",
+        "t": "10",
+        "sv": "3+",
+        "w": "14",
+        "ld": "7+",
+        "oc": "-"
+      },
+      "weapons": [
+        {
+          "name": "循环离子炮 — 标准",
+          "range": "18”",
+          "attacks": "3",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "循环离子炮 — 过载[危险]",
+          "range": "18”",
+          "attacks": "3",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-2",
+          "damage": "2",
+          "tags": [
+            "危险"
+          ]
+        },
+        {
+          "name": "离子加农 — 标准[爆炸]",
+          "range": "60”",
+          "attacks": "D6+3",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": [
+            "爆炸"
+          ]
+        },
+        {
+          "name": "离子加农 — 过载[爆炸，危险]",
+          "range": "60”",
+          "attacks": "D6+3",
+          "skill": "4+",
+          "strength": "8",
+          "ap": "-2",
+          "damage": "3",
+          "tags": [
+            "爆炸，危险"
+          ]
+        },
+        {
+          "name": "长管爆裂速射炮",
+          "range": "24”",
+          "attacks": "8",
+          "skill": "4+",
+          "strength": "6",
+          "ap": "0",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "导弹仓",
+          "range": "30”",
+          "attacks": "2",
+          "skill": "4+",
+          "strength": "7",
+          "ap": "-1",
+          "damage": "2",
+          "tags": []
+        },
+        {
+          "name": "寻觅者导弹[一次性]",
+          "range": "48”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "14",
+          "ap": "-3",
+          "damage": "D6+1",
+          "tags": [
+            "一次性"
+          ]
+        },
+        {
+          "name": "高速爆裂速射炮",
+          "range": "36”",
+          "attacks": "16",
+          "skill": "4+",
+          "strength": "6",
+          "ap": "-1",
+          "damage": "1",
+          "tags": []
+        },
+        {
+          "name": "高速磁轨炮[毁灭伤害]",
+          "range": "72”",
+          "attacks": "1",
+          "skill": "4+",
+          "strength": "20",
+          "ap": "-5",
+          "damage": "D6+6",
+          "tags": [
+            "毁灭伤害"
+          ]
+        }
+      ],
+      "points": [
+        {
+          "models": 1,
+          "points": 220
+        }
+      ],
+      "keywords": [
+        "载具",
+        "飞行器",
+        "飞行",
+        "外壳",
+        "梭鱼"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    },
+    {
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 75,
+      "edition": "11",
+      "name": "战术兵蜂",
+      "statline": {
+        "m": "8”",
+        "t": "3",
+        "sv": "4+",
+        "w": "1",
+        "ld": "7+",
+        "oc": "0"
+      },
+      "weapons": [
+        {
+          "name": "并联脉冲卡宾[突击，双联]",
+          "range": "20”",
+          "attacks": "2",
+          "skill": "5+",
+          "strength": "5",
+          "ap": "0",
+          "damage": "1",
+          "tags": [
+            "突击，双联"
+          ]
+        }
+      ],
+      "points": [],
+      "keywords": [
+        "兵蜂",
+        "飞行",
+        "战术兵蜂"
+      ],
+      "faction_keywords": [
+        "钛帝国"
+      ],
+      "review_status": "candidate_needs_manual_review"
+    }
+  ]
+}

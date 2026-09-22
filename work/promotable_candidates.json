@@ -1,0 +1,276 @@
+{
+  "schema_version": 1,
+  "promotable_count": 17,
+  "promotable": [
+    {
+      "name": "远见指挥官",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 14,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "火刃队长",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 18,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 50
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "暗行者",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 20,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 60
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "打击小队",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 21,
+      "edition": "11",
+      "points": [
+        {
+          "models": 10,
+          "points": 70
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "破袭小队",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 22,
+      "edition": "11",
+      "points": [
+        {
+          "models": 10,
+          "points": 90
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "(XV8)危机火刃战斗服小队",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 24,
+      "edition": "11",
+      "points": [
+        {
+          "models": 3,
+          "points": 100
+        },
+        {
+          "models": 3,
+          "points": 110
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "(XV8)危机星镰战斗服小队",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 25,
+      "edition": "11",
+      "points": [
+        {
+          "models": 3,
+          "points": 90
+        },
+        {
+          "models": 3,
+          "points": 100
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "寻路者小队",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 28,
+      "edition": "11",
+      "points": [
+        {
+          "models": 10,
+          "points": 80
+        }
+      ],
+      "weapon_count": 8,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "神射手小队",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 29,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 55
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "克鲁特寻迹塑形者",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 31,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 50
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "克鲁特血肉塑形者",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 33,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 45
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "克鲁特狂兽小队",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 37,
+      "edition": "11",
+      "points": [
+        {
+          "models": 3,
+          "points": 85
+        },
+        {
+          "models": 6,
+          "points": 170
+        },
+        {
+          "models": 3,
+          "points": 95
+        },
+        {
+          "models": 6,
+          "points": 180
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "潮汐兵蜂平台",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 50,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 85
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "重型枪蜂小队",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 57,
+      "edition": "11",
+      "points": [
+        {
+          "models": 2,
+          "points": 45
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "卡纳罗克巨兽",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 58,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 100
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "卡纳罗克骑兵队",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 60,
+      "edition": "11",
+      "points": [
+        {
+          "models": 3,
+          "points": 110
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "脂鲤小队",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 72,
+      "edition": "11",
+      "points": [
+        {
+          "models": 2,
+          "points": 80
+        },
+        {
+          "models": 4,
+          "points": 160
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    }
+  ],
+  "rejected_reasons": {
+    "missing_points": 585,
+    "missing_weapons": 552,
+    "non_numeric_oc": 18,
+    "non_numeric_m": 24,
+    "complex_weapon_attacks": 32,
+    "complex_weapon_damage": 39
+  }
+}

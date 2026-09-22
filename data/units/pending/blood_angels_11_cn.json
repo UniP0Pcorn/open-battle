@@ -1,0 +1,16 @@
+{
+  "id": "blood_angels_11_cn",
+  "display_name": "圣血天使",
+  "edition": 11,
+  "faction": "blood_angels_11_cn",
+  "source": {
+    "filename": "圣血天使11版中文1.01.pdf",
+    "category": "faction",
+    "pages": 41,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

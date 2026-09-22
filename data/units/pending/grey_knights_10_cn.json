@@ -1,0 +1,16 @@
+{
+  "id": "grey_knights_10_cn",
+  "display_name": "灰骑士",
+  "edition": 10,
+  "faction": "grey_knights_10_cn",
+  "source": {
+    "filename": "Codex-灰骑士10版中文v1.1-1.pdf",
+    "category": "faction",
+    "pages": 41,
+    "status": "pending_profile_import"
+  },
+  "models": [],
+  "weapons": [],
+  "points": [],
+  "import_status": "pending_extraction"
+}

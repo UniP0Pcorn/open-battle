@@ -1,0 +1,14 @@
+{
+  "id": "control_center_prototype",
+  "display_name": "Control Center Prototype",
+  "score_to_win": 5,
+  "control_radius_inches": 3.0,
+  "objectives": [
+    {"id": "center", "position_inches": [30.0, 22.0], "points": 1}
+  ],
+  "terrain": [
+    {"id": "ruin_west", "x": 18.0, "y": 13.0, "width": 8.0, "height": 5.0, "cover_bonus": 1},
+    {"id": "ruin_east", "x": 34.0, "y": 26.0, "width": 8.0, "height": 5.0, "cover_bonus": 1}
+  ],
+  "provenance": "Original prototype mission structure. It is not a transcription of an official mission."
+}
