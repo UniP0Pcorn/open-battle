@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+extends RefCounted
+## Canonical command envelope and phase contract shared by saves, replay and servers.
+
+const KINDS := ["MOVE", "SHOOT", "CHARGE", "FIGHT", "END_TURN", "BATTLE_SHOCK", "HAZARDOUS", "STRATAGEM"]
+const PHASE_BY_KIND := {
+	"MOVE": "MOVEMENT",
+	"SHOOT": "SHOOTING",
+	"CHARGE": "CHARGE",
+	"FIGHT": "FIGHT"
+}
+
+static func validate_entry(entry: Dictionary) -> String:
+	if not entry.has("sequence") or int(entry.get("sequence", -1)) < 0:
+		return "INVALID SEQUENCE"
+	if int(entry.get("team", -1)) not in [0, 1]:
+		return "INVALID TEAM"
+	var kind := str(entry.get("kind", ""))
+	if not KINDS.has(kind):
+		return "UNKNOWN COMMAND"
+	if not (entry.get("payload", null) is Dictionary):
+		return "INVALID PAYLOAD"
+	return validate_payload(kind, entry.payload)
+
+static func validate_payload(kind: String, payload: Dictionary) -> String:
+	match kind:
+		"MOVE":
+			if str(payload.get("unit_id", "")).is_empty() or not _numbers(payload.get("delta", []), 2):
+				return "INVALID MOVE"
+		"SHOOT", "FIGHT":
+			if not _nonnegative_int(payload.get("target", -1)) or not _nonnegative_int(payload.get("damage", -1)):
+				return "INVALID DAMAGE EVENT"
+		"CHARGE":
+			if not _nonnegative_int(payload.get("model", -1)) or not _nonnegative_int(payload.get("target", -1)) or not _numbers(payload.get("to", []), 2):
+				return "INVALID CHARGE"
+		"BATTLE_SHOCK":
+			if str(payload.get("unit_id", "")).is_empty() or typeof(payload.get("passed", null)) != TYPE_BOOL:
+				return "INVALID BATTLE SHOCK"
+		"HAZARDOUS":
+			if not _nonnegative_int(payload.get("attacker", -1)) or not _nonnegative_int(payload.get("damage", -1)):
+				return "INVALID HAZARDOUS EVENT"
+		"STRATAGEM":
+			if str(payload.get("id", "")).is_empty() or str(payload.get("phase", "")).is_empty():
+				return "INVALID STRATAGEM"
+		"END_TURN":
+			pass
+	return ""
+
+static func validate_for_state(entry: Dictionary, state: Dictionary) -> String:
+	var error := validate_entry(entry)
+	if not error.is_empty():
+		return error
+	var kind := str(entry.kind)
+	if kind != "END_TURN" and int(entry.team) != int(state.get("active_team", -1)):
+		return "NOT ACTIVE TEAM"
+	if PHASE_BY_KIND.has(kind) and str(state.get("phase", "")) != str(PHASE_BY_KIND[kind]):
+		return "INVALID PHASE"
+	return ""
+
+static func _nonnegative_int(value: Variant) -> bool:
+	return (typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT) and int(value) >= 0 and float(value) == float(int(value))
+
+static func _numbers(value: Variant, expected_size: int) -> bool:
+	if not (value is Array) or value.size() != expected_size:
+		return false
+	for item in value:
+		if typeof(item) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(item)):
+			return false
+	return true

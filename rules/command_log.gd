@@ -2,6 +2,8 @@
 extends RefCounted
 ## Small, deterministic action log shared by local saves, replays, and servers.
 
+const CommandSchema = preload("res://rules/command_schema.gd")
+
 static func append(log: Array, actor_team: int, kind: String, payload: Dictionary) -> Array:
 	var next_log := log.duplicate(true)
 	next_log.append({
@@ -14,13 +16,14 @@ static func append(log: Array, actor_team: int, kind: String, payload: Dictionar
 
 static func validate(log: Array) -> String:
 	for index in range(log.size()):
+		if not (log[index] is Dictionary):
+			return "INVALID ENTRY"
 		var entry: Dictionary = log[index]
 		if int(entry.get("sequence", -1)) != index:
 			return "SEQUENCE GAP"
-		if not entry.has("team") or not entry.has("kind") or not entry.has("payload"):
-			return "INVALID ENTRY"
-		if not (entry.payload is Dictionary):
-			return "INVALID PAYLOAD"
+		var error := CommandSchema.validate_entry(entry)
+		if not error.is_empty():
+			return error
 	return ""
 
 static func encode(log: Array) -> String:

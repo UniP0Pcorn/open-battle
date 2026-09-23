@@ -4,6 +4,7 @@ const Rules = preload("res://rules/movement.gd")
 const Combat = preload("res://rules/combat.gd")
 const ArmyValidation = preload("res://rules/army_validation.gd")
 const CommandLog = preload("res://rules/command_log.gd")
+const CommandSchema = preload("res://rules/command_schema.gd")
 const UnitValidation = preload("res://rules/unit_validation.gd")
 const Dice = preload("res://rules/dice.gd")
 const TurnState = preload("res://rules/turn_state.gd")
@@ -84,13 +85,18 @@ func run() -> void:
 	roster.points_limit = 900
 	check(not ArmyValidation.validate_roster(roster).is_empty(), "over-limit roster fails")
 	var log: Array = []
-	log = CommandLog.append(log, 0, "MOVE", {"model": 1, "distance": 3.0})
-	log = CommandLog.append(log, 0, "SHOOT", {"attacker": 1, "target": 2})
+	log = CommandLog.append(log, 0, "MOVE", {"unit_id": "u", "delta": [3.0, 0.0]})
+	log = CommandLog.append(log, 0, "SHOOT", {"target": 2, "damage": 1})
 	check(CommandLog.validate(log).is_empty(), "command log entries validate")
 	check(CommandLog.decode(CommandLog.encode(log)).size() == 2, "command log round trips")
 	var broken_log := log.duplicate(true)
 	broken_log[1].sequence = 4
 	check(CommandLog.validate(broken_log) == "SEQUENCE GAP", "command log detects sequence gaps")
+	check(CommandSchema.validate_for_state(log[0], {"active_team": 0, "phase": "MOVEMENT"}).is_empty(), "command schema accepts active movement")
+	check(CommandSchema.validate_for_state(log[1], {"active_team": 0, "phase": "MOVEMENT"}) == "INVALID PHASE", "command schema rejects wrong phase")
+	var malformed_command: Dictionary = log[0].duplicate(true)
+	malformed_command.payload = {"unit_id": "u"}
+	check(CommandSchema.validate_entry(malformed_command) == "INVALID MOVE", "command schema rejects incomplete payload")
 	var coherent_unit: Array = [
 		{"position": Vector2(10, 10)},
 		{"position": Vector2(11.5, 10)},
