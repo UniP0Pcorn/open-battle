@@ -43,6 +43,7 @@ var phase := "MOVEMENT"
 var combat_rng := RandomNumberGenerator.new()
 var mission: Dictionary = {}
 var objectives: Array = []
+var objective_values: Array = []
 var terrain: Array = []
 var control_radius := 3.0
 var score_to_win := 5
@@ -83,6 +84,7 @@ func _ready() -> void:
 	deployment_depth = float(mission.get("deployment_depth_inches", 12.0))
 	for objective in mission.get("objectives", []):
 		objectives.append(Vector2(float(objective.position_inches[0]), float(objective.position_inches[1])))
+		objective_values.append(int(objective.get("points", 1)))
 	terrain = mission.get("terrain", [])
 	combat_rng.seed = 402000
 	reset_table()
@@ -318,8 +320,9 @@ func end_turn() -> void:
 	dragging = false
 	placing = false
 	selected = -1
-	var gained := score_objectives(active_team)
-	score[active_team] += gained
+	var scoring_team := active_team
+	var gained := score_objectives(scoring_team)
+	score[scoring_team] += gained
 	active_team = 1 - active_team
 	command_points = CommandPoints.gain(command_points, active_team)
 	phase = "MOVEMENT"
@@ -332,8 +335,9 @@ func end_turn() -> void:
 	command_log = CommandLog.append(command_log, 1 - active_team, "END_TURN", {"score_gained": gained})
 	var shock_summary := resolve_battle_shock(active_team)
 	message = "得分 +%d。现在轮到%s方。%s" % [gained, "金" if active_team == 0 else "蓝", shock_summary]
-	if MissionRules.winner(score, score_to_win) >= 0:
-		message = "%s方达到 %d 分，任务完成！" % ["金" if active_team == 0 else "蓝", score_to_win]
+	var winning_team := MissionRules.winner(score, score_to_win)
+	if winning_team >= 0:
+		message = "%s方达到 %d 分，任务完成！" % ["金" if winning_team == 0 else "蓝", score_to_win]
 	queue_redraw()
 
 func resolve_battle_shock(team_id: int) -> String:
@@ -362,8 +366,8 @@ func resolve_battle_shock(team_id: int) -> String:
 
 func score_objectives(team_id: int) -> int:
 	var objective_data: Array = []
-	for objective in objectives:
-		objective_data.append({"position": objective, "points": 1})
+	for index in range(objectives.size()):
+		objective_data.append({"position": objectives[index], "points": int(objective_values[index]) if index < objective_values.size() else 1})
 	var scored := MissionRules.score_objectives(objective_data, models, control_radius)
 	return int(scored.score[team_id])
 

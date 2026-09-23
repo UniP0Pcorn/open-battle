@@ -342,6 +342,7 @@ func run() -> void:
 	check(scene.models[0].has("unit_id"), "models carry unit ids")
 	check(scene.phase == "MOVEMENT" and scene.active_team == 0 and TurnState.is_valid(scene.turn_state), "scene starts in gold movement phase")
 	check(scene.objectives.size() == 1 and scene.score == [0, 0], "scene starts with one neutral objective")
+	check(scene.objective_values.size() == 1 and scene.objective_values[0] == 2, "scene loads objective point values")
 	check(scene.ready_profile_count >= 1 and scene.pending_profile_count == 30, "scene reports profile catalog status")
 	check(scene.ready_profiles.size() == scene.ready_profile_count and scene.unit_profile.id == "custodian_guard_fixture", "scene loads ready profile catalog")
 	check(scene.roster.faction == scene.unit_profile.faction, "scene applies profile faction to roster")
@@ -393,7 +394,10 @@ func run() -> void:
 	check(scene.phase == "MOVEMENT", "ending turn starts movement phase")
 	scene.models[1].position = Vector2(30, 22)
 	scene.end_turn()
-	check(scene.score[0] == 1, "objective scores for a controlling team")
+	check(scene.score[0] == 2, "objective scores for a controlling team")
+	scene.score_to_win = 2
+	scene.end_turn()
+	check(scene.message.contains("金方") and scene.message.contains("任务完成"), "victory message names the scoring team")
 	scene.dragging = true
 	scene.selected = 0
 	scene.preview = Vector2(14, 6)
