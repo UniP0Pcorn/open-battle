@@ -22,6 +22,7 @@ const WeaponRules = preload("res://rules/weapon_rules.gd")
 const BattleShock = preload("res://rules/battle_shock.gd")
 const TurnState = preload("res://rules/turn_state.gd")
 const Deployment = preload("res://rules/deployment.gd")
+const MissionValidation = preload("res://rules/mission_validation.gd")
 const SCALE := 15.0
 const OFFSET := Vector2(38, 112)
 const GOLD := Color("e5ba6b")
@@ -75,7 +76,11 @@ func _ready() -> void:
 			break
 	sync_profile_weapon()
 	roster = JSON.parse_string(FileAccess.get_file_as_string("res://data/armies/prototype_gold.json"))
-	mission = JSON.parse_string(FileAccess.get_file_as_string("res://data/missions/control_center.json"))
+	var parsed_mission = JSON.parse_string(FileAccess.get_file_as_string("res://data/missions/control_center.json"))
+	mission = parsed_mission if parsed_mission is Dictionary else {}
+	var mission_errors := MissionValidation.validate(mission)
+	if not mission_errors.is_empty():
+		message = "任务数据无效：" + str(mission_errors[0])
 	if not roster.has("faction") and not str(unit_profile.get("faction", "")).is_empty():
 		roster.faction = str(unit_profile.get("faction", ""))
 	ready_profile_count = ProfileCatalog.ready_only(ProfileCatalog.load_tree("res://data/units", true)).size()

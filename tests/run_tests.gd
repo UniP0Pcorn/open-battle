@@ -31,6 +31,7 @@ const WeaponRules = preload("res://rules/weapon_rules.gd")
 const Replay = preload("res://rules/replay.gd")
 const UnitKeywords = preload("res://rules/unit_keywords.gd")
 const RulesetCatalog = preload("res://rules/ruleset_catalog.gd")
+const MissionValidation = preload("res://rules/mission_validation.gd")
 var failures := 0
 var checks := 0
 
@@ -400,6 +401,13 @@ func run() -> void:
 	scene.toggle_roster_panel()
 	check(scene.terrain.size() == 2, "mission terrain loads")
 	check(scene.mission.id == "control_center_prototype" and scene.score_to_win == 5, "mission data loads from JSON")
+	check(MissionValidation.validate(scene.mission).is_empty(), "mission data passes structural validation")
+	var invalid_mission: Dictionary = scene.mission.duplicate(true)
+	invalid_mission.objectives[0].points = 0
+	check(MissionValidation.validate(invalid_mission).has("INVALID OBJECTIVE POINTS center"), "mission validation rejects invalid objective points")
+	var invalid_terrain: Dictionary = scene.mission.duplicate(true)
+	invalid_terrain.terrain[0].x = 59.0
+	check(MissionValidation.validate(invalid_terrain).has("INVALID TERRAIN BOUNDS ruin_west"), "mission validation rejects terrain outside board")
 	check(scene.pick(Vector2(6, 6)) == 0, "base selection")
 	for i in range(scene.models.size()):
 		check(Rules.placement_reason(scene.models[i].position, radius, scene.models, i).is_empty(), "initial base %d valid" % i)
