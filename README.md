@@ -64,6 +64,7 @@ godot --headless --path . --script tests/run_tests.gd
 
 `rules/roster_editor.gd` 提供编成创建、添加、移除、阵营与版本检查、分数计算和 profile 就绪状态校验；界面层可以直接复用它，避免绕过编成规则修改 JSON。
 桌面初始化和兵牌切换会自动把当前 profile 的 faction 写入军表，随后所有添加、数量和分数编辑都继续经过阵营校验。
+编成校验还支持由 profile 声明的 `organization.unique`、`organization.max_copies`、`organization.role`，以及军表声明的 `organization.minimum_roles`；未声明这些字段的原型数据不会被额外限制。
 `rules/army_builder.gd` 会在展开军表时校验版本、阵营一致性和 profile 的最小结构，发现未完成兵牌会拒绝上桌；展开后的模型会携带豁免、领导力、目标控制、能力、关键词和武器数据。
 `rules/profile_catalog.gd` 同时支持单目录和递归目录索引；桌面运行时递归扫描 `data/units/`，因此放入 `imported/` 等子目录的正式 profile 会进入兵牌循环和目录统计。
 目录的 ready/verified/prototype profile 会先经过 `rules/datasheet_validation.gd` 结构校验；状态标记本身不足以让缺字段或未知关键词的兵牌进入可用目录。

@@ -83,7 +83,7 @@ static func set_faction(roster: Dictionary, profiles: Dictionary, faction: Strin
 
 static func validate(roster: Dictionary, profiles: Dictionary) -> Array[String]:
 	var errors: Array[String] = []
-	errors.append_array(ArmyValidation.validate_roster(roster))
+	errors.append_array(ArmyValidation.validate_roster(roster, profiles))
 	var built := ArmyBuilder.build(roster, profiles)
 	errors.append_array(built.errors)
 	return _unique(errors)

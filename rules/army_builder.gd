@@ -2,9 +2,14 @@
 extends RefCounted
 ## Converts validated unit profiles and roster entries into battle units.
 
+const ArmyValidation = preload("res://rules/army_validation.gd")
+
 static func build(roster: Dictionary, profiles: Dictionary, team: int = 0) -> Dictionary:
 	var errors: Array = []
 	var units: Array = []
+	errors.append_array(ArmyValidation.validate_organization(roster, profiles))
+	if not errors.is_empty():
+		return {"valid": false, "errors": errors, "points": 0, "units": []}
 	var total := 0
 	var edition := int(roster.get("edition", 0))
 	var entry_index := 0

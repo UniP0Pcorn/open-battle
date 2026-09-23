@@ -2,7 +2,7 @@
 extends RefCounted
 ## Generic roster validation. It intentionally knows nothing about proprietary faction rules.
 
-static func validate_roster(roster: Dictionary) -> Array[String]:
+static func validate_roster(roster: Dictionary, profiles: Dictionary = {}) -> Array[String]:
 	var errors: Array[String] = []
 	var limit := int(roster.get("points_limit", 0))
 	var total := 0
@@ -21,6 +21,34 @@ static func validate_roster(roster: Dictionary) -> Array[String]:
 		errors.append("Points limit must be positive.")
 	elif total > limit:
 		errors.append("Army exceeds points limit (%d/%d)." % [total, limit])
+	errors.append_array(validate_organization(roster, profiles))
+	return errors
+
+static func validate_organization(roster: Dictionary, profiles: Dictionary) -> Array[String]:
+	var errors: Array[String] = []
+	if profiles.is_empty():
+		return errors
+	var copies: Dictionary = {}
+	var roles: Dictionary = {}
+	for unit in roster.get("units", []):
+		var unit_id := str(unit.get("unit_id", ""))
+		var count := int(unit.get("count", 0))
+		copies[unit_id] = int(copies.get(unit_id, 0)) + count
+		var profile: Dictionary = profiles.get(unit_id, {})
+		var organization: Dictionary = profile.get("organization", {}) if profile.get("organization", {}) is Dictionary else {}
+		var role := str(organization.get("role", profile.get("role", "")))
+		if not role.is_empty():
+			roles[role] = int(roles.get(role, 0)) + count
+		var max_copies := int(organization.get("max_copies", profile.get("max_copies", 0)))
+		if bool(organization.get("unique", profile.get("unique", false))):
+			max_copies = 1
+		if max_copies > 0 and copies[unit_id] > max_copies:
+			errors.append("UNIT COPY LIMIT %s (%d/%d)" % [unit_id, copies[unit_id], max_copies])
+	var requirements: Dictionary = roster.get("organization", {}) if roster.get("organization", {}) is Dictionary else {}
+	for role_name in requirements.get("minimum_roles", []):
+		var role_id := str(role_name)
+		if int(roles.get(role_id, 0)) < 1:
+			errors.append("MISSING REQUIRED ROLE " + role_id)
 	return errors
 
 static func total_points(roster: Dictionary) -> int:

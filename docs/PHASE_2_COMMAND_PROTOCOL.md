@@ -15,6 +15,7 @@
 - 待复核 profile 元数据记录每个来源的候选数量，客户端同时显示待复核来源和候选记录总数。
 - `rules/engagement.gd` 统一冲锋结束与近战目标的底座边缘距离，避免不同底座尺寸产生不同接战结果。
 - 模型获得稳定 `model_id`，攻击命令按 ID 记录目标；回放会同步移除被淘汰模型，避免数组下标变化破坏重放。
+- 编成校验支持 profile 的 `organization.unique`、`organization.max_copies`、`organization.role`，以及军表的 `organization.minimum_roles`；未声明组织字段的原型 profile 行为保持不变。
 - 新增回归覆盖：活动阵营可执行命令、错误阶段拒绝、缺字段载荷拒绝。
 
 ## 验证
@@ -23,7 +24,7 @@
 godot --headless --path . --script tests/run_tests.gd
 ```
 
-当前结果：**228 项检查，0 失败**。
+当前结果：**230 项检查，0 失败**。
 
 ## 下一步
 

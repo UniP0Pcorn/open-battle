@@ -294,6 +294,14 @@ func run() -> void:
 	incomplete_profile.id = "incomplete_profile"
 	incomplete_profile.models = []
 	check(not ArmyBuilder.build({"edition": 11, "points_limit": 1000, "units": [{"unit_id": incomplete_profile.id, "count": 1}]}, {incomplete_profile.id: incomplete_profile}).valid, "army builder rejects incomplete profile")
+	var unique_profile := profile.duplicate(true)
+	unique_profile.id = "unique_profile"
+	unique_profile.organization = {"unique": true, "role": "character"}
+	var unique_profiles := {unique_profile.id: unique_profile}
+	var duplicate_unique := {"edition": 11, "points_limit": 1000, "units": [{"unit_id": unique_profile.id, "count": 2}]}
+	check(not ArmyBuilder.build(duplicate_unique, unique_profiles).valid and ArmyBuilder.build(duplicate_unique, unique_profiles).errors[0] == "UNIT COPY LIMIT unique_profile (2/1)", "army builder enforces unique organization")
+	var required_role := {"edition": 11, "points_limit": 1000, "organization": {"minimum_roles": ["battleline"]}, "units": [{"unit_id": unique_profile.id, "count": 1}]}
+	check(RosterEditor.validate(required_role, unique_profiles).has("MISSING REQUIRED ROLE battleline"), "organization role validation reports missing role")
 	var editable_roster := RosterEditor.create("Test Roster", 11, 1000)
 	var added := RosterEditor.add_unit(editable_roster, profiles, profile.id, 1)
 	check(added.ok and RosterEditor.total_points(added.roster) == 100, "roster editor adds validated unit")
