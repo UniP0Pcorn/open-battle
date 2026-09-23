@@ -15,6 +15,9 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 	if not contract_error.is_empty():
 		return {"ok": false, "reason": contract_error, "state": state}
 	var payload: Dictionary = entry.payload
+	var reference_error := _validate_references(next.models, entry, kind, payload)
+	if not reference_error.is_empty():
+		return {"ok": false, "reason": reference_error, "state": state}
 	match kind:
 		"MOVE":
 			var delta: Array = payload.delta
@@ -87,6 +90,51 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			return {"ok": false, "reason": "UNKNOWN COMMAND", "state": state}
 	next.events.append(kind)
 	return {"ok": true, "reason": "", "state": next}
+
+static func _validate_references(models: Array, entry: Dictionary, kind: String, payload: Dictionary) -> String:
+	var actor_team := int(entry.get("team", -1))
+	match kind:
+		"MOVE":
+			var found := false
+			for model in models:
+				if str(model.get("unit_id", "")) == str(payload.get("unit_id", "")):
+					found = true
+					if int(model.get("team", -1)) != actor_team:
+						return "NOT ACTIVE TEAM"
+			return "" if found else "UNKNOWN UNIT"
+		"CHARGE":
+			var charger := _index_for(models, payload, "model_id", "model")
+			var charge_target := _index_for(models, payload, "target_id", "target")
+			if charger < 0 or charger >= models.size() or charge_target < 0 or charge_target >= models.size():
+				return "INVALID CHARGE"
+			if int(models[charger].get("team", -1)) != actor_team:
+				return "NOT ACTIVE TEAM"
+			if int(models[charge_target].get("team", -1)) == actor_team:
+				return "FRIENDLY TARGET"
+		"SHOOT", "FIGHT":
+			var attacker := _index_for(models, payload, "attacker_id", "attacker")
+			var target := _index_for(models, payload, "target_id", "target")
+			if attacker < 0 or attacker >= models.size() or target < 0 or target >= models.size() or attacker == target:
+				return "INVALID DAMAGE EVENT"
+			if int(models[attacker].get("team", -1)) != actor_team:
+				return "NOT ACTIVE TEAM"
+			if int(models[target].get("team", -1)) == actor_team:
+				return "FRIENDLY TARGET"
+		"HAZARDOUS":
+			var hazardous_attacker := _index_for(models, payload, "attacker_id", "attacker")
+			if hazardous_attacker < 0 or hazardous_attacker >= models.size():
+				return "INVALID HAZARDOUS EVENT"
+			if int(models[hazardous_attacker].get("team", -1)) != actor_team:
+				return "NOT ACTIVE TEAM"
+		"BATTLE_SHOCK":
+			var found_unit := false
+			for model in models:
+				if str(model.get("unit_id", "")) == str(payload.get("unit_id", "")):
+					found_unit = true
+					if int(model.get("team", -1)) != actor_team:
+						return "NOT ACTIVE TEAM"
+			return "" if found_unit else "UNKNOWN UNIT"
+	return ""
 
 static func _apply_damage(model: Dictionary, damage: int) -> Dictionary:
 	var next := model.duplicate(true)

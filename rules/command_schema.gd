@@ -29,7 +29,7 @@ static func validate_payload(kind: String, payload: Dictionary) -> String:
 			if str(payload.get("unit_id", "")).is_empty() or not _numbers(payload.get("delta", []), 2):
 				return "INVALID MOVE"
 		"SHOOT", "FIGHT":
-			if not _nonnegative_int(payload.get("target", -1)) or not _nonnegative_int(payload.get("damage", -1)):
+			if not _model_ref(payload, "attacker_id", "attacker") or not _model_ref(payload, "target_id", "target") or not _nonnegative_int(payload.get("damage", -1)):
 				return "INVALID DAMAGE EVENT"
 		"CHARGE":
 			if not _nonnegative_int(payload.get("model", -1)) or not _nonnegative_int(payload.get("target", -1)) or not _numbers(payload.get("to", []), 2):
@@ -84,3 +84,9 @@ static func _numbers(value: Variant, expected_size: int) -> bool:
 		if typeof(item) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(item)):
 			return false
 	return true
+
+static func _model_ref(payload: Dictionary, id_key: String, index_key: String) -> bool:
+	var model_id := str(payload.get(id_key, ""))
+	if not model_id.is_empty():
+		return true
+	return _nonnegative_int(payload.get(index_key, -1))

@@ -89,7 +89,7 @@ func run() -> void:
 	check(not ArmyValidation.validate_roster(roster).is_empty(), "over-limit roster fails")
 	var log: Array = []
 	log = CommandLog.append(log, 0, "MOVE", {"unit_id": "u", "delta": [3.0, 0.0]})
-	log = CommandLog.append(log, 0, "SHOOT", {"target": 2, "damage": 1})
+	log = CommandLog.append(log, 0, "SHOOT", {"attacker": 0, "target": 2, "damage": 1})
 	check(CommandLog.validate(log).is_empty(), "command log entries validate")
 	check(CommandLog.decode(CommandLog.encode(log)).size() == 2, "command log round trips")
 	var broken_log := log.duplicate(true)
@@ -105,6 +105,8 @@ func run() -> void:
 	var malformed_command: Dictionary = log[0].duplicate(true)
 	malformed_command.payload = {"unit_id": "u"}
 	check(CommandSchema.validate_entry(malformed_command) == "INVALID MOVE", "command schema rejects incomplete payload")
+	var incomplete_damage := {"sequence": 0, "team": 0, "kind": "SHOOT", "payload": {"target": 1, "damage": 1}}
+	check(CommandSchema.validate_entry(incomplete_damage) == "INVALID DAMAGE EVENT", "command schema requires damage attacker")
 	var session := BattleSession.create([{"position": Vector2(2, 2), "unit_id": "u", "team": 0}], 11, 0)
 	check(not session.is_empty() and BattleSession.validate_snapshot(session).is_empty() and session.phase == "COMMAND", "authoritative session creates a versioned snapshot")
 	var session_move := BattleSession.submit(session, 0, "MOVE", {"unit_id": "u", "delta": [1, 0]})
@@ -175,16 +177,26 @@ func run() -> void:
 	check(shock_replay.ok and shock_replay.state.models[0].battle_shocked and not shock_replay.state.models[0].can_control, "replay applies battle shock")
 	var combat_replay_models: Array = [{"model_id": "attacker_m001", "unit_id": "attacker", "team": 0, "wounds": 3}, {"model_id": "target_m001", "unit_id": "target", "team": 1, "wounds": 4}]
 	var combat_replay_log: Array = []
-	combat_replay_log = CommandLog.append(combat_replay_log, 0, "SHOOT", {"target": 1, "target_id": "target_m001", "damage": 3})
+	combat_replay_log = CommandLog.append(combat_replay_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "attacker_m001", "target": 1, "target_id": "target_m001", "damage": 3})
 	var combat_replay := Replay.replay(Replay.initial_state(combat_replay_models, "SHOOTING", 0), combat_replay_log)
 	check(combat_replay.ok and combat_replay.state.models[1].wounds == 1, "replay applies shooting damage")
 	var phase_replay_log: Array = []
 	phase_replay_log = CommandLog.append(phase_replay_log, 0, "PHASE_ADVANCE", {"from": "MOVEMENT", "to": "SHOOTING"})
-	phase_replay_log = CommandLog.append(phase_replay_log, 0, "SHOOT", {"target": 1, "damage": 1})
+	phase_replay_log = CommandLog.append(phase_replay_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "attacker_m001", "target": 1, "target_id": "target_m001", "damage": 1})
 	var phase_replay := Replay.replay(Replay.initial_state(combat_replay_models, "MOVEMENT", 0), phase_replay_log)
 	check(phase_replay.ok and phase_replay.state.phase == "SHOOTING" and phase_replay.state.models[1].wounds == 3, "replay reconstructs phase transition before shooting")
+	var friendly_damage_log: Array = []
+	var friendly_models := combat_replay_models.duplicate(true)
+	friendly_models.append({"model_id": "friendly_m001", "unit_id": "friendly", "team": 0, "wounds": 3})
+	friendly_damage_log = CommandLog.append(friendly_damage_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "attacker_m001", "target": 2, "target_id": "friendly_m001", "damage": 1})
+	var friendly_damage := Replay.replay(Replay.initial_state(friendly_models, "SHOOTING", 0), friendly_damage_log)
+	check(not friendly_damage.ok and friendly_damage.reason == "FRIENDLY TARGET", "replay rejects friendly damage target")
+	var foreign_attacker_log: Array = []
+	foreign_attacker_log = CommandLog.append(foreign_attacker_log, 1, "SHOOT", {"attacker": 0, "attacker_id": "attacker_m001", "target": 1, "target_id": "target_m001", "damage": 1})
+	var foreign_attacker := Replay.replay(Replay.initial_state(combat_replay_models, "SHOOTING", 1), foreign_attacker_log)
+	check(not foreign_attacker.ok and foreign_attacker.reason == "NOT ACTIVE TEAM", "replay rejects foreign attacker")
 	var destroyed_replay_log: Array = []
-	destroyed_replay_log = CommandLog.append(destroyed_replay_log, 0, "SHOOT", {"target": 1, "target_id": "target_m001", "damage": 4})
+	destroyed_replay_log = CommandLog.append(destroyed_replay_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "attacker_m001", "target": 1, "target_id": "target_m001", "damage": 4})
 	var destroyed_replay := Replay.replay(Replay.initial_state(combat_replay_models, "SHOOTING", 0), destroyed_replay_log)
 	check(destroyed_replay.ok and destroyed_replay.state.models.size() == 1 and destroyed_replay.state.models[0].model_id == "attacker_m001", "replay removes destroyed model by stable id")
 	var turn := TurnState.new_state(0)
