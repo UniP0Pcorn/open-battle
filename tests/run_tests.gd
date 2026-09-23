@@ -32,6 +32,7 @@ const Replay = preload("res://rules/replay.gd")
 const UnitKeywords = preload("res://rules/unit_keywords.gd")
 const RulesetCatalog = preload("res://rules/ruleset_catalog.gd")
 const MissionValidation = preload("res://rules/mission_validation.gd")
+const ModelState = preload("res://rules/model_state.gd")
 var failures := 0
 var checks := 0
 
@@ -108,7 +109,7 @@ func run() -> void:
 	check(CommandSchema.validate_entry(malformed_command) == "INVALID MOVE", "command schema rejects incomplete payload")
 	var incomplete_damage := {"sequence": 0, "team": 0, "kind": "SHOOT", "payload": {"target": 1, "damage": 1}}
 	check(CommandSchema.validate_entry(incomplete_damage) == "INVALID DAMAGE EVENT", "command schema requires damage attacker")
-	var session := BattleSession.create([{"position": Vector2(2, 2), "unit_id": "u", "team": 0}], 11, 0)
+	var session := BattleSession.create([{"model_id": "u_m001", "position": Vector2(2, 2), "unit_id": "u", "team": 0}], 11, 0)
 	check(not session.is_empty() and BattleSession.validate_snapshot(session).is_empty() and session.phase == "COMMAND", "authoritative session creates a versioned snapshot")
 	var session_move := BattleSession.submit(session, 0, "MOVE", {"unit_id": "u", "delta": [1, 0]})
 	check(not session_move.ok and session_move.reason == "INVALID PHASE", "authoritative session rejects movement in command phase")
@@ -118,6 +119,11 @@ func run() -> void:
 	var bad_snapshot: Dictionary = accepted_move.state.duplicate(true)
 	bad_snapshot.ruleset_id = "wh40k_unknown"
 	check(BattleSession.validate_snapshot(bad_snapshot) == "RULESET MISMATCH", "authoritative session rejects mismatched ruleset")
+	var duplicate_snapshot: Dictionary = accepted_move.state.duplicate(true)
+	duplicate_snapshot.models.append(duplicate_snapshot.models[0].duplicate(true))
+	check(BattleSession.validate_snapshot(duplicate_snapshot) == "DUPLICATE MODEL ID u_m001", "authoritative session rejects duplicate model ids")
+	var invalid_model := {"model_id": "bad_m001", "unit_id": "bad", "team": 0, "position": Vector2(INF, 2)}
+	check(ModelState.validate_models([invalid_model]).has("INVALID MODEL POSITION bad_m001"), "model state rejects non-finite position")
 	check(Deployment.zone_reason(Vector2(10, 6), 1.0, 0, Rules.BOARD_SIZE, 12.0).is_empty(), "gold deployment zone accepts legal base")
 	check(Deployment.zone_reason(Vector2(10, 20), 1.0, 0, Rules.BOARD_SIZE, 12.0) == "OUTSIDE DEPLOYMENT ZONE", "gold deployment zone rejects midfield base")
 	check(Deployment.zone_reason(Vector2(10, 38), 1.0, 1, Rules.BOARD_SIZE, 12.0).is_empty(), "blue deployment zone accepts legal base")

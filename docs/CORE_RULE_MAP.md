@@ -4,7 +4,7 @@
 
 | 核心章节 | 工程模块 | 当前状态 |
 | --- | --- | --- |
-| 核心概念：军队、单位、模型、距离、骰子 | `rules/model_state.gd`、`rules/dice.gd` | 待实现 |
+| 核心概念：军队、单位、模型、距离、骰子 | `rules/model_state.gd`、`rules/dice.gd` | 已有稳定模型状态校验、英寸制几何和确定性骰面入口 |
 | 数据卡：属性、武器、关键词、能力 | `data/units/*.json`、`rules/datasheet_validation.gd`、`rules/army_builder.gd`、`rules/army_validation.gd` | 已有版本化数据契约、结构校验、组织约束和编成展开 |
 | 移动、部署、连续性、交战状态 | `rules/movement.gd`、`rules/unit_validation.gd`、`rules/unit_movement.gd`、`rules/deployment.gd`、`rules/engagement.gd` | 已加入多模型连续性、部署区和底座边缘接战校验 |
 | 选择武器、选择目标、解析攻击 | `rules/combat.gd` | 有原型射击，待补完整攻击流程 |

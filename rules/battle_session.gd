@@ -7,6 +7,7 @@ const CommandSchema = preload("res://rules/command_schema.gd")
 const Replay = preload("res://rules/replay.gd")
 const RulesetCatalog = preload("res://rules/ruleset_catalog.gd")
 const TurnState = preload("res://rules/turn_state.gd")
+const ModelState = preload("res://rules/model_state.gd")
 
 const SCHEMA_VERSION := 1
 
@@ -69,6 +70,9 @@ static func validate_snapshot(state: Dictionary) -> String:
 		return "RULESET MISMATCH"
 	if int(state.round) < 1 or int(state.active_team) not in [0, 1] or not (state.models is Array) or not (state.command_log is Array):
 		return "INVALID SNAPSHOT"
+	var model_errors := ModelState.validate_models(state.models)
+	if not model_errors.is_empty():
+		return model_errors[0]
 	var phase_state := {"round": int(state.round), "active_team": int(state.active_team), "phase": str(state.phase), "phase_index": int(state.phase_index), "command_points": state.get("command_points", [0, 0])}
 	if not TurnState.is_valid(phase_state):
 		return "INVALID TURN STATE"
