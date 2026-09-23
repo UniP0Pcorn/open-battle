@@ -40,6 +40,9 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			next.phase = "MOVEMENT"
 			next.phase_index = TurnState.phase_index("MOVEMENT")
 			next.round = int(next.round) + (1 if next.active_team == 0 else 0)
+			var points: Array = next.get("command_points", [0, 0]).duplicate(true)
+			points[next.active_team] = mini(10, int(points[next.active_team]) + 1)
+			next.command_points = points
 		"PHASE_ADVANCE":
 			var phase_state := {
 				"round": int(next.get("round", 1)),

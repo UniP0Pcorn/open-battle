@@ -59,7 +59,7 @@ static func validate_for_state(entry: Dictionary, state: Dictionary) -> String:
 	if not error.is_empty():
 		return error
 	var kind := str(entry.kind)
-	if kind != "END_TURN" and int(entry.team) != int(state.get("active_team", -1)):
+	if int(entry.team) != int(state.get("active_team", -1)):
 		return "NOT ACTIVE TEAM"
 	if PHASE_BY_KIND.has(kind) and str(state.get("phase", "")) != str(PHASE_BY_KIND[kind]):
 		return "INVALID PHASE"

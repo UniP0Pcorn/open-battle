@@ -19,6 +19,7 @@
 - 射击、近战、冲锋、危险武器和战斗震慑命令会在回放入口确认模型 ID/索引、活动阵营和敌我关系，不能只伪造一个伤害值。
 - 新增 `rules/mission_validation.gd`，任务加载前校验目标位置/分值、部署纵深、地形矩形和掩体修正，避免坏任务数据进入桌面。
 - 新增 `rules/model_state.gd`，权威会话拒绝缺失/重复模型 ID、非法单位阵营和非有限坐标，传输层无需重复实现快照完整性检查。
+- `END_TURN` 现在和其他命令一样要求活动阵营，回放同步切换阵营、回合和指挥点，避免会话状态与本地日志分叉。
 - 编成校验支持 profile 的 `organization.unique`、`organization.max_copies`、`organization.role`，以及军表的 `organization.minimum_roles`；未声明组织字段的原型 profile 行为保持不变。
 - 新增回归覆盖：活动阵营可执行命令、错误阶段拒绝、缺字段载荷拒绝。
 
@@ -28,7 +29,7 @@
 godot --headless --path . --script tests/run_tests.gd
 ```
 
-当前结果：**241 项检查，0 失败**。
+当前结果：**243 项检查，0 失败**。
 
 ## 下一步
 

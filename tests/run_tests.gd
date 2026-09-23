@@ -116,6 +116,10 @@ func run() -> void:
 	session = BattleSession.advance_phase(session).state
 	var accepted_move := BattleSession.submit(session, 0, "MOVE", {"unit_id": "u", "delta": [1, 0]})
 	check(accepted_move.ok and accepted_move.state.command_log.size() == 2 and accepted_move.state.phase == "MOVEMENT", "authoritative session accepts a legal movement command")
+	var wrong_end_turn := BattleSession.submit(accepted_move.state, 1, "END_TURN", {})
+	check(not wrong_end_turn.ok and wrong_end_turn.reason == "NOT ACTIVE TEAM", "authoritative session rejects foreign end turn")
+	var ended_session := BattleSession.submit(accepted_move.state, 0, "END_TURN", {})
+	check(ended_session.ok and ended_session.state.active_team == 1 and ended_session.state.command_points[1] == 1, "authoritative session advances turn and grants command point")
 	var bad_snapshot: Dictionary = accepted_move.state.duplicate(true)
 	bad_snapshot.ruleset_id = "wh40k_unknown"
 	check(BattleSession.validate_snapshot(bad_snapshot) == "RULESET MISMATCH", "authoritative session rejects mismatched ruleset")
