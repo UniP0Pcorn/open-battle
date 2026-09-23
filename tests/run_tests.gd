@@ -7,6 +7,7 @@ const CommandLog = preload("res://rules/command_log.gd")
 const CommandSchema = preload("res://rules/command_schema.gd")
 const BattleSession = preload("res://rules/battle_session.gd")
 const Deployment = preload("res://rules/deployment.gd")
+const Engagement = preload("res://rules/engagement.gd")
 const UnitValidation = preload("res://rules/unit_validation.gd")
 const Dice = preload("res://rules/dice.gd")
 const TurnState = preload("res://rules/turn_state.gd")
@@ -212,9 +213,14 @@ func run() -> void:
 	check(Charge.target_reason(charge_attacker, charge_target, 0, 5.0, 8).is_empty(), "charge target in range")
 	check(Charge.target_reason(charge_attacker, charge_target, 0, 15.0, 8) == "OUT OF CHARGE RANGE", "charge target out of range")
 	check(Charge.end_reason(Vector2(10, 10), Vector2(10.8, 10)).is_empty(), "charge ends in engagement")
+	check(Charge.end_reason(Vector2(10, 10), Vector2(13.5, 10), 1.0, 2.0, 1.0).is_empty(), "charge engagement includes base radii")
 	var melee_attacker := {"team": 0, "distance_to_target": 0.8}
 	var melee_target := {"team": 1}
 	check(Melee.target_reason(melee_attacker, melee_target, 0).is_empty(), "melee target is engaged")
+	var positioned_attacker := {"team": 0, "position": Vector2(10, 10), "radius": 2.0}
+	var positioned_target := {"team": 1, "position": Vector2(13.5, 10), "radius": 1.0}
+	check(is_equal_approx(Engagement.separation(positioned_attacker, positioned_target), 0.5) and Engagement.in_engagement(positioned_attacker, positioned_target), "engagement subtracts both base radii")
+	check(Melee.target_reason(positioned_attacker, positioned_target, 0).is_empty(), "melee uses positioned engagement geometry")
 	var obstacles: Array = [{"x": 4.0, "y": 4.0, "width": 2.0, "height": 2.0}]
 	check(Terrain.circle_reason(Vector2(5, 5), 0.5, obstacles) == "TERRAIN BLOCKED", "terrain blocks base placement")
 	check(Terrain.path_reason(Vector2(2, 5), Vector2(8, 5), 0.5, obstacles) == "TERRAIN BLOCKED", "terrain blocks movement path")

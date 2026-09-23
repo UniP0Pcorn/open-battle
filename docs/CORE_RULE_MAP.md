@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | 核心概念：军队、单位、模型、距离、骰子 | `rules/model_state.gd`、`rules/dice.gd` | 待实现 |
 | 数据卡：属性、武器、关键词、能力 | `data/units/*.json`、`rules/datasheet_validation.gd`、`rules/army_builder.gd` | 已有版本化数据契约、结构校验和编成展开 |
-| 移动、部署、连续性、交战状态 | `rules/movement.gd`、`rules/unit_validation.gd`、`rules/unit_movement.gd` | 已加入多模型连续性和同步平移校验，部署/交战状态待实现 |
+| 移动、部署、连续性、交战状态 | `rules/movement.gd`、`rules/unit_validation.gd`、`rules/unit_movement.gd`、`rules/deployment.gd`、`rules/engagement.gd` | 已加入多模型连续性、部署区和底座边缘接战校验 |
 | 选择武器、选择目标、解析攻击 | `rules/combat.gd` | 有原型射击，待补完整攻击流程 |
 | 命中、致伤、豁免、造成伤害 | `rules/combat.gd`、`rules/dice.gd` | 命中/致伤/伤害有原型，豁免待实现 |
 | 战斗轮和玩家回合 | `rules/turn_state.gd` | 当前只有本地移动/射击阶段 |
@@ -14,7 +14,7 @@
 | 移动阶段 | `rules/movement.gd` | 已有基础移动、边界、重叠和路径阻挡 |
 | 射击阶段 | `rules/combat.gd` | 已有敌我和射程验证，待补单位/武器选择 |
 | 冲锋阶段 | `rules/charge.gd` | 待实现 |
-| 战斗阶段、贴靠、合并和近战攻击 | `rules/melee.gd` | 待实现 |
+| 战斗阶段、贴靠、合并和近战攻击 | `rules/melee.gd`、`rules/engagement.gd` | 已有接战距离和近战攻击原型，完整单位合并/分配仍待扩展 |
 | 地形、视线、掩体、遮蔽 | `rules/terrain.gd`、`rules/visibility.gd`、`rules/combat.gd` | 已有矩形阻挡、采样视线和 `cover_bonus` 豁免修正，复杂掩体类别待实现 |
 | 目标点和任务胜负 | `rules/mission.gd` | 已抽出目标控制、目标分值和胜负判定，任务条件仍待扩展 |
 | 战略点、核心策略和行动 | `rules/stratagems.gd`、`rules/actions.gd` | 待实现 |

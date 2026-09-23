@@ -20,7 +20,7 @@ static func target_reason(attacker: Dictionary, target: Dictionary, active_team:
 		return "OUT OF CHARGE RANGE"
 	return ""
 
-static func end_reason(attacker_position: Vector2, target_position: Vector2, engagement_range: float = 1.0) -> String:
-	if attacker_position.distance_to(target_position) > engagement_range:
+static func end_reason(attacker_position: Vector2, target_position: Vector2, engagement_range: float = 1.0, attacker_radius: float = 0.0, target_radius: float = 0.0) -> String:
+	if attacker_position.distance_to(target_position) - attacker_radius - target_radius > engagement_range + 0.0001:
 		return "NOT IN ENGAGEMENT"
 	return ""

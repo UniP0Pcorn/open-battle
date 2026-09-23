@@ -80,6 +80,7 @@ godot --headless --path . --script tests/run_tests.gd
 `rules/command_schema.gd` 集中定义八类命令的字段和阶段契约；存档、回放和未来服务器共享同一验证入口，避免不同入口接受不同的命令格式。
 `rules/battle_session.gd` 提供版本化权威会话快照、阶段推进和命令提交入口，网络层可以直接复用它进行服务器端验证。
 `rules/deployment.gd` 和任务 JSON 的 `deployment_depth_inches` 提供双方部署区校验；放置底座时会检查阵营、桌面边界和已有底座重叠。
+`rules/engagement.gd` 统一按双方底座边缘距离判断接战；冲锋结束和近战目标选择会使用同一几何结果。
 桌面阶段状态会同步到 `rules/turn_state.gd` 的版本化状态结构，阶段索引、活动阵营、回合数和指挥点会随对局存档恢复。
 `rules/ruleset_catalog.gd` 注册当前可执行的 10E 和 11E 规则集；兵牌校验会拒绝未注册的 edition，避免把未知版本误当作可运行规则。
 

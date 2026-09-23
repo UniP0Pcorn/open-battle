@@ -581,9 +581,7 @@ func fight_selected() -> void:
 	for i in range(models.size()):
 		if models[i].team != active_team:
 			var distance: float = attacker.position.distance_to(models[i].position)
-			var candidate := attacker.duplicate(true)
-			candidate.distance_to_target = distance - attacker.radius - models[i].radius
-			if Melee.target_reason(candidate, models[i], active_team).is_empty() and distance < nearest:
+			if Melee.target_reason(attacker, models[i], active_team).is_empty() and distance < nearest:
 				nearest = distance
 				target_index = i
 	if target_index < 0:
