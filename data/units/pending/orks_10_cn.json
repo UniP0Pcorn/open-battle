@@ -12,5 +12,7 @@
   "models": [],
   "weapons": [],
   "points": [],
-  "import_status": "pending_extraction"
+  "import_status": "pending_extraction",
+  "candidate_count": 49,
+  "review_sheet": "work/profile_review.csv"
 }

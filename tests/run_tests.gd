@@ -344,6 +344,7 @@ func run() -> void:
 	check(scene.objectives.size() == 1 and scene.score == [0, 0], "scene starts with one neutral objective")
 	check(scene.objective_values.size() == 1 and scene.objective_values[0] == 2, "scene loads objective point values")
 	check(scene.ready_profile_count >= 1 and scene.pending_profile_count == 30, "scene reports profile catalog status")
+	check(scene.pending_candidate_count == 643, "scene reports pending candidate count")
 	check(scene.ready_profiles.size() == scene.ready_profile_count and scene.unit_profile.id == "custodian_guard_fixture", "scene loads ready profile catalog")
 	check(scene.roster.faction == scene.unit_profile.faction, "scene applies profile faction to roster")
 	check(scene.pending_profile_count == ProfileCatalog.load_tree("res://data/units/pending", true).size(), "scene counts recursive pending profile catalog")

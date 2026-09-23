@@ -57,6 +57,7 @@ var message := "选择底座以查看移动额度。"
 var font: Font = ThemeDB.fallback_font
 var ready_profile_count := 0
 var pending_profile_count := 0
+var pending_candidate_count := 0
 var ready_profiles: Array = []
 var selected_profile_index := 0
 var show_roster_panel := false
@@ -78,7 +79,10 @@ func _ready() -> void:
 	if not roster.has("faction") and not str(unit_profile.get("faction", "")).is_empty():
 		roster.faction = str(unit_profile.get("faction", ""))
 	ready_profile_count = ProfileCatalog.ready_only(ProfileCatalog.load_tree("res://data/units", true)).size()
-	pending_profile_count = ProfileCatalog.load_tree("res://data/units/pending", true).size()
+	var pending_catalog := ProfileCatalog.load_tree("res://data/units/pending", true)
+	pending_profile_count = pending_catalog.size()
+	for pending_profile in pending_catalog.values():
+		pending_candidate_count += int(pending_profile.get("candidate_count", 0))
 	control_radius = float(mission.get("control_radius_inches", 3.0))
 	score_to_win = int(mission.get("score_to_win", 5))
 	deployment_depth = float(mission.get("deployment_depth_inches", 12.0))
@@ -866,13 +870,14 @@ func _draw() -> void:
 		label_at(to_screen(preview) + Vector2(18, -16), "%.2f 英寸 | %s" % [models[selected].position.distance_to(preview), "合法" if reason.is_empty() else display_reason(reason)], 16, color)
 	if placing:
 		var radius := Rules.radius_inches(float(fixture.base_diameter_mm))
-		var color := GOLD if Rules.placement_reason(preview, radius, models).is_empty() else RED
+		var color := GOLD if Deployment.placement_reason(preview, radius, team, models, -1, deployment_depth).is_empty() else RED
 		draw_arc(to_screen(preview), radius * SCALE, 0, TAU, 48, color, 2, true)
 	label_at(Vector2(976, 135), "原型版本 / 00", 19, GOLD)
 	label_at(Vector2(976, 160), "任务：" + str(mission.get("display_name", "未命名")), 15)
 	label_at(Vector2(976, 178), str(unit_profile.get("display_name", "未选择兵牌")), 23)
 	label_at(Vector2(976, 202), "编成：%d / %d 点" % [ArmyValidation.total_points(roster), int(roster.get("points_limit", 0))], 14)
-	label_at(Vector2(976, 220), "兵牌：%d 可用 / %d 待复核" % [ready_profile_count, pending_profile_count], 14, BLUE)
+	label_at(Vector2(976, 220), "兵牌：%d 可用 / %d 来源待复核" % [ready_profile_count, pending_profile_count], 14, BLUE)
+	label_at(Vector2(976, 240), "候选记录：%d 条（均需人工审核）" % pending_candidate_count, 13, BLUE)
 	label_at(Vector2(976, 236), "单位条目：%d（A 添加 / D 移除）" % roster.get("units", []).size(), 13, BLUE)
 	label_at(Vector2(976, 248), "40mm / %.4f 英寸直径" % (40.0 / 25.4), 15)
 	label_at(Vector2(976, 264), "武器：" + str(fixture.get("weapon", {}).get("name", "未选择")), 14, GOLD)
