@@ -2,6 +2,8 @@
 extends RefCounted
 ## Data-driven weapon keyword normalization and attack context.
 
+const Dice = preload("res://rules/dice.gd")
+
 const ALIASES := {
 	"喷射": "torrent",
 	"torrent": "torrent",
@@ -21,6 +23,10 @@ const ALIASES := {
 
 static func canonical_id(value: Variant) -> String:
 	var text := str(value).strip_edges().to_lower()
+	if text.begins_with("速射") and text.substr(2).is_valid_int():
+		return "rapid_fire_" + text.substr(2)
+	if text.begins_with("rapid fire ") and text.substr(11).is_valid_int():
+		return "rapid_fire_" + text.substr(11)
 	return str(ALIASES.get(text, text))
 
 static func ids_from_weapon(weapon: Dictionary) -> Array:
@@ -36,8 +42,17 @@ static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, t
 		result.hit_on = 1
 	if ids.has("ignores_cover"):
 		cover_bonus = 0
-	if ids.has("rapid_fire") and distance <= float(result.get("range_inches", 0.0)) / 2.0:
-		result.attacks = int(result.get("attacks", 1)) * 2
+	if distance <= float(result.get("range_inches", 0.0)) / 2.0:
+		var rapid_bonus := -1
+		for keyword in ids:
+			if str(keyword).begins_with("rapid_fire_"):
+				rapid_bonus = maxi(0, int(str(keyword).trim_prefix("rapid_fire_")))
+				break
+		if rapid_bonus >= 0:
+			result.attacks = _add_expression(result.get("attacks", 1), rapid_bonus)
+		elif ids.has("rapid_fire"):
+			# Bare rapid fire remains the original prototype shorthand.
+			result.attacks = int(result.get("attacks", 1)) * 2
 	if ids.has("hazardous"):
 		result.hazardous = true
 		result.hazardous_damage = int(result.get("hazardous_damage", 3))
@@ -46,3 +61,17 @@ static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, t
 	if ids.has("blast") and target_models >= 5:
 		result.attacks = int(result.get("attacks", 1)) + (target_models / 5)
 	return {"weapon": result, "cover_bonus": cover_bonus, "keywords": ids}
+
+static func _add_expression(value: Variant, modifier: int) -> Variant:
+	var parsed := Dice.parse_expression(value)
+	if not parsed.valid:
+		return value
+	if int(parsed.sides) == 0:
+		return int(parsed.modifier) + modifier
+	var expression := (str(parsed.count) if int(parsed.count) != 1 else "") + "D" + str(parsed.sides)
+	var total_modifier := int(parsed.modifier) + modifier
+	if total_modifier > 0:
+		expression += "+" + str(total_modifier)
+	elif total_modifier < 0:
+		expression += str(total_modifier)
+	return expression

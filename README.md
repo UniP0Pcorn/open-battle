@@ -74,6 +74,7 @@ godot --headless --path . --script tests/run_tests.gd
 能力层同时提供中文/英文别名规范化，例如“隐匿”“斥候6英寸”“深入打击”会映射到稳定的内部 ID。
 `rules/unit_keywords.gd` 规范化单位关键词；profile 校验会拒绝未知单位关键词，但允许来源自定义阵营关键词。
 `rules/weapon_rules.gd` 负责武器关键词规范化和攻击上下文，例如喷射自动命中、忽略掩体和半程速射。
+数值速射（如 `速射1`、`速射2`）在半程按数值增加攻击，`D3/D6` 攻击表达式也会保留；无数字的 `速射` 继续作为原型兼容简写。
 `lone_operator` 能力已接入远程目标筛选：距离超过 12 英寸时不能被远程指定，近距离仍可正常攻击。
 `rules/datasheet_validation.gd` 会校验武器的攻击次数和伤害骰面是否能由 `rules/dice.gd` 执行；JSON 数字、`D3`、`D6`、`2D6+1` 等受支持表达式可直接进入 profile。
 `rules/battle_shock.gd` 提供半数模型阈值判断、2D6 领导力检定以及按单位写入震慑和目标控制状态的辅助函数。
