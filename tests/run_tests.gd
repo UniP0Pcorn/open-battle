@@ -97,6 +97,11 @@ func run() -> void:
 	check(CommandLog.validate(broken_log) == "SEQUENCE GAP", "command log detects sequence gaps")
 	check(CommandSchema.validate_for_state(log[0], {"active_team": 0, "phase": "MOVEMENT"}).is_empty(), "command schema accepts active movement")
 	check(CommandSchema.validate_for_state(log[1], {"active_team": 0, "phase": "MOVEMENT"}) == "INVALID PHASE", "command schema rejects wrong phase")
+	var phase_entry := {"sequence": 0, "team": 0, "kind": "PHASE_ADVANCE", "payload": {"from": "MOVEMENT", "to": "SHOOTING"}}
+	check(CommandSchema.validate_for_state(phase_entry, {"active_team": 0, "phase": "MOVEMENT"}).is_empty(), "command schema accepts phase advance")
+	var bad_phase_entry := phase_entry.duplicate(true)
+	bad_phase_entry.payload.to = "FIGHT"
+	check(CommandSchema.validate_entry(bad_phase_entry) == "INVALID PHASE TRANSITION", "command schema rejects skipped phase")
 	var malformed_command: Dictionary = log[0].duplicate(true)
 	malformed_command.payload = {"unit_id": "u"}
 	check(CommandSchema.validate_entry(malformed_command) == "INVALID MOVE", "command schema rejects incomplete payload")
@@ -106,7 +111,7 @@ func run() -> void:
 	check(not session_move.ok and session_move.reason == "INVALID PHASE", "authoritative session rejects movement in command phase")
 	session = BattleSession.advance_phase(session).state
 	var accepted_move := BattleSession.submit(session, 0, "MOVE", {"unit_id": "u", "delta": [1, 0]})
-	check(accepted_move.ok and accepted_move.state.command_log.size() == 1, "authoritative session accepts a legal movement command")
+	check(accepted_move.ok and accepted_move.state.command_log.size() == 2 and accepted_move.state.phase == "MOVEMENT", "authoritative session accepts a legal movement command")
 	var bad_snapshot: Dictionary = accepted_move.state.duplicate(true)
 	bad_snapshot.ruleset_id = "wh40k_unknown"
 	check(BattleSession.validate_snapshot(bad_snapshot) == "RULESET MISMATCH", "authoritative session rejects mismatched ruleset")
@@ -173,6 +178,11 @@ func run() -> void:
 	combat_replay_log = CommandLog.append(combat_replay_log, 0, "SHOOT", {"target": 1, "target_id": "target_m001", "damage": 3})
 	var combat_replay := Replay.replay(Replay.initial_state(combat_replay_models, "SHOOTING", 0), combat_replay_log)
 	check(combat_replay.ok and combat_replay.state.models[1].wounds == 1, "replay applies shooting damage")
+	var phase_replay_log: Array = []
+	phase_replay_log = CommandLog.append(phase_replay_log, 0, "PHASE_ADVANCE", {"from": "MOVEMENT", "to": "SHOOTING"})
+	phase_replay_log = CommandLog.append(phase_replay_log, 0, "SHOOT", {"target": 1, "damage": 1})
+	var phase_replay := Replay.replay(Replay.initial_state(combat_replay_models, "MOVEMENT", 0), phase_replay_log)
+	check(phase_replay.ok and phase_replay.state.phase == "SHOOTING" and phase_replay.state.models[1].wounds == 3, "replay reconstructs phase transition before shooting")
 	var destroyed_replay_log: Array = []
 	destroyed_replay_log = CommandLog.append(destroyed_replay_log, 0, "SHOOT", {"target": 1, "target_id": "target_m001", "damage": 4})
 	var destroyed_replay := Replay.replay(Replay.initial_state(combat_replay_models, "SHOOTING", 0), destroyed_replay_log)

@@ -3,9 +3,10 @@ extends RefCounted
 ## Deterministic command-log replay for local verification and future servers.
 
 const CommandSchema = preload("res://rules/command_schema.gd")
+const TurnState = preload("res://rules/turn_state.gd")
 
 static func initial_state(models: Array, phase: String = "MOVEMENT", active_team: int = 0) -> Dictionary:
-	return {"models": models.duplicate(true), "phase": phase, "active_team": active_team, "round": 1, "events": []}
+	return {"models": models.duplicate(true), "phase": phase, "phase_index": TurnState.phase_index(phase), "active_team": active_team, "round": 1, "command_points": [0, 0], "events": []}
 
 static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 	var next := state.duplicate(true)
@@ -34,7 +35,22 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 		"END_TURN":
 			next.active_team = 1 - int(next.active_team)
 			next.phase = "MOVEMENT"
+			next.phase_index = TurnState.phase_index("MOVEMENT")
 			next.round = int(next.round) + (1 if next.active_team == 0 else 0)
+		"PHASE_ADVANCE":
+			var phase_state := {
+				"round": int(next.get("round", 1)),
+				"active_team": int(next.get("active_team", 0)),
+				"phase": str(next.get("phase", "")),
+				"phase_index": int(next.get("phase_index", -1)),
+				"command_points": next.get("command_points", [0, 0]).duplicate(true)
+			}
+			var advanced := TurnState.advance(phase_state)
+			next.round = advanced.round
+			next.active_team = advanced.active_team
+			next.phase = advanced.phase
+			next.phase_index = advanced.phase_index
+			next.command_points = advanced.command_points.duplicate(true)
 		"BATTLE_SHOCK":
 			var unit_id := str(payload.get("unit_id", ""))
 			var found := false

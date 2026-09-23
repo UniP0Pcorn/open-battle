@@ -480,9 +480,11 @@ func enter_shooting() -> void:
 		return
 	dragging = false
 	placing = false
+	var previous_phase := phase
 	phase = "SHOOTING"
 	turn_state.phase = phase
 	turn_state.phase_index = TurnState.phase_index(phase)
+	command_log = CommandLog.append(command_log, active_team, "PHASE_ADVANCE", {"from": previous_phase, "to": phase})
 	message = "已进入射击阶段。选择底座后按 F 射击最近目标。"
 	queue_redraw()
 
@@ -493,9 +495,11 @@ func enter_charge() -> void:
 		return
 	dragging = false
 	placing = false
+	var previous_phase := phase
 	phase = "CHARGE"
 	turn_state.phase = phase
 	turn_state.phase_index = TurnState.phase_index(phase)
+	command_log = CommandLog.append(command_log, active_team, "PHASE_ADVANCE", {"from": previous_phase, "to": phase})
 	message = "已进入冲锋阶段。选择当前阵营底座后按 G 执行冲锋。"
 	queue_redraw()
 
@@ -506,9 +510,11 @@ func enter_fight() -> void:
 		return
 	dragging = false
 	placing = false
+	var previous_phase := phase
 	phase = "FIGHT"
 	turn_state.phase = phase
 	turn_state.phase_index = TurnState.phase_index(phase)
+	command_log = CommandLog.append(command_log, active_team, "PHASE_ADVANCE", {"from": previous_phase, "to": phase})
 	message = "已进入战斗阶段。选择接战底座后按 X 执行近战攻击。"
 	queue_redraw()
 

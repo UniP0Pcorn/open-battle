@@ -48,7 +48,6 @@ static func advance_phase(state: Dictionary) -> Dictionary:
 	var snapshot_error := validate_snapshot(state)
 	if not snapshot_error.is_empty():
 		return {"ok": false, "reason": snapshot_error, "state": state}
-	var next := state.duplicate(true)
 	var phase_state := {
 		"round": int(state.round),
 		"active_team": int(state.active_team),
@@ -57,12 +56,7 @@ static func advance_phase(state: Dictionary) -> Dictionary:
 		"command_points": state.command_points.duplicate(true)
 	}
 	var advanced := TurnState.advance(phase_state)
-	next.round = advanced.round
-	next.active_team = advanced.active_team
-	next.phase = advanced.phase
-	next.phase_index = advanced.phase_index
-	next.command_points = advanced.command_points.duplicate(true)
-	return {"ok": true, "reason": "", "state": next}
+	return submit(state, int(state.active_team), "PHASE_ADVANCE", {"from": str(state.phase), "to": str(advanced.phase)})
 
 static func validate_snapshot(state: Dictionary) -> String:
 	for field in ["schema_version", "edition", "ruleset_id", "round", "active_team", "phase", "phase_index", "models", "command_log"]:

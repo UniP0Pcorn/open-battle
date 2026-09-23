@@ -2,7 +2,8 @@
 extends RefCounted
 ## Canonical command envelope and phase contract shared by saves, replay and servers.
 
-const KINDS := ["MOVE", "SHOOT", "CHARGE", "FIGHT", "END_TURN", "BATTLE_SHOCK", "HAZARDOUS", "STRATAGEM"]
+const KINDS := ["MOVE", "SHOOT", "CHARGE", "FIGHT", "PHASE_ADVANCE", "END_TURN", "BATTLE_SHOCK", "HAZARDOUS", "STRATAGEM"]
+const PHASES := ["COMMAND", "MOVEMENT", "SHOOTING", "CHARGE", "FIGHT"]
 const PHASE_BY_KIND := {
 	"MOVE": "MOVEMENT",
 	"SHOOT": "SHOOTING",
@@ -42,6 +43,13 @@ static func validate_payload(kind: String, payload: Dictionary) -> String:
 		"STRATAGEM":
 			if str(payload.get("id", "")).is_empty() or str(payload.get("phase", "")).is_empty():
 				return "INVALID STRATAGEM"
+		"PHASE_ADVANCE":
+			var from_phase := str(payload.get("from", ""))
+			var to_phase := str(payload.get("to", ""))
+			if not PHASES.has(from_phase) or not PHASES.has(to_phase):
+				return "INVALID PHASE TRANSITION"
+			if _next_phase(from_phase) != to_phase:
+				return "INVALID PHASE TRANSITION"
 		"END_TURN":
 			pass
 	return ""
@@ -55,7 +63,16 @@ static func validate_for_state(entry: Dictionary, state: Dictionary) -> String:
 		return "NOT ACTIVE TEAM"
 	if PHASE_BY_KIND.has(kind) and str(state.get("phase", "")) != str(PHASE_BY_KIND[kind]):
 		return "INVALID PHASE"
+	if kind == "PHASE_ADVANCE":
+		if str(state.get("phase", "")) != str(entry.payload.get("from", "")):
+			return "INVALID PHASE"
 	return ""
+
+static func _next_phase(phase: String) -> String:
+	var index := PHASES.find(phase)
+	if index < 0:
+		return ""
+	return PHASES[(index + 1) % PHASES.size()]
 
 static func _nonnegative_int(value: Variant) -> bool:
 	return (typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT) and int(value) >= 0 and float(value) == float(int(value))

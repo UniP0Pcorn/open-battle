@@ -4,7 +4,7 @@
 
 ## 已完成
 
-- 新增 `rules/command_schema.gd`，统一定义 MOVE、SHOOT、CHARGE、FIGHT、END_TURN、BATTLE_SHOCK、HAZARDOUS 和 STRATAGEM 八类命令。
+- 新增 `rules/command_schema.gd`，统一定义 MOVE、SHOOT、CHARGE、FIGHT、PHASE_ADVANCE、END_TURN、BATTLE_SHOCK、HAZARDOUS 和 STRATAGEM 九类命令。
 - 统一检查序号、操作阵营、命令类型、载荷字段和阶段要求；只对需要字段的命令执行校验，避免各模块重复实现同一套规则。
 - `rules/command_log.gd` 使用统一契约验证存档日志。
 - `rules/replay.gd` 使用统一契约验证回放命令，并保留未知单位、越权阵营、错误阶段和非法目标的语义错误。
@@ -15,6 +15,7 @@
 - 待复核 profile 元数据记录每个来源的候选数量，客户端同时显示待复核来源和候选记录总数。
 - `rules/engagement.gd` 统一冲锋结束与近战目标的底座边缘距离，避免不同底座尺寸产生不同接战结果。
 - 模型获得稳定 `model_id`，攻击命令按 ID 记录目标；回放会同步移除被淘汰模型，避免数组下标变化破坏重放。
+- 阶段切换也写入 `PHASE_ADVANCE` 命令；界面、权威会话和回放现在能重建移动→射击→冲锋→战斗的完整阶段顺序，并拒绝跳过阶段。
 - 编成校验支持 profile 的 `organization.unique`、`organization.max_copies`、`organization.role`，以及军表的 `organization.minimum_roles`；未声明组织字段的原型 profile 行为保持不变。
 - 新增回归覆盖：活动阵营可执行命令、错误阶段拒绝、缺字段载荷拒绝。
 
@@ -24,7 +25,7 @@
 godot --headless --path . --script tests/run_tests.gd
 ```
 
-当前结果：**230 项检查，0 失败**。
+当前结果：**233 项检查，0 失败**。
 
 ## 下一步
 

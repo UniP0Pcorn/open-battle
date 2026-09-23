@@ -9,11 +9,11 @@
 | 移动、部署、连续性、交战状态 | `rules/movement.gd`、`rules/unit_validation.gd`、`rules/unit_movement.gd`、`rules/deployment.gd`、`rules/engagement.gd` | 已加入多模型连续性、部署区和底座边缘接战校验 |
 | 选择武器、选择目标、解析攻击 | `rules/combat.gd` | 有原型射击，待补完整攻击流程 |
 | 命中、致伤、豁免、造成伤害 | `rules/combat.gd`、`rules/dice.gd` | 命中/致伤/伤害有原型，豁免待实现 |
-| 战斗轮和玩家回合 | `rules/turn_state.gd` | 当前只有本地移动/射击阶段 |
+| 战斗轮和玩家回合 | `rules/turn_state.gd`、`rules/command_schema.gd`、`rules/replay.gd` | 已有版本化阶段状态和可回放的阶段切换命令 |
 | 指挥阶段、指挥点和战斗震慑 | `rules/turn_state.gd`、`rules/command_points.gd`、`rules/battle_shock.gd` | 已有阶段、指挥点和震慑检定，完整指挥能力待实现 |
 | 移动阶段 | `rules/movement.gd` | 已有基础移动、边界、重叠和路径阻挡 |
 | 射击阶段 | `rules/combat.gd` | 已有敌我和射程验证，待补单位/武器选择 |
-| 冲锋阶段 | `rules/charge.gd` | 待实现 |
+| 冲锋阶段 | `rules/charge.gd` | 已有 2D6 冲锋距离、射程和接战落点原型 |
 | 战斗阶段、贴靠、合并和近战攻击 | `rules/melee.gd`、`rules/engagement.gd` | 已有接战距离和近战攻击原型，完整单位合并/分配仍待扩展 |
 | 地形、视线、掩体、遮蔽 | `rules/terrain.gd`、`rules/visibility.gd`、`rules/combat.gd` | 已有矩形阻挡、采样视线和 `cover_bonus` 豁免修正，复杂掩体类别待实现 |
 | 目标点和任务胜负 | `rules/mission.gd` | 已抽出目标控制、目标分值和胜负判定，任务条件仍待扩展 |
