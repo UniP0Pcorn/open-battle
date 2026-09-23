@@ -293,13 +293,14 @@ func _ready_profile_map() -> Dictionary:
 func add_model(point: Vector2, side: int, unit_id: String = "", model_data: Dictionary = {}) -> void:
 	if unit_id.is_empty():
 		unit_id = "%s_model_%02d" % [str(fixture.get("id", "fixture")), models.size() + 1]
+	var model_id := str(model_data.get("model_id", "%s_m%03d" % [unit_id, models.size() + 1]))
 	var ability_ids: Array = model_data.get("ability_ids", UnitAbilities.ids_from_profile(unit_profile))
 	var ability_mods := UnitAbilities.modifiers(ability_ids)
 	var base_mm := float(model_data.get("base_diameter_mm", fixture.get("base_diameter_mm", 40.0)))
 	var objective_control := int(model_data.get("objective_control", 1)) + int(ability_mods.objective_control_bonus)
 	# Retain movement per model; the current catalogue selection is only a default.
 	var movement_inches := float(model_data.get("movement_inches", fixture.get("movement_inches", 6.0)))
-	models.append({"position": point, "radius": Rules.radius_inches(base_mm), "spent": 0.0, "team": side, "wounds": int(model_data.get("wounds", fixture.get("wounds", 3))), "toughness": int(model_data.get("toughness", fixture.get("toughness", 4))), "save_on": int(model_data.get("save_on", fixture.get("save_on", 7))), "invulnerable_save": int(model_data.get("invulnerable_save", fixture.get("invulnerable_save", 0))), "leadership": int(model_data.get("leadership", fixture.get("leadership", 7))), "objective_control": objective_control, "ability_ids": ability_ids, "keywords": model_data.get("keywords", unit_profile.get("keywords", [])).duplicate(true), "faction_keywords": model_data.get("faction_keywords", unit_profile.get("faction_keywords", [])).duplicate(true), "weapons": model_data.get("weapons", unit_profile.get("weapons", [])).duplicate(true), "unit_id": unit_id, "battle_shocked": false, "can_control": true})
+	models.append({"model_id": model_id, "position": point, "radius": Rules.radius_inches(base_mm), "spent": 0.0, "team": side, "wounds": int(model_data.get("wounds", fixture.get("wounds", 3))), "toughness": int(model_data.get("toughness", fixture.get("toughness", 4))), "save_on": int(model_data.get("save_on", fixture.get("save_on", 7))), "invulnerable_save": int(model_data.get("invulnerable_save", fixture.get("invulnerable_save", 0))), "leadership": int(model_data.get("leadership", fixture.get("leadership", 7))), "objective_control": objective_control, "ability_ids": ability_ids, "keywords": model_data.get("keywords", unit_profile.get("keywords", [])).duplicate(true), "faction_keywords": model_data.get("faction_keywords", unit_profile.get("faction_keywords", [])).duplicate(true), "weapons": model_data.get("weapons", unit_profile.get("weapons", [])).duplicate(true), "unit_id": unit_id, "battle_shocked": false, "can_control": true})
 
 	models[-1].movement_inches = movement_inches
 	models[-1].coherency_inches = float(model_data.get("coherency_inches", 2.0))
@@ -562,7 +563,7 @@ func charge_selected() -> void:
 		return
 	var old_position: Vector2 = attacker.position
 	attacker.position = destination
-	command_log = CommandLog.append(command_log, active_team, "CHARGE", {"model": selected, "target": target_index, "roll": roll.rolls, "from": [old_position.x, old_position.y], "to": [destination.x, destination.y]})
+	command_log = CommandLog.append(command_log, active_team, "CHARGE", {"model": selected, "model_id": attacker.get("model_id", ""), "target": target_index, "target_id": target.get("model_id", ""), "roll": roll.rolls, "from": [old_position.x, old_position.y], "to": [destination.x, destination.y]})
 	message = "冲锋成功：2D6=%d，已进入接战距离。" % roll.distance
 	queue_redraw()
 
@@ -592,7 +593,7 @@ func fight_selected() -> void:
 	var weapon := weapon_for_model(attacker)
 	var result := Melee.resolve_attack(weapon, models[target_index], combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls))
 	reroll_next_attack = false
-	command_log = CommandLog.append(command_log, active_team, "FIGHT", {"attacker": selected, "target": target_index, "hits": result.hits, "damage": result.damage})
+	command_log = CommandLog.append(command_log, active_team, "FIGHT", {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "hits": result.hits, "damage": result.damage})
 	var damage_result := Damage.allocate_to_unit(models, int(result.damage), target_index)
 	if int(damage_result.destroyed) > 0:
 		selected = -1 if selected == target_index else selected
@@ -639,13 +640,13 @@ func fire_selected() -> void:
 	var attacker_abilities := UnitAbilities.modifiers(attacker.get("ability_ids", []))
 	var result := Combat.resolve_ranged_attack(weapon_context.weapon, target_for_attack, combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls))
 	reroll_next_attack = false
-	command_log = CommandLog.append(command_log, active_team, "SHOOT", {"attacker": selected, "target": target_index, "weapon": weapon.get("name", ""), "hits": result.hits, "damage": result.damage})
+	command_log = CommandLog.append(command_log, active_team, "SHOOT", {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "weapon": weapon.get("name", ""), "hits": result.hits, "damage": result.damage})
 	var damage_result := Damage.allocate_to_unit(models, int(result.damage), target_index)
 	var hazardous_damage := int(result.hazardous_failures) * int(weapon_context.weapon.get("hazardous_damage", 3))
 	var hazardous_result := {"destroyed": 0, "damage": 0}
 	if hazardous_damage > 0 and selected >= 0 and selected < models.size():
 		hazardous_result = Damage.allocate_to_unit(models, hazardous_damage, selected)
-		command_log = CommandLog.append(command_log, active_team, "HAZARDOUS", {"attacker": selected, "damage": hazardous_damage})
+		command_log = CommandLog.append(command_log, active_team, "HAZARDOUS", {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "damage": hazardous_damage})
 	var target_name := "底座 %02d" % (target_index + 1)
 	if int(hazardous_result.destroyed) > 0:
 		selected = -1
@@ -701,7 +702,7 @@ func finish_drag() -> void:
 				models[index].spent += distance
 				models[index].position += delta
 		history.append({"changes": changes, "selected": selected})
-		command_log = CommandLog.append(command_log, active_team, "MOVE", {"unit_id": models[selected].unit_id, "model": selected, "delta": [delta.x, delta.y], "distance": distance})
+		command_log = CommandLog.append(command_log, active_team, "MOVE", {"unit_id": models[selected].unit_id, "model": selected, "model_id": models[selected].get("model_id", ""), "delta": [delta.x, delta.y], "distance": distance})
 		message = "本次移动 %.2f 英寸。移动额度按累计值计算。" % distance
 	else:
 		message = "非法移动：%s。已还原位置。" % display_reason(reason)

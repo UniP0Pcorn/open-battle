@@ -81,6 +81,7 @@ godot --headless --path . --script tests/run_tests.gd
 `rules/battle_session.gd` 提供版本化权威会话快照、阶段推进和命令提交入口，网络层可以直接复用它进行服务器端验证。
 `rules/deployment.gd` 和任务 JSON 的 `deployment_depth_inches` 提供双方部署区校验；放置底座时会检查阵营、桌面边界和已有底座重叠。
 `rules/engagement.gd` 统一按双方底座边缘距离判断接战；冲锋结束和近战目标选择会使用同一几何结果。
+每个上桌模型还带有稳定 `model_id`；射击、近战、冲锋和危险武器命令会记录模型 ID，回放在模型被淘汰后仍能正确找到后续目标。
 桌面阶段状态会同步到 `rules/turn_state.gd` 的版本化状态结构，阶段索引、活动阵营、回合数和指挥点会随对局存档恢复。
 `rules/ruleset_catalog.gd` 注册当前可执行的 10E 和 11E 规则集；兵牌校验会拒绝未注册的 edition，避免把未知版本误当作可运行规则。
 

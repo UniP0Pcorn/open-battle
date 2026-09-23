@@ -168,11 +168,15 @@ func run() -> void:
 	shock_replay_log = CommandLog.append(shock_replay_log, 0, "BATTLE_SHOCK", {"unit_id": "u", "passed": false})
 	var shock_replay := Replay.replay(Replay.initial_state(replay_models), shock_replay_log)
 	check(shock_replay.ok and shock_replay.state.models[0].battle_shocked and not shock_replay.state.models[0].can_control, "replay applies battle shock")
-	var combat_replay_models: Array = [{"unit_id": "attacker", "team": 0, "wounds": 3}, {"unit_id": "target", "team": 1, "wounds": 4}]
+	var combat_replay_models: Array = [{"model_id": "attacker_m001", "unit_id": "attacker", "team": 0, "wounds": 3}, {"model_id": "target_m001", "unit_id": "target", "team": 1, "wounds": 4}]
 	var combat_replay_log: Array = []
-	combat_replay_log = CommandLog.append(combat_replay_log, 0, "SHOOT", {"target": 1, "damage": 3})
+	combat_replay_log = CommandLog.append(combat_replay_log, 0, "SHOOT", {"target": 1, "target_id": "target_m001", "damage": 3})
 	var combat_replay := Replay.replay(Replay.initial_state(combat_replay_models, "SHOOTING", 0), combat_replay_log)
 	check(combat_replay.ok and combat_replay.state.models[1].wounds == 1, "replay applies shooting damage")
+	var destroyed_replay_log: Array = []
+	destroyed_replay_log = CommandLog.append(destroyed_replay_log, 0, "SHOOT", {"target": 1, "target_id": "target_m001", "damage": 4})
+	var destroyed_replay := Replay.replay(Replay.initial_state(combat_replay_models, "SHOOTING", 0), destroyed_replay_log)
+	check(destroyed_replay.ok and destroyed_replay.state.models.size() == 1 and destroyed_replay.state.models[0].model_id == "attacker_m001", "replay removes destroyed model by stable id")
 	var turn := TurnState.new_state(0)
 	check(TurnState.is_valid(turn) and turn.phase == "COMMAND", "turn state starts in command phase")
 	for expected in ["MOVEMENT", "SHOOTING", "CHARGE", "FIGHT"]:
@@ -346,6 +350,7 @@ func run() -> void:
 	await process_frame
 	check(scene.models.size() == 20, "scene starts with twenty bases")
 	check(scene.models[0].has("unit_id"), "models carry unit ids")
+	check(scene.models[0].has("model_id") and not str(scene.models[0].model_id).is_empty(), "models carry stable ids")
 	check(scene.phase == "MOVEMENT" and scene.active_team == 0 and TurnState.is_valid(scene.turn_state), "scene starts in gold movement phase")
 	check(scene.objectives.size() == 1 and scene.score == [0, 0], "scene starts with one neutral objective")
 	check(scene.objective_values.size() == 1 and scene.objective_values[0] == 2, "scene loads objective point values")

@@ -26,9 +26,9 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			if not found:
 				return {"ok": false, "reason": "UNKNOWN UNIT", "state": state}
 		"CHARGE":
-			var model_index := int(payload.get("model", -1))
+			var model_index := _index_for(next.models, payload, "model_id", "model")
 			var destination: Array = payload.get("to", [])
-			if model_index >= next.models.size():
+			if model_index < 0 or model_index >= next.models.size():
 				return {"ok": false, "reason": "INVALID CHARGE", "state": state}
 			next.models[model_index].position = Vector2(float(destination[0]), float(destination[1]))
 		"END_TURN":
@@ -46,18 +46,25 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			if not found:
 				return {"ok": false, "reason": "UNKNOWN UNIT", "state": state}
 		"SHOOT", "FIGHT":
-			var target_index := int(payload.get("target", -1))
+			var target_index := _index_for(next.models, payload, "target_id", "target")
 			var damage := int(payload.get("damage", -1))
-			if target_index >= next.models.size():
+			if target_index < 0 or target_index >= next.models.size():
 				return {"ok": false, "reason": "INVALID DAMAGE EVENT", "state": state}
 			var damage_result := _apply_damage(next.models[target_index], damage)
-			next.models[target_index] = damage_result
+			if bool(damage_result.get("destroyed", false)):
+				next.models.remove_at(target_index)
+			else:
+				next.models[target_index] = damage_result
 		"HAZARDOUS":
-			var attacker_index := int(payload.get("attacker", -1))
+			var attacker_index := _index_for(next.models, payload, "attacker_id", "attacker")
 			var hazardous_damage := int(payload.get("damage", -1))
-			if attacker_index >= next.models.size():
+			if attacker_index < 0 or attacker_index >= next.models.size():
 				return {"ok": false, "reason": "INVALID HAZARDOUS EVENT", "state": state}
-			next.models[attacker_index] = _apply_damage(next.models[attacker_index], hazardous_damage)
+			var hazardous_result := _apply_damage(next.models[attacker_index], hazardous_damage)
+			if bool(hazardous_result.get("destroyed", false)):
+				next.models.remove_at(attacker_index)
+			else:
+				next.models[attacker_index] = hazardous_result
 		"STRATAGEM":
 			pass
 		_:
@@ -72,6 +79,15 @@ static func _apply_damage(model: Dictionary, damage: int) -> Dictionary:
 		next.destroyed = true
 		next.can_control = false
 	return next
+
+static func _index_for(models: Array, payload: Dictionary, id_key: String, index_key: String) -> int:
+	var model_id := str(payload.get(id_key, ""))
+	if not model_id.is_empty():
+		for index in range(models.size()):
+			if str(models[index].get("model_id", "")) == model_id:
+				return index
+		return -1
+	return int(payload.get(index_key, -1))
 
 static func replay(initial: Dictionary, log: Array) -> Dictionary:
 	var validation := _validate_sequence(log)
