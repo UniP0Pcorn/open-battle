@@ -27,6 +27,10 @@ static func canonical_id(value: Variant) -> String:
 		return "rapid_fire_" + text.substr(2)
 	if text.begins_with("rapid fire ") and text.substr(11).is_valid_int():
 		return "rapid_fire_" + text.substr(11)
+	if text.begins_with("热熔") and text.substr(2).is_valid_int():
+		return "melta_" + text.substr(2)
+	if text.begins_with("melta ") and text.substr(6).is_valid_int():
+		return "melta_" + text.substr(6)
 	return str(ALIASES.get(text, text))
 
 static func ids_from_weapon(weapon: Dictionary) -> Array:
@@ -53,6 +57,12 @@ static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, t
 		elif ids.has("rapid_fire"):
 			# Bare rapid fire remains the original prototype shorthand.
 			result.attacks = int(result.get("attacks", 1)) * 2
+		var melta_bonus := 0
+		for keyword in ids:
+			if str(keyword).begins_with("melta_"):
+				melta_bonus = maxi(melta_bonus, int(str(keyword).trim_prefix("melta_")))
+		if melta_bonus > 0:
+			result.damage = _add_expression(result.get("damage", 1), melta_bonus)
 	if ids.has("hazardous"):
 		result.hazardous = true
 		result.hazardous_damage = int(result.get("hazardous_damage", 3))

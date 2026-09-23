@@ -21,6 +21,7 @@
 - 新增 `rules/model_state.gd`，权威会话拒绝缺失/重复模型 ID、非法单位阵营和非有限坐标，传输层无需重复实现快照完整性检查。
 - `END_TURN` 现在和其他命令一样要求活动阵营，回放同步切换阵营、回合和指挥点，避免会话状态与本地日志分叉。
 - 武器上下文开始按数据中的数值速射处理半程攻击加成，支持固定数字和 `D3/D6` 攻击表达式。
+- 武器上下文同时按数据中的数值热熔处理半程伤害加成，支持固定数字和 `D6` 伤害表达式。
 - 编成校验支持 profile 的 `organization.unique`、`organization.max_copies`、`organization.role`，以及军表的 `organization.minimum_roles`；未声明组织字段的原型 profile 行为保持不变。
 - 新增回归覆盖：活动阵营可执行命令、错误阶段拒绝、缺字段载荷拒绝。
 
@@ -30,7 +31,7 @@
 godot --headless --path . --script tests/run_tests.gd
 ```
 
-当前结果：**245 项检查，0 失败**。
+当前结果：**246 项检查，0 失败**。
 
 ## 下一步
 
