@@ -6,6 +6,7 @@ const ArmyValidation = preload("res://rules/army_validation.gd")
 const CommandLog = preload("res://rules/command_log.gd")
 const CommandSchema = preload("res://rules/command_schema.gd")
 const BattleSession = preload("res://rules/battle_session.gd")
+const Deployment = preload("res://rules/deployment.gd")
 const UnitValidation = preload("res://rules/unit_validation.gd")
 const Dice = preload("res://rules/dice.gd")
 const TurnState = preload("res://rules/turn_state.gd")
@@ -108,6 +109,9 @@ func run() -> void:
 	var bad_snapshot: Dictionary = accepted_move.state.duplicate(true)
 	bad_snapshot.ruleset_id = "wh40k_unknown"
 	check(BattleSession.validate_snapshot(bad_snapshot) == "RULESET MISMATCH", "authoritative session rejects mismatched ruleset")
+	check(Deployment.zone_reason(Vector2(10, 6), 1.0, 0, Rules.BOARD_SIZE, 12.0).is_empty(), "gold deployment zone accepts legal base")
+	check(Deployment.zone_reason(Vector2(10, 20), 1.0, 0, Rules.BOARD_SIZE, 12.0) == "OUTSIDE DEPLOYMENT ZONE", "gold deployment zone rejects midfield base")
+	check(Deployment.zone_reason(Vector2(10, 38), 1.0, 1, Rules.BOARD_SIZE, 12.0).is_empty(), "blue deployment zone accepts legal base")
 	var coherent_unit: Array = [
 		{"position": Vector2(10, 10)},
 		{"position": Vector2(11.5, 10)},

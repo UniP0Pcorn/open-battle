@@ -21,6 +21,7 @@ const UnitAbilities = preload("res://rules/unit_abilities.gd")
 const WeaponRules = preload("res://rules/weapon_rules.gd")
 const BattleShock = preload("res://rules/battle_shock.gd")
 const TurnState = preload("res://rules/turn_state.gd")
+const Deployment = preload("res://rules/deployment.gd")
 const SCALE := 15.0
 const OFFSET := Vector2(38, 112)
 const GOLD := Color("e5ba6b")
@@ -45,6 +46,7 @@ var objectives: Array = []
 var terrain: Array = []
 var control_radius := 3.0
 var score_to_win := 5
+var deployment_depth := 12.0
 var score: Array = [0, 0]
 var command_points: Array = [0, 0]
 var reroll_next_attack := false
@@ -78,6 +80,7 @@ func _ready() -> void:
 	pending_profile_count = ProfileCatalog.load_tree("res://data/units/pending", true).size()
 	control_radius = float(mission.get("control_radius_inches", 3.0))
 	score_to_win = int(mission.get("score_to_win", 5))
+	deployment_depth = float(mission.get("deployment_depth_inches", 12.0))
 	for objective in mission.get("objectives", []):
 		objectives.append(Vector2(float(objective.position_inches[0]), float(objective.position_inches[1])))
 	terrain = mission.get("terrain", [])
@@ -778,7 +781,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		var point := to_inches(get_global_mouse_position())
 		if placing:
-			var reason := Rules.placement_reason(point, Rules.radius_inches(float(fixture.base_diameter_mm)), models)
+			var reason := Deployment.placement_reason(point, Rules.radius_inches(float(fixture.base_diameter_mm)), team, models, -1, deployment_depth)
 			if reason.is_empty():
 				add_model(point, team)
 				selected = models.size() - 1
@@ -808,6 +811,8 @@ func display_reason(reason: String) -> String:
 		"OUTSIDE TABLE": return "底座超出桌面"
 		"BASE OVERLAP": return "底座与其他底座重叠"
 		"PATH BLOCKED": return "移动路径被其他底座阻挡"
+		"OUTSIDE DEPLOYMENT ZONE": return "超出当前阵营部署区"
+		"INVALID DEPLOYMENT ZONE": return "任务部署区配置无效"
 	return reason
 
 func _draw() -> void:
@@ -821,6 +826,10 @@ func _draw() -> void:
 	for y in range(45):
 		draw_line(to_screen(Vector2(0, y)), to_screen(Vector2(60, y)), Color("36505c") if y % 6 == 0 else Color("1e3540"))
 	draw_rect(Rect2(OFFSET, Rules.BOARD_SIZE * SCALE), BLUE, false, 2)
+	draw_line(to_screen(Vector2(0, deployment_depth)), to_screen(Vector2(Rules.BOARD_SIZE.x, deployment_depth)), Color(0.9, 0.72, 0.35, 0.55), 2)
+	draw_line(to_screen(Vector2(0, Rules.BOARD_SIZE.y - deployment_depth)), to_screen(Vector2(Rules.BOARD_SIZE.x, Rules.BOARD_SIZE.y - deployment_depth)), Color(0.4, 0.72, 0.9, 0.55), 2)
+	label_at(to_screen(Vector2(1, deployment_depth)) + Vector2(0, -6), "金方部署区", 12, GOLD)
+	label_at(to_screen(Vector2(1, Rules.BOARD_SIZE.y - deployment_depth)) + Vector2(0, 16), "蓝方部署区", 12, BLUE)
 	for x in range(0, 61, 6):
 		label_at(to_screen(Vector2(x, 0)) + Vector2(-5, -10), str(x), 12, BLUE)
 	for y in range(6, 45, 6):

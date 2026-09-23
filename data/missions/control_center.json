@@ -3,6 +3,7 @@
   "display_name": "Control Center Prototype",
   "score_to_win": 5,
   "control_radius_inches": 3.0,
+  "deployment_depth_inches": 12.0,
   "objectives": [
     {"id": "center", "position_inches": [30.0, 22.0], "points": 1}
   ],
