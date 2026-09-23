@@ -5,6 +5,7 @@ const Combat = preload("res://rules/combat.gd")
 const ArmyValidation = preload("res://rules/army_validation.gd")
 const CommandLog = preload("res://rules/command_log.gd")
 const CommandSchema = preload("res://rules/command_schema.gd")
+const BattleSession = preload("res://rules/battle_session.gd")
 const UnitValidation = preload("res://rules/unit_validation.gd")
 const Dice = preload("res://rules/dice.gd")
 const TurnState = preload("res://rules/turn_state.gd")
@@ -97,6 +98,16 @@ func run() -> void:
 	var malformed_command: Dictionary = log[0].duplicate(true)
 	malformed_command.payload = {"unit_id": "u"}
 	check(CommandSchema.validate_entry(malformed_command) == "INVALID MOVE", "command schema rejects incomplete payload")
+	var session := BattleSession.create([{"position": Vector2(2, 2), "unit_id": "u", "team": 0}], 11, 0)
+	check(not session.is_empty() and BattleSession.validate_snapshot(session).is_empty() and session.phase == "COMMAND", "authoritative session creates a versioned snapshot")
+	var session_move := BattleSession.submit(session, 0, "MOVE", {"unit_id": "u", "delta": [1, 0]})
+	check(not session_move.ok and session_move.reason == "INVALID PHASE", "authoritative session rejects movement in command phase")
+	session = BattleSession.advance_phase(session).state
+	var accepted_move := BattleSession.submit(session, 0, "MOVE", {"unit_id": "u", "delta": [1, 0]})
+	check(accepted_move.ok and accepted_move.state.command_log.size() == 1, "authoritative session accepts a legal movement command")
+	var bad_snapshot: Dictionary = accepted_move.state.duplicate(true)
+	bad_snapshot.ruleset_id = "wh40k_unknown"
+	check(BattleSession.validate_snapshot(bad_snapshot) == "RULESET MISMATCH", "authoritative session rejects mismatched ruleset")
 	var coherent_unit: Array = [
 		{"position": Vector2(10, 10)},
 		{"position": Vector2(11.5, 10)},
