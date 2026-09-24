@@ -57,7 +57,8 @@ static func validate(stratagem: Dictionary) -> String:
 	if str(stratagem.effect) == "GRANT_ABILITY":
 		if str(stratagem.get("target", "")) != "FRIENDLY_UNIT" or str(stratagem.get("duration", "")) not in ["BATTLE", "PHASE", "TURN"]:
 			return "INVALID ABILITY TARGET OR DURATION"
-		if str(stratagem.phase) not in ["COMMAND", "MOVEMENT", "SHOOTING", "CHARGE", "FIGHT"] or str(stratagem.timing) != str(stratagem.phase):
+		var reaction := str(stratagem.timing) == "AFTER_ENEMY_MOVE" and str(stratagem.phase) == "MOVEMENT"
+		if str(stratagem.phase) not in ["COMMAND", "MOVEMENT", "SHOOTING", "CHARGE", "FIGHT"] or (str(stratagem.timing) != str(stratagem.phase) and not reaction):
 			return "INVALID ABILITY TIMING"
 		var ability: Variant = stratagem.get("ability", "")
 		if not (ability is String) or ability not in GRANTABLE_ABILITIES or not UnitAbilities.DEFINITIONS.has(ability):
@@ -65,6 +66,8 @@ static func validate(stratagem: Dictionary) -> String:
 	return ""
 
 static func use(stratagem: Dictionary, phase: String, team: int, points: Array) -> Dictionary:
+	if str(stratagem.get("effect", "")) == "REACTION_SHOOT":
+		return {"ok": false, "reason": "REACTION SHOOT NOT IMPLEMENTED", "points": points.duplicate(), "effect": ""}
 	var schema_error := validate(stratagem)
 	if not schema_error.is_empty():
 		return {"ok": false, "reason": schema_error, "points": points.duplicate(), "effect": ""}

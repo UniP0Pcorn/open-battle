@@ -221,7 +221,53 @@ func apply_network_snapshot(state: Dictionary) -> void:
 	message = "已载入联机权威快照：第 %d 回合，%s方。" % [int(state.round), "金" if active_team == 0 else "蓝"]
 	if network_winner >= 0:
 		message = "%s方已获胜，比赛结束。" % ["金" if network_winner == 0 else "蓝"]
+	show_reaction_controls(state)
 	queue_redraw()
+
+func show_reaction_controls(state: Dictionary) -> void:
+	var old_panel := get_node_or_null("ReactionPanel")
+	if old_panel != null:
+		remove_child(old_panel)
+		old_panel.queue_free()
+	var window: Dictionary = state.get("reaction_window", {})
+	if window.is_empty():
+		return
+	var panel := PanelContainer.new()
+	panel.name = "ReactionPanel"
+	panel.position = Vector2(50, 120)
+	panel.custom_minimum_size = Vector2(360, 100)
+	add_child(panel)
+	var box := VBoxContainer.new()
+	panel.add_child(box)
+	var heading := Label.new()
+	heading.text = "移动后反应：等待%s方选择" % ("金" if int(window.team) == 0 else "蓝")
+	box.add_child(heading)
+	var bridge := get_node_or_null("/root/NetworkBridge")
+	if bridge == null or bridge.local_player_team() != int(window.team):
+		return
+	var strategy := OptionButton.new()
+	for strategy_id in window.stratagem_ids:
+		strategy.add_item(str(strategy_id))
+	box.add_child(strategy)
+	var units := OptionButton.new()
+	var unit_ids: Array = []
+	for model in state.models:
+		var unit_id := Attachments.group_id(model)
+		if int(model.team) == int(window.team) and Reserves.active(model) and not Transports.is_embarked(model) and not unit_ids.has(unit_id):
+			unit_ids.append(unit_id)
+			units.add_item(unit_id)
+	box.add_child(units)
+	var use_button := Button.new()
+	use_button.text = "对所选友军使用策略"
+	use_button.disabled = unit_ids.is_empty()
+	use_button.pressed.connect(func():
+		_submit_network_command("STRATAGEM", {"id": strategy.get_item_text(strategy.selected), "phase": str(state.phase), "unit_id": units.get_item_text(units.selected), "window_id": str(window.id)})
+	)
+	box.add_child(use_button)
+	var pass_button := Button.new()
+	pass_button.text = "放弃本次反应"
+	pass_button.pressed.connect(func(): _submit_network_command("REACTION_PASS", {"window_id": str(window.id)}))
+	box.add_child(pass_button)
 
 func _submit_network_command(kind: String, payload: Dictionary) -> bool:
 	if not network_active:

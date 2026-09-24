@@ -2,7 +2,7 @@
 extends RefCounted
 ## Canonical command envelope and phase contract shared by saves, replay and servers.
 
-const KINDS := ["MOVE", "ADVANCE", "FALL_BACK", "DEPLOY_RESERVE", "SCOUT", "ATTACH", "DETACH", "EMBARK", "DISEMBARK", "TRANSPORT_MOVE", "SHOOT", "CHARGE", "FIGHT", "PHASE_ADVANCE", "END_TURN", "BATTLE_SHOCK", "HAZARDOUS", "STRATAGEM"]
+const KINDS := ["MOVE", "ADVANCE", "FALL_BACK", "DEPLOY_RESERVE", "SCOUT", "ATTACH", "DETACH", "EMBARK", "DISEMBARK", "TRANSPORT_MOVE", "SHOOT", "CHARGE", "FIGHT", "PHASE_ADVANCE", "END_TURN", "BATTLE_SHOCK", "HAZARDOUS", "STRATAGEM", "REACTION_PASS"]
 const PHASES := ["COMMAND", "MOVEMENT", "SHOOTING", "CHARGE", "FIGHT"]
 const PHASE_BY_KIND := {
 	"MOVE": "MOVEMENT",
@@ -111,6 +111,9 @@ static func validate_payload(kind: String, payload: Dictionary) -> String:
 				return "INVALID PHASE TRANSITION"
 		"END_TURN":
 			pass
+		"REACTION_PASS":
+			if str(payload.get("window_id", "")).is_empty():
+				return "REACTION WINDOW REQUIRED"
 	return ""
 
 static func validate_for_state(entry: Dictionary, state: Dictionary) -> String:
@@ -118,6 +121,17 @@ static func validate_for_state(entry: Dictionary, state: Dictionary) -> String:
 	if not error.is_empty():
 		return error
 	var kind := str(entry.kind)
+	var window: Dictionary = state.get("reaction_window", {})
+	if not window.is_empty():
+		if int(entry.team) != int(window.get("team", -1)):
+			return "REACTION PENDING"
+		if kind not in ["STRATAGEM", "REACTION_PASS"]:
+			return "REACTION COMMAND REQUIRED"
+		if str(entry.payload.get("window_id", "")) != str(window.get("id", "")):
+			return "STALE REACTION WINDOW"
+		return ""
+	if kind == "REACTION_PASS" or entry.payload.has("window_id"):
+		return "NO REACTION WINDOW"
 	if int(entry.team) != int(state.get("active_team", -1)):
 		return "NOT ACTIVE TEAM"
 	if PHASE_BY_KIND.has(kind) and str(state.get("phase", "")) != str(PHASE_BY_KIND[kind]):

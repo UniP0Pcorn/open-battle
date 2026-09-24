@@ -41,6 +41,8 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 	if not reference_error.is_empty():
 		return {"ok": false, "reason": reference_error, "state": state}
 	match kind:
+		"REACTION_PASS":
+			next.erase("reaction_window")
 		"MOVE":
 			var delta: Array = payload.delta
 			var unit_id := str(payload.get("unit_id", ""))
@@ -295,6 +297,12 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			var stratagem: Dictionary = _stratagem_for(next, int(entry.team), stratagem_id)
 			if stratagem.is_empty():
 				return {"ok": false, "reason": "UNKNOWN STRATAGEM", "state": state}
+			var window: Dictionary = next.get("reaction_window", {})
+			if not window.is_empty():
+				if str(stratagem.timing) != str(window.get("timing", "")) or stratagem_id not in window.get("stratagem_ids", []):
+					return {"ok": false, "reason": "INVALID REACTION STRATAGEM", "state": state}
+			elif str(stratagem.get("timing", "")) == "AFTER_ENEMY_MOVE":
+				return {"ok": false, "reason": "REACTION WINDOW REQUIRED", "state": state}
 			var stratagem_result := Stratagems.use(stratagem, str(next.phase), int(entry.team), next.get("command_points", [0, 0]))
 			if not bool(stratagem_result.get("ok", false)):
 				return {"ok": false, "reason": str(stratagem_result.get("reason", "STRATAGEM REJECTED")), "state": state}
@@ -356,8 +364,11 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 				"payload": payload.duplicate(true)
 			})
 			next.stratagem_effects = effects
+			next.erase("reaction_window")
 		_:
 			return {"ok": false, "reason": "UNKNOWN COMMAND", "state": state}
+	if kind in ["MOVE", "FALL_BACK"] and Vector2(float(payload.delta[0]), float(payload.delta[1])).length() > 0.00001:
+		_open_move_reaction(next, entry)
 	next.events.append(kind)
 	return {"ok": true, "reason": "", "state": next}
 
@@ -374,6 +385,22 @@ static func _expire_grants(models: Array, expired: Array) -> void:
 				grants.erase(ability_id)
 		if grants.is_empty():
 			model.erase("ability_grants")
+
+static func _open_move_reaction(state: Dictionary, entry: Dictionary) -> void:
+	var responder := 1 - int(entry.team)
+	var available: Array = []
+	for model in state.models:
+		if int(model.get("team", -1)) != responder or not Reserves.active(model) or Transports.is_embarked(model):
+			continue
+		for definition in model.get("faction_stratagems", []):
+			if not (definition is Dictionary) or not Stratagems.validate(definition).is_empty():
+				continue
+			if str(definition.timing) != "AFTER_ENEMY_MOVE" or int(definition.cost) > int(state.get("command_points", [0, 0])[responder]):
+				continue
+			if not available.has(str(definition.id)):
+				available.append(str(definition.id))
+	if not available.is_empty():
+		state.reaction_window = {"id": "move:%d" % int(entry.sequence), "team": responder, "timing": "AFTER_ENEMY_MOVE", "trigger_unit_id": str(entry.payload.unit_id), "stratagem_ids": available}
 
 static func _validate_references(models: Array, entry: Dictionary, kind: String, payload: Dictionary, terrain: Array = [], effects: Array = []) -> String:
 	var actor_team := int(entry.get("team", -1))

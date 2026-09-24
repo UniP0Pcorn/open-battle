@@ -79,6 +79,19 @@ static func validate_snapshot(state: Dictionary) -> String:
 	if int(state.round) < 1 or int(state.active_team) not in [0, 1] or not (state.models is Array) or not (state.command_log is Array):
 		return "INVALID SNAPSHOT"
 	var model_errors := ModelState.validate_models(state.models)
+	if state.has("reaction_window"):
+		var window: Variant = state.reaction_window
+		if not (window is Dictionary):
+			return "INVALID REACTION WINDOW"
+		if int(window.get("team", -1)) != 1 - int(state.active_team) or str(window.get("timing", "")) != "AFTER_ENEMY_MOVE" or str(state.phase) != "MOVEMENT":
+			return "INVALID REACTION WINDOW"
+		if str(window.get("id", "")).is_empty() or str(window.get("trigger_unit_id", "")).is_empty() or not (window.get("stratagem_ids") is Array):
+			return "INVALID REACTION WINDOW"
+		if window.stratagem_ids.is_empty():
+			return "INVALID REACTION WINDOW"
+		for strategy_id in window.stratagem_ids:
+			if not (strategy_id is String) or strategy_id.is_empty():
+				return "INVALID REACTION WINDOW"
 	if not model_errors.is_empty():
 		return model_errors[0]
 	if state.has("terrain") and not (state.terrain is Array):

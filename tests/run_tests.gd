@@ -233,6 +233,54 @@ func run() -> void:
 	var grant_snapshot := NetworkSync.accept_snapshot(grant_room.session, grant_network.snapshot)
 	check(grant_snapshot.ok and grant_snapshot.state.models[0].ability_ids.has("fall_back_and_shoot"), "client snapshot retains executed grant")
 	var bad_grant_entry: Dictionary = grant_entry.duplicate(true)
+	var reaction_rule := {"id": "fixture_reactive_cover", "cost": 1, "phase": "MOVEMENT", "effect": "GRANT_ABILITY", "timing": "AFTER_ENEMY_MOVE", "target": "FRIENDLY_UNIT", "duration": "TURN", "ability": "stealth"}
+	var reaction_models: Array = [
+		{"model_id": "moving", "unit_id": "moving_unit", "team": 0, "position": Vector2(20, 10), "radius": 0.5, "movement_inches": 6, "wounds": 3},
+		{"model_id": "responding", "unit_id": "responding_unit", "team": 1, "position": Vector2(30, 20), "radius": 0.5, "wounds": 3, "faction_stratagems": [reaction_rule]}
+	]
+	var reaction_room: Dictionary = room.duplicate(true)
+	reaction_room.session = BattleSession.create(reaction_models)
+	reaction_room.session.phase = "MOVEMENT"
+	reaction_room.session.phase_index = 1
+	reaction_room.session.command_points = [1, 1]
+	var reaction_initial: Dictionary = reaction_room.session.duplicate(true)
+	var trigger_entry := {"sequence": 0, "team": 0, "kind": "MOVE", "payload": {"unit_id": "moving_unit", "delta": [1, 0]}}
+	var trigger_packet := PeerProtocol.command(room.id, "player_gold", peer_session_id, 0, -1, trigger_entry, PeerProtocol.hash_snapshot(reaction_initial))
+	var trigger_result := NetworkSync.host_command(reaction_room, trigger_packet, "player_gold")
+	check(trigger_result.ok and trigger_result.room.session.reaction_window.team == 1, "enemy move opens data-declared reaction window")
+	var waiting_state: Dictionary = trigger_result.room.session
+	check(waiting_state.active_team == 0 and waiting_state.models[0].position == Vector2(21, 10), "reaction suspends priority after committed movement without changing active team")
+	check(not BattleSession.submit(waiting_state, 0, "END_TURN", {}).ok, "active player cannot skip pending reaction")
+	check(not BattleSession.submit(waiting_state, 1, "MOVE", {"unit_id": "responding_unit", "delta": [0, 1], "window_id": "move:0"}).ok, "responder cannot use reaction priority for normal actions")
+	check(not BattleSession.submit(waiting_state, 1, "REACTION_PASS", {"window_id": "move:999"}).ok, "stale window identifier rejected")
+	var reaction_payload := {"id": "fixture_reactive_cover", "phase": "MOVEMENT", "unit_id": "responding_unit", "window_id": "move:0"}
+	var response_entry := {"sequence": 1, "team": 1, "kind": "STRATAGEM", "payload": reaction_payload}
+	var response_packet := PeerProtocol.command(room.id, "player_blue", peer_session_id, 1, 0, response_entry, PeerProtocol.hash_snapshot(waiting_state))
+	var responded := NetworkSync.host_command(trigger_result.room, response_packet, "player_blue")
+	check(responded.ok and responded.room.session.models[1].ability_ids.has("stealth") and responded.room.session.command_points[1] == 0, "opponent reaction executes ability and spends responder points")
+	check(not responded.room.session.has("reaction_window") and responded.room.session.active_team == 0, "reaction completion resumes original player's priority")
+	var replayed_response := Replay.replay(reaction_initial, responded.room.session.command_log)
+	check(replayed_response.ok and replayed_response.state.models == responded.room.session.models, "mixed-team reaction log replays host result")
+	var passed_response := BattleSession.submit(waiting_state, 1, "REACTION_PASS", {"window_id": "move:0"})
+	check(passed_response.ok and not passed_response.state.has("reaction_window") and passed_response.state.command_points[1] == 1, "passing closes reaction without spending points")
+	check(not BattleSession.submit(passed_response.state, 1, "REACTION_PASS", {"window_id": "move:0"}).ok, "closed reaction cannot be reused")
+	var outside_reaction: Dictionary = reaction_initial.duplicate(true)
+	outside_reaction.active_team = 1
+	check(not BattleSession.submit(outside_reaction, 1, "STRATAGEM", {"id": "fixture_reactive_cover", "phase": "MOVEMENT", "unit_id": "responding_unit"}).ok, "reactive strategy cannot be invoked without trigger")
+	var no_budget: Dictionary = reaction_initial.duplicate(true)
+	no_budget.command_points[1] = 0
+	var no_budget_move := Replay.apply_entry(no_budget, trigger_entry)
+	check(no_budget_move.ok and not no_budget_move.state.has("reaction_window"), "unaffordable reactions do not stall movement")
+	var unimplemented_reaction := Stratagems.use(Stratagems.definition("fire_overwatch"), "MOVEMENT", 0, [1, 0])
+	check(not unimplemented_reaction.ok and unimplemented_reaction.points == [1, 0], "unimplemented reaction shooting fails without spending points")
+	var corrupt_window: Dictionary = waiting_state.duplicate(true)
+	corrupt_window.reaction_window.team = 0
+	check(not BattleSession.validate_snapshot(corrupt_window).is_empty(), "snapshot rejects reaction priority assigned to active player")
+	var reaction_wire := PeerProtocol.snapshot(room.id, "player_gold", peer_session_id, 0, waiting_state)
+	var reaction_restored := NetworkSync.accept_snapshot(reaction_initial, JSON.parse_string(PeerProtocol.encode(reaction_wire)))
+	check(reaction_restored.ok and reaction_restored.state.reaction_window.id == "move:0", "reaction window survives serialized reconnect snapshot")
+	var response_turn_end := BattleSession.submit(responded.room.session, 0, "END_TURN", {})
+	check(response_turn_end.ok and not response_turn_end.state.models[1].ability_ids.has("stealth"), "reactive turn grant expires when triggering turn ends")
 	var phase_grant_state: Dictionary = grant_room.session.duplicate(true)
 	phase_grant_state.models[0].faction_stratagems[0].duration = "PHASE"
 	var phase_granted := Replay.apply_entry(phase_grant_state, grant_entry)
@@ -1009,6 +1057,18 @@ func run() -> void:
 	root.add_child(scene)
 	await process_frame
 	check(scene.models.size() == 20, "scene starts with twenty bases")
+	var ui_bridge = root.get_node_or_null("NetworkBridge")
+	if ui_bridge != null:
+		var prior_room: Dictionary = ui_bridge.lobby.room.duplicate(true)
+		var prior_player: String = ui_bridge.lobby.player_id
+		ui_bridge.lobby.room = trigger_result.room
+		ui_bridge.lobby.player_id = "player_blue"
+		scene.show_reaction_controls(waiting_state)
+		check(scene.get_node("ReactionPanel").get_child(0).get_child_count() == 5, "responding player sees strategy target execute and pass controls")
+		scene.show_reaction_controls(passed_response.state)
+		check(scene.get_node_or_null("ReactionPanel") == null, "reaction panel closes when authoritative window closes")
+		ui_bridge.lobby.room = prior_room
+		ui_bridge.lobby.player_id = prior_player
 	check(scene.models[0].has("unit_id"), "models carry unit ids")
 	check(scene.models[0].has("model_id") and not str(scene.models[0].model_id).is_empty(), "models carry stable ids")
 	check(scene.phase == "MOVEMENT" and scene.active_team == 0 and TurnState.is_valid(scene.turn_state), "scene starts in gold movement phase")
