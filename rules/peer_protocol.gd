@@ -13,6 +13,7 @@ const COMMAND := "COMMAND"
 const SNAPSHOT := "SNAPSHOT"
 const RECONNECT := "RECONNECT"
 const AUTH := "AUTH"
+const LOBBY := "LOBBY"
 
 static func command(room_id: String, peer_id: String, session_id: String, sequence: int, ack: int, command_entry: Dictionary, snapshot_hash: String, reconnect_token: String = "") -> Dictionary:
 	return {
@@ -44,13 +45,20 @@ static func auth(peer_id: String, session_id: String, response: Dictionary) -> D
 		"response": response.duplicate(true)
 	}
 
+static func lobby(room_id: String, peer_id: String, session_id: String, action: String, payload: Dictionary = {}) -> Dictionary:
+	return {
+		"version": VERSION, "kind": LOBBY, "room_id": room_id, "peer_id": peer_id,
+		"session_id": session_id, "sequence": 0, "ack": -1, "snapshot_hash": "LOBBY",
+		"action": action, "payload": payload.duplicate(true)
+	}
+
 static func validate(packet: Dictionary) -> String:
 	for field in ["version", "kind", "room_id", "peer_id", "session_id", "sequence", "ack", "snapshot_hash"]:
 		if not packet.has(field):
 			return "MISSING " + field.to_upper()
 	if int(packet.version) != VERSION:
 		return "UNSUPPORTED PEER VERSION"
-	if str(packet.kind) not in [COMMAND, SNAPSHOT, RECONNECT, AUTH]:
+	if str(packet.kind) not in [COMMAND, SNAPSHOT, RECONNECT, AUTH, LOBBY]:
 		return "UNKNOWN PEER MESSAGE"
 	for field in ["room_id", "peer_id", "session_id"]:
 		if str(packet.get(field, "")).strip_edges().is_empty():
@@ -74,6 +82,8 @@ static func validate(packet: Dictionary) -> String:
 		return "MISSING RECONNECT TOKEN"
 	if packet.kind == AUTH and not (packet.get("response", null) is Dictionary):
 		return "MISSING AUTH RESPONSE"
+	if packet.kind == LOBBY and (str(packet.get("action", "")).is_empty() or not (packet.get("payload", null) is Dictionary)):
+		return "INVALID LOBBY MESSAGE"
 	return ""
 
 static func sequence_status(last_sequence: int, packet: Dictionary) -> String:
