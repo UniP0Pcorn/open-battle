@@ -89,6 +89,9 @@ static func expand_unit(profile: Dictionary, count: int, team: int, unit_id: Str
 			"keywords": profile.get("keywords", []).duplicate(true),
 			"faction_keywords": profile.get("faction_keywords", []).duplicate(true),
 			"weapons": profile.get("weapons", []).duplicate(true),
-			"reserve_status": "deployed"
+			"reserve_status": "deployed",
+			"transport_capacity": int(model_template.get("transport_capacity", profile.get("transport_capacity", 0))),
+			"transport_moved": false,
+			"embarked_in": ""
 		})
 	return {"unit_id": unit_id, "team": team, "models": models, "profile": profile.id, "abilities": ability_ids, "keywords": profile.get("keywords", []).duplicate(true), "faction_keywords": profile.get("faction_keywords", []).duplicate(true)}

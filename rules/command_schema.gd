@@ -2,7 +2,7 @@
 extends RefCounted
 ## Canonical command envelope and phase contract shared by saves, replay and servers.
 
-const KINDS := ["MOVE", "ADVANCE", "FALL_BACK", "DEPLOY_RESERVE", "SCOUT", "SHOOT", "CHARGE", "FIGHT", "PHASE_ADVANCE", "END_TURN", "BATTLE_SHOCK", "HAZARDOUS", "STRATAGEM"]
+const KINDS := ["MOVE", "ADVANCE", "FALL_BACK", "DEPLOY_RESERVE", "SCOUT", "EMBARK", "DISEMBARK", "TRANSPORT_MOVE", "SHOOT", "CHARGE", "FIGHT", "PHASE_ADVANCE", "END_TURN", "BATTLE_SHOCK", "HAZARDOUS", "STRATAGEM"]
 const PHASES := ["COMMAND", "MOVEMENT", "SHOOTING", "CHARGE", "FIGHT"]
 const PHASE_BY_KIND := {
 	"MOVE": "MOVEMENT",
@@ -10,6 +10,9 @@ const PHASE_BY_KIND := {
 	"FALL_BACK": "MOVEMENT",
 	"DEPLOY_RESERVE": "MOVEMENT",
 	"SCOUT": "COMMAND",
+	"EMBARK": "MOVEMENT",
+	"DISEMBARK": "MOVEMENT",
+	"TRANSPORT_MOVE": "MOVEMENT",
 	"SHOOT": "SHOOTING",
 	"CHARGE": "CHARGE",
 	"FIGHT": "FIGHT"
@@ -44,6 +47,18 @@ static func validate_payload(kind: String, payload: Dictionary) -> String:
 		"SCOUT":
 			if str(payload.get("unit_id", "")).is_empty() or not _numbers(payload.get("delta", []), 2):
 				return "INVALID SCOUT"
+		"EMBARK":
+			if str(payload.get("unit_id", "")).is_empty() or str(payload.get("transport_id", "")).is_empty():
+				return "INVALID EMBARK"
+		"DISEMBARK":
+			if str(payload.get("unit_id", "")).is_empty() or not (payload.get("positions", null) is Array) or payload.positions.is_empty():
+				return "INVALID DISEMBARK"
+			for position in payload.positions:
+				if not _numbers(position, 2):
+					return "INVALID DISEMBARK"
+		"TRANSPORT_MOVE":
+			if str(payload.get("transport_id", "")).is_empty() or not _numbers(payload.get("delta", []), 2):
+				return "INVALID TRANSPORT MOVE"
 		"SHOOT", "FIGHT":
 			if not _model_ref(payload, "attacker_id", "attacker") or not _model_ref(payload, "target_id", "target"):
 				return "INVALID DAMAGE EVENT"

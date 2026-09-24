@@ -133,6 +133,10 @@ func run() -> void:
 	check(CommandSchema.validate_for_state(reserve_entry, {"active_team": 0, "phase": "MOVEMENT"}).is_empty(), "command schema accepts reserve arrival")
 	var scout_entry := {"sequence": 0, "team": 0, "kind": "SCOUT", "payload": {"unit_id": "u", "delta": [3.0, 0.0]}}
 	check(CommandSchema.validate_for_state(scout_entry, {"active_team": 0, "phase": "COMMAND"}).is_empty(), "command schema accepts scout")
+	var embark_entry := {"sequence": 0, "team": 0, "kind": "EMBARK", "payload": {"unit_id": "u", "transport_id": "transport_m001"}}
+	check(CommandSchema.validate_for_state(embark_entry, {"active_team": 0, "phase": "MOVEMENT"}).is_empty(), "command schema accepts embark")
+	var disembark_entry := {"sequence": 0, "team": 0, "kind": "DISEMBARK", "payload": {"unit_id": "u", "positions": [[10.0, 20.0]]}}
+	check(CommandSchema.validate_for_state(disembark_entry, {"active_team": 0, "phase": "MOVEMENT"}).is_empty(), "command schema accepts disembark")
 	var bad_reserve_entry := reserve_entry.duplicate(true)
 	bad_reserve_entry.payload.positions = [[10.0]]
 	check(CommandSchema.validate_entry(bad_reserve_entry) == "INVALID RESERVE ARRIVAL", "command schema rejects malformed reserve arrival")
@@ -377,6 +381,21 @@ func run() -> void:
 	reserve_move_log = CommandLog.append(reserve_move_log, 0, "MOVE", {"unit_id": "reserve_unit", "delta": [1, 0]})
 	var reserve_move := Replay.replay(Replay.initial_state(reserve_models, "MOVEMENT", 0), reserve_move_log)
 	check(not reserve_move.ok and reserve_move.reason == "UNIT IN RESERVE", "reserve unit cannot move before arrival")
+	var transport_models: Array = [{"model_id": "transport_m001", "unit_id": "transport", "team": 0, "position": Vector2(5, 5), "radius": 1.0, "movement_inches": 10.0, "transport_capacity": 5, "wounds": 8}, {"model_id": "passenger_m001", "unit_id": "passenger", "team": 0, "position": Vector2(6, 5), "radius": 0.5, "wounds": 3}, {"model_id": "transport_enemy_m001", "unit_id": "transport_enemy", "team": 1, "position": Vector2(40, 30), "radius": 0.5, "wounds": 3}]
+	var embark_log: Array = []
+	embark_log = CommandLog.append(embark_log, 0, "EMBARK", {"unit_id": "passenger", "transport_id": "transport_m001"})
+	embark_log = CommandLog.append(embark_log, 0, "TRANSPORT_MOVE", {"transport_id": "transport_m001", "delta": [3, 0]})
+	var embarked_replay := Replay.replay(Replay.initial_state(transport_models, "MOVEMENT", 0), embark_log)
+	check(embarked_replay.ok and embarked_replay.state.models[1].embarked_in == "transport_m001" and embarked_replay.state.models[1].position == Vector2(9, 5) and embarked_replay.state.models[0].transport_moved, "replay moves embarked passengers with transport")
+	var bad_disembark_log := embark_log.duplicate(true)
+	bad_disembark_log = CommandLog.append(bad_disembark_log, 0, "DISEMBARK", {"unit_id": "passenger", "positions": [[8, 5]]})
+	var bad_disembark := Replay.replay(Replay.initial_state(transport_models, "MOVEMENT", 0), bad_disembark_log)
+	check(not bad_disembark.ok and bad_disembark.reason == "TRANSPORT ALREADY MOVED", "replay blocks disembark after transport movement")
+	var valid_disembark_log: Array = []
+	valid_disembark_log = CommandLog.append(valid_disembark_log, 0, "EMBARK", {"unit_id": "passenger", "transport_id": "transport_m001"})
+	valid_disembark_log = CommandLog.append(valid_disembark_log, 0, "DISEMBARK", {"unit_id": "passenger", "positions": [[8, 5]]})
+	var valid_disembark := Replay.replay(Replay.initial_state(transport_models, "MOVEMENT", 0), valid_disembark_log)
+	check(valid_disembark.ok and valid_disembark.state.models[1].embarked_in.is_empty() and valid_disembark.state.models[1].position == Vector2(8, 5), "replay disembarks within transport range")
 	var scout_models: Array = [{"model_id": "scout_m001", "unit_id": "scout_unit", "team": 0, "position": Vector2(5, 5), "radius": 0.5, "ability_ids": ["scout_6"]}, {"model_id": "scout_enemy_m001", "unit_id": "scout_enemy", "team": 1, "position": Vector2(30, 30), "radius": 0.5}]
 	var scout_log: Array = []
 	scout_log = CommandLog.append(scout_log, 0, "SCOUT", {"unit_id": "scout_unit", "delta": [3, 0]})

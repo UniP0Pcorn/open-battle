@@ -18,7 +18,7 @@
 | 地形、视线、掩体、遮蔽 | `rules/terrain.gd`、`rules/visibility.gd`、`rules/combat.gd` | 已有矩形阻挡、采样视线和 `cover_bonus` 豁免修正，复杂掩体类别待实现 |
 | 目标点和任务胜负 | `rules/mission.gd`、`rules/mission_validation.gd` | 已抽出目标控制、目标分值和胜负判定，任务 JSON 在加载前经过结构校验 |
 | 战略点、核心策略和行动 | `rules/stratagems.gd`、`rules/actions.gd` | 已有可注册策略定义、阶段/资源校验和回放效果记录；完整派系策略仍按数据导入 |
-| 运输工具、附属单位、预备队、飞行单位 | `rules/advanced_rules.gd`、`rules/reserves.gd` | 预备队/深入打击已实现；运输工具、附属单位和飞行单位待实现 |
+| 运输工具、附属单位、预备队、飞行单位 | `rules/transports.gd`、`rules/reserves.gd` | 运输工具搭载、同步移动和下车、预备队/深入打击已实现；附属单位和飞行单位待实现 |
 
 ## 实施顺序
 

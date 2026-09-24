@@ -44,6 +44,12 @@ static func validate_model(model: Variant, index: int = 0, ids: Dictionary = {})
 		return "INVALID MODEL FELL_BACK " + model_id
 	if model.has("scouted") and typeof(model.scouted) != TYPE_BOOL:
 		return "INVALID MODEL SCOUTED " + model_id
+	if model.has("transport_moved") and typeof(model.transport_moved) != TYPE_BOOL:
+		return "INVALID MODEL TRANSPORT_MOVED " + model_id
+	if model.has("transport_capacity") and (typeof(model.transport_capacity) not in [TYPE_INT, TYPE_FLOAT] or int(model.transport_capacity) < 0 or float(model.transport_capacity) != float(int(model.transport_capacity))):
+		return "INVALID MODEL TRANSPORT_CAPACITY " + model_id
+	if model.has("embarked_in") and typeof(model.embarked_in) != TYPE_STRING:
+		return "INVALID MODEL EMBARKED_IN " + model_id
 	if model.has("reserve_status") and str(model.reserve_status) not in ["deployed", "reserve", "destroyed"]:
 		return "INVALID MODEL RESERVE_STATUS " + model_id
 	return ""

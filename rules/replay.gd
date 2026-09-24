@@ -13,6 +13,7 @@ const Stratagems = preload("res://rules/stratagems.gd")
 const TurnState = preload("res://rules/turn_state.gd")
 const UnitAbilities = preload("res://rules/unit_abilities.gd")
 const Reserves = preload("res://rules/reserves.gd")
+const Transports = preload("res://rules/transports.gd")
 
 static func initial_state(models: Array, phase: String = "MOVEMENT", active_team: int = 0, terrain: Array = []) -> Dictionary:
 	var initial_models: Array = models.duplicate(true)
@@ -99,6 +100,39 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 				if str(model.get("unit_id", "")) == scout_unit_id:
 					model.position += scout_vector
 					model.scouted = true
+		"EMBARK":
+			var embark_unit_id := str(payload.get("unit_id", ""))
+			var embark_transport_id := str(payload.get("transport_id", ""))
+			for model in next.models:
+				if str(model.get("unit_id", "")) == embark_unit_id:
+					model.embarked_in = embark_transport_id
+					model.spent = 0.0
+					model.advanced = false
+					model.advance_bonus = 0
+					model.fell_back = false
+		"DISEMBARK":
+			var disembark_unit_id := str(payload.get("unit_id", ""))
+			var disembark_positions: Array = payload.get("positions", [])
+			var disembark_index := 0
+			for model in next.models:
+				if str(model.get("unit_id", "")) != disembark_unit_id or not Transports.is_embarked(model):
+					continue
+				var disembark_destination: Array = disembark_positions[disembark_index]
+				model.position = Vector2(float(disembark_destination[0]), float(disembark_destination[1]))
+				model.embarked_in = ""
+				model.spent = 0.0
+				model.disembarked = true
+				disembark_index += 1
+		"TRANSPORT_MOVE":
+			var transport_id := str(payload.get("transport_id", ""))
+			var transport_delta: Array = payload.get("delta", [])
+			var transport_vector := Vector2(float(transport_delta[0]), float(transport_delta[1]))
+			for model in next.models:
+				if str(model.get("model_id", "")) == transport_id or str(model.get("embarked_in", "")) == transport_id:
+					model.position += transport_vector
+					if str(model.get("model_id", "")) == transport_id:
+						model.spent = float(model.get("spent", 0.0)) + transport_vector.length()
+						model.transport_moved = true
 		"CHARGE":
 			var model_index := _index_for(next.models, payload, "model_id", "model")
 			var destination: Array = payload.get("to", [])
@@ -120,6 +154,8 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 					model.advance_bonus = 0
 					model.fell_back = false
 					model.erase("temporary_cover_bonus")
+					model.transport_moved = false
+					model.disembarked = false
 		"PHASE_ADVANCE":
 			var phase_state := {
 				"round": int(next.get("round", 1)),
@@ -142,6 +178,8 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 						model.advance_bonus = 0
 						model.fell_back = false
 						model.erase("temporary_cover_bonus")
+						model.transport_moved = false
+						model.disembarked = false
 			if str(next.phase) == "FIGHT":
 				for model in next.models:
 					if int(model.get("team", -1)) == int(next.active_team):
@@ -256,6 +294,8 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 			var found := false
 			for model in models:
 				if str(model.get("unit_id", "")) == str(payload.get("unit_id", "")):
+					if Transports.is_embarked(model):
+						return "UNIT EMBARKED"
 					if Reserves.in_reserve(model):
 						return "UNIT IN RESERVE"
 					found = true
@@ -268,6 +308,8 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 			var advance_found := false
 			for model in models:
 				if str(model.get("unit_id", "")) == str(payload.get("unit_id", "")):
+					if Transports.is_embarked(model):
+						return "UNIT EMBARKED"
 					if Reserves.in_reserve(model):
 						return "UNIT IN RESERVE"
 					advance_found = true
@@ -280,6 +322,12 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 			return Reserves.arrival_reason(models, str(payload.get("unit_id", "")), actor_team, payload.get("positions", []))
 		"SCOUT":
 			return _scout_reference_error(models, str(payload.get("unit_id", "")), payload.delta, actor_team)
+		"EMBARK":
+			return Transports.embark_reason(models, str(payload.get("unit_id", "")), str(payload.get("transport_id", "")), actor_team)
+		"DISEMBARK":
+			return Transports.disembark_reason(models, str(payload.get("unit_id", "")), payload.get("positions", []), actor_team)
+		"TRANSPORT_MOVE":
+			return Transports.move_reason(models, str(payload.get("transport_id", "")), payload.get("delta", []), actor_team, terrain)
 		"CHARGE":
 			var charger := _index_for(models, payload, "model_id", "model")
 			var charge_target := _index_for(models, payload, "target_id", "target")
@@ -287,6 +335,8 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 				return "INVALID CHARGE"
 			if Reserves.in_reserve(models[charger]) or Reserves.in_reserve(models[charge_target]):
 				return "UNIT IN RESERVE"
+			if Transports.is_embarked(models[charger]) or Transports.is_embarked(models[charge_target]):
+				return "UNIT EMBARKED"
 			if int(models[charger].get("team", -1)) != actor_team:
 				return "NOT ACTIVE TEAM"
 			if int(models[charge_target].get("team", -1)) == actor_team:
@@ -299,6 +349,8 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 				return "INVALID DAMAGE EVENT"
 			if Reserves.in_reserve(models[attacker]) or Reserves.in_reserve(models[target]):
 				return "UNIT IN RESERVE"
+			if Transports.is_embarked(models[attacker]) or Transports.is_embarked(models[target]):
+				return "UNIT EMBARKED"
 			if int(models[attacker].get("team", -1)) != actor_team:
 				return "NOT ACTIVE TEAM"
 			if int(models[target].get("team", -1)) == actor_team:
@@ -329,6 +381,8 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 				return "INVALID HAZARDOUS EVENT"
 			if Reserves.in_reserve(models[hazardous_attacker]):
 				return "UNIT IN RESERVE"
+			if Transports.is_embarked(models[hazardous_attacker]):
+				return "UNIT EMBARKED"
 			if int(models[hazardous_attacker].get("team", -1)) != actor_team:
 				return "NOT ACTIVE TEAM"
 			var hazardous_fnp_error := _feel_no_pain_reference_error(models[hazardous_attacker], int(payload.get("damage", 0)), payload)
@@ -337,7 +391,7 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 		"BATTLE_SHOCK":
 			var found_unit := false
 			for model in models:
-				if str(model.get("unit_id", "")) == str(payload.get("unit_id", "")) and not Reserves.in_reserve(model):
+				if str(model.get("unit_id", "")) == str(payload.get("unit_id", "")) and not Reserves.in_reserve(model) and not Transports.is_embarked(model):
 					found_unit = true
 					if int(model.get("team", -1)) != actor_team:
 						return "NOT ACTIVE TEAM"
@@ -362,11 +416,11 @@ static func _movement_reference_error(models: Array, unit_id: String, delta: Arr
 	var enemies: Array = []
 	var unit_team := -1
 	for model in models:
-		if str(model.get("unit_id", "")) == unit_id and not Reserves.in_reserve(model):
+		if str(model.get("unit_id", "")) == unit_id and not Reserves.in_reserve(model) and not Transports.is_embarked(model):
 			unit_models.append(model)
 			unit_team = int(model.get("team", -1))
 	for model in models:
-		if int(model.get("team", -1)) != unit_team and not Reserves.in_reserve(model):
+		if int(model.get("team", -1)) != unit_team and not Reserves.in_reserve(model) and not Transports.is_embarked(model):
 			enemies.append(model)
 	var engaged := false
 	var remains_engaged := false
@@ -374,7 +428,7 @@ static func _movement_reference_error(models: Array, unit_id: String, delta: Arr
 	var movement_distance := movement_delta.length()
 	var external_models: Array = []
 	for model in models:
-		if str(model.get("unit_id", "")) != unit_id and not Reserves.in_reserve(model):
+		if str(model.get("unit_id", "")) != unit_id and not Reserves.in_reserve(model) and not Transports.is_embarked(model):
 			external_models.append(model)
 	for model in unit_models:
 		if bool(model.get("fell_back", false)):
@@ -409,11 +463,11 @@ static func _advance_reference_error(models: Array, unit_id: String) -> String:
 	var enemies: Array = []
 	var unit_team := -1
 	for model in models:
-		if str(model.get("unit_id", "")) == unit_id and not Reserves.in_reserve(model):
+		if str(model.get("unit_id", "")) == unit_id and not Reserves.in_reserve(model) and not Transports.is_embarked(model):
 			unit_models.append(model)
 			unit_team = int(model.get("team", -1))
 	for model in models:
-		if int(model.get("team", -1)) != unit_team and not Reserves.in_reserve(model):
+		if int(model.get("team", -1)) != unit_team and not Reserves.in_reserve(model) and not Transports.is_embarked(model):
 			enemies.append(model)
 	for model in unit_models:
 		if float(model.get("spent", 0.0)) > Engagement.EPSILON:
@@ -587,10 +641,10 @@ static func _attack_reference_error(models: Array, attacker_index: int, target_i
 
 static func _engaged_with_enemy(models: Array, model_index: int) -> bool:
 	var model: Dictionary = models[model_index]
-	if Reserves.in_reserve(model):
+	if Reserves.in_reserve(model) or Transports.is_embarked(model):
 		return false
 	for index in range(models.size()):
-		if index == model_index or Reserves.in_reserve(models[index]) or int(models[index].get("team", -1)) == int(model.get("team", -1)):
+		if index == model_index or Reserves.in_reserve(models[index]) or Transports.is_embarked(models[index]) or int(models[index].get("team", -1)) == int(model.get("team", -1)):
 			continue
 		if Engagement.in_engagement(model, models[index]):
 			return true
