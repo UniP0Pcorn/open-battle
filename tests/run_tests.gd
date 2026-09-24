@@ -814,6 +814,13 @@ func run() -> void:
 	counter_fight_log = CommandLog.append(counter_fight_log, 0, "FIGHT", {"attacker": 0, "attacker_id": "normal_fighter_m001", "target": 2, "target_id": "first_target_m001", "weapon": "Test Blade", "damage": 1})
 	var counter_fight := Replay.replay(counter_state, counter_fight_log)
 	check(counter_fight.ok and counter_fight.state.models[0].fought and counter_fight.state.stratagem_effects[0].consumed, "counter offensive unlocks and consumes next fight activation")
+	var reroll_state := Replay.initial_state(combat_replay_models, "SHOOTING", 0)
+	reroll_state.command_points = [1, 0]
+	var reroll_log: Array = []
+	reroll_log = CommandLog.append(reroll_log, 0, "STRATAGEM", {"id": "command_reroll", "phase": "SHOOTING"})
+	reroll_log = CommandLog.append(reroll_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "attacker_m001", "target": 1, "target_id": "target_m001", "damage": 1})
+	var reroll_replay := Replay.replay(reroll_state, reroll_log)
+	check(reroll_replay.ok and reroll_replay.state.stratagem_effects[0].consumed, "replay consumes command reroll on the next attack")
 	var source_manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/sources/manifest.json"))
 	check(SourceManifest.validate(source_manifest).is_empty() and source_manifest.sources.size() == 30, "PDF source manifest validates")
 	var catalog_profiles: Array = [profile, {"id": "other", "display_name": "Other", "edition": 10, "faction": "other", "models": [], "weapons": []}]

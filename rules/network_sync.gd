@@ -70,12 +70,17 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, packet: 
 	rng.seed = (str(packet.get("session_id", "")) + ":" + str(packet.get("sequence", 0))).hash()
 	var result: Dictionary
 	var resolved_weapon: Dictionary = weapon.duplicate(true)
+	var hit_rerolls := 0
+	for effect in state.get("stratagem_effects", []):
+		if effect is Dictionary and str(effect.get("effect", "")) == "REROLL_HIT" and int(effect.get("team", -1)) == int(command.get("team", -1)) and not bool(effect.get("consumed", false)):
+			hit_rerolls = 1
+			break
 	if str(command.get("kind", "")) == "FIGHT":
 		var melee_context := WeaponRules.context(weapon, INF, 0, 1, target.get("keywords", []), false)
 		resolved_weapon = melee_context.weapon
 		if bool(attacker.get("charged", false)) and WeaponRules.ids_from_weapon(resolved_weapon).has("lance"):
 			resolved_weapon.wound_bonus = 1
-		result = Melee.resolve_attack(resolved_weapon, target, rng, 0, target.get("keywords", []), UnitAbilities.event_modifiers(attacker.get("ability_ids", []), "before_attack", {"phase": "FIGHT", "kind": "FIGHT"}))
+		result = Melee.resolve_attack(resolved_weapon, target, rng, hit_rerolls, target.get("keywords", []), UnitAbilities.event_modifiers(attacker.get("ability_ids", []), "before_attack", {"phase": "FIGHT", "kind": "FIGHT"}))
 	else:
 		var distance := _position(attacker).distance_to(_position(target))
 		var target_abilities := UnitAbilities.modifiers(target.get("ability_ids", []))
@@ -87,7 +92,7 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, packet: 
 		var line_of_sight := not Visibility.blocked(_position(attacker), _position(target), state.get("terrain", []))
 		var context := WeaponRules.context(weapon, distance, cover, target_count, target.get("keywords", []), float(attacker.get("spent", 0.0)) <= 0.0001, line_of_sight)
 		resolved_weapon = context.weapon
-		result = Combat.resolve_ranged_attack(resolved_weapon, target, rng, 0, UnitAbilities.event_modifiers(attacker.get("ability_ids", []), "before_attack", {"phase": "SHOOTING", "kind": "SHOOT"}))
+		result = Combat.resolve_ranged_attack(resolved_weapon, target, rng, hit_rerolls, UnitAbilities.event_modifiers(attacker.get("ability_ids", []), "before_attack", {"phase": "SHOOTING", "kind": "SHOOT"}))
 	payload.intent = false
 	payload.attacker = attacker_index
 	payload.target = target_index

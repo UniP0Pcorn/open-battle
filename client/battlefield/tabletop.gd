@@ -202,8 +202,11 @@ func apply_network_snapshot(state: Dictionary) -> void:
 			if objective is Dictionary and objective.get("position", null) is Vector2:
 				objectives.append(objective.position)
 				objective_values.append(int(objective.get("points", 1)))
+	reroll_next_attack = false
 	counter_offensive_next = false
 	for effect in state.get("stratagem_effects", []):
+		if effect is Dictionary and str(effect.get("effect", "")) == "REROLL_HIT" and int(effect.get("team", -1)) == active_team and not bool(effect.get("consumed", false)):
+			reroll_next_attack = true
 		if effect is Dictionary and str(effect.get("effect", "")) == "FIGHT_NEXT" and int(effect.get("team", -1)) == active_team and not bool(effect.get("consumed", false)):
 			counter_offensive_next = true
 	command_log = state.get("command_log", []).duplicate(true)

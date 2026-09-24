@@ -274,6 +274,10 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 				for effect in next.get("stratagem_effects", []):
 					if effect is Dictionary and str(effect.get("effect", "")) == "FIGHT_NEXT" and int(effect.get("team", -1)) == int(entry.team) and not bool(effect.get("consumed", false)):
 						effect.consumed = true
+			for effect in next.get("stratagem_effects", []):
+				if effect is Dictionary and str(effect.get("effect", "")) == "REROLL_HIT" and int(effect.get("team", -1)) == int(entry.team) and not bool(effect.get("consumed", false)):
+					effect.consumed = true
+					break
 		"HAZARDOUS":
 			var attacker_index := _index_for(next.models, payload, "attacker_id", "attacker")
 			var hazardous_damage := int(payload.get("damage", -1))
