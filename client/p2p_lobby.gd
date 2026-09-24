@@ -122,6 +122,7 @@ func _submit_host_command(actor_id: String, kind: String, payload: Dictionary) -
 	room = result.room
 	var packet := PeerProtocol.snapshot(str(room.id), player_id, _session_id(), _last_sequence(), room.session, reconnect_token)
 	transport.broadcast(packet)
+	battle_snapshot_received.emit(room.session)
 	lobby_changed.emit(Room.public_snapshot(room))
 	return ""
 

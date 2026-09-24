@@ -132,6 +132,7 @@ func add_button(title: String, position_px: Vector2, action: Callable) -> void:
 	add_child(button)
 
 func reset_table() -> void:
+	network_active = false
 	models.clear()
 	selected = -1
 	dragging = false
@@ -181,9 +182,25 @@ func apply_network_snapshot(state: Dictionary) -> void:
 	network_active = true
 	selected = -1
 	dragging = false
+	falling_back = false
+	placing = false
 	history.clear()
 	message = "已载入联机权威快照：第 %d 回合，%s方。" % [int(state.round), "金" if active_team == 0 else "蓝"]
 	queue_redraw()
+
+func _submit_network_command(kind: String, payload: Dictionary) -> bool:
+	if not network_active:
+		return false
+	var bridge := get_node_or_null("/root/NetworkBridge")
+	if bridge == null:
+		message = "网络桥接不可用。"
+		queue_redraw()
+		return true
+	var error: String = bridge.submit_command(kind, payload)
+	if not error.is_empty():
+		message = "网络命令失败：" + error
+		queue_redraw()
+	return true
 
 func cycle_ready_profile() -> void:
 	if ready_profiles.is_empty():
@@ -389,6 +406,8 @@ func advance_selected() -> void:
 			return
 	var roll := Dice.roll_d6(combat_rng, 1, 0)
 	var unit_id := str(models[selected].get("unit_id", ""))
+	if _submit_network_command("ADVANCE", {"unit_id": unit_id, "roll": int(roll.total), "rolls": roll.rolls}):
+		return
 	for model in unit_models:
 		model.advanced = true
 		model.advance_bonus = int(roll.total)
@@ -420,6 +439,8 @@ func fall_back_selected() -> void:
 	queue_redraw()
 
 func end_turn() -> void:
+	if _submit_network_command("END_TURN", {}):
+		return
 	dragging = false
 	falling_back = false
 	placing = false
@@ -622,6 +643,8 @@ func load_state() -> void:
 func enter_shooting() -> void:
 	if phase != "MOVEMENT":
 		return
+	if _submit_network_command("PHASE_ADVANCE", {"from": "MOVEMENT", "to": "SHOOTING"}):
+		return
 	dragging = false
 	falling_back = false
 	placing = false
@@ -638,6 +661,8 @@ func enter_charge() -> void:
 		message = "请先完成射击阶段。"
 		queue_redraw()
 		return
+	if _submit_network_command("PHASE_ADVANCE", {"from": "SHOOTING", "to": "CHARGE"}):
+		return
 	dragging = false
 	placing = false
 	var previous_phase := phase
@@ -653,6 +678,8 @@ func enter_fight() -> void:
 		message = "请先完成冲锋阶段。"
 		queue_redraw()
 		return
+	if _submit_network_command("PHASE_ADVANCE", {"from": "CHARGE", "to": "FIGHT"}):
+		return
 	dragging = false
 	placing = false
 	var previous_phase := phase
@@ -664,6 +691,8 @@ func enter_fight() -> void:
 	queue_redraw()
 
 func use_command_reroll() -> void:
+	if _submit_network_command("STRATAGEM", {"id": "command_reroll", "phase": phase}):
+		return
 	var result := Stratagems.use(Stratagems.command_reroll(), phase, active_team, command_points)
 	if not result.ok:
 		message = "指挥重掷失败：" + str(result.reason)
@@ -935,10 +964,14 @@ func finish_drag() -> void:
 				models[index].position += delta
 		history.append({"changes": changes, "selected": selected})
 		var move_kind := "FALL_BACK" if falling_back else "MOVE"
+		var move_payload := {"unit_id": models[selected].unit_id, "model": selected, "model_id": models[selected].get("model_id", ""), "delta": [delta.x, delta.y], "distance": distance}
+		if _submit_network_command(move_kind, move_payload):
+			dragging = false
+			return
 		if falling_back:
 			for moved_model in unit_models:
 				moved_model.fell_back = true
-		command_log = CommandLog.append(command_log, active_team, move_kind, {"unit_id": models[selected].unit_id, "model": selected, "model_id": models[selected].get("model_id", ""), "delta": [delta.x, delta.y], "distance": distance})
+		command_log = CommandLog.append(command_log, active_team, move_kind, move_payload)
 		message = ("撤退 %.2f 英寸，单位本回合不能射击或冲锋。" if falling_back else "本次移动 %.2f 英寸。移动额度按累计值计算。") % distance
 		falling_back = false
 	else:
