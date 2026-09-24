@@ -183,15 +183,16 @@ static func _shooting_command(state: Dictionary, team: int, rng: RandomNumberGen
 static func _charge_command(state: Dictionary, team: int, rng: RandomNumberGenerator) -> Dictionary:
 	for attacker_index in range(state.models.size()):
 		var attacker: Dictionary = state.models[attacker_index]
-		if int(attacker.get("team", -1)) != team or bool(attacker.get("advanced", false)) or bool(attacker.get("fell_back", false)):
+		if int(attacker.get("team", -1)) != team or bool(attacker.get("fell_back", false)):
 			continue
+		var attacker_abilities := UnitAbilities.modifiers(attacker.get("ability_ids", []))
 		for target_index in range(state.models.size()):
 			var target: Dictionary = state.models[target_index]
 			if int(target.get("team", -1)) == team:
 				continue
 			var roll := Charge.charge_distance(rng)
 			var starting := _position(attacker).distance_to(_position(target))
-			if not Charge.target_reason(attacker, target, team, starting, int(roll.distance)).is_empty():
+			if not Charge.target_reason(attacker, target, team, starting, int(roll.distance), 1.0, bool(attacker_abilities.advance_and_charge)).is_empty():
 				continue
 			var direction := (_position(target) - _position(attacker)).normalized()
 			var destination := _position(target) - direction * (float(attacker.get("radius", 0.0)) + float(target.get("radius", 0.0)) + 0.5)

@@ -653,7 +653,8 @@ func charge_selected() -> void:
 		queue_redraw()
 		return
 	var attacker: Dictionary = models[selected]
-	if bool(attacker.get("advanced", false)):
+	var attacker_abilities := UnitAbilities.modifiers(attacker.get("ability_ids", []))
+	if bool(attacker.get("advanced", false)) and not bool(attacker_abilities.advance_and_charge):
 		message = "前进后的单位不能冲锋。"
 		queue_redraw()
 		return
@@ -671,7 +672,7 @@ func charge_selected() -> void:
 		return
 	var roll := Charge.charge_distance(combat_rng)
 	var target: Dictionary = models[target_index]
-	var reason := Charge.target_reason(attacker, target, active_team, nearest, int(roll.distance))
+	var reason := Charge.target_reason(attacker, target, active_team, nearest, int(roll.distance), 1.0, bool(attacker_abilities.advance_and_charge))
 	if not reason.is_empty():
 		message = "冲锋失败：%s（2D6=%d）。" % [reason, roll.distance]
 		queue_redraw()

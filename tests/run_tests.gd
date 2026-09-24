@@ -466,6 +466,8 @@ func run() -> void:
 	var charge_target := {"team": 1, "base_radius": 0.8}
 	check(Charge.target_reason(charge_attacker, charge_target, 0, 5.0, 8).is_empty(), "charge target in range")
 	check(Charge.target_reason(charge_attacker, charge_target, 0, 15.0, 8) == "OUT OF CHARGE RANGE", "charge target out of range")
+	var advance_charge_attacker := {"team": 0, "base_radius": 0.8, "advanced": true}
+	check(Charge.target_reason(advance_charge_attacker, charge_target, 0, 5.0, 8) == "ADVANCED CANNOT CHARGE" and Charge.target_reason(advance_charge_attacker, charge_target, 0, 5.0, 8, 1.0, true).is_empty(), "advance and charge ability unlocks charge")
 	check(Charge.end_reason(Vector2(10, 10), Vector2(10.8, 10)).is_empty(), "charge ends in engagement")
 	check(Charge.end_reason(Vector2(10, 10), Vector2(13.5, 10), 1.0, 2.0, 1.0).is_empty(), "charge engagement includes base radii")
 	var melee_attacker := {"team": 0, "distance_to_target": 0.8}

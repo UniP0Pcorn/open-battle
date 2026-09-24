@@ -11,6 +11,7 @@ const Melee = preload("res://rules/melee.gd")
 const Movement = preload("res://rules/movement.gd")
 const Stratagems = preload("res://rules/stratagems.gd")
 const TurnState = preload("res://rules/turn_state.gd")
+const UnitAbilities = preload("res://rules/unit_abilities.gd")
 
 static func initial_state(models: Array, phase: String = "MOVEMENT", active_team: int = 0, terrain: Array = []) -> Dictionary:
 	return {"models": models.duplicate(true), "phase": phase, "phase_index": TurnState.phase_index(phase), "active_team": active_team, "round": 1, "command_points": [0, 0], "terrain": terrain.duplicate(true), "stratagem_effects": [], "events": []}
@@ -361,7 +362,8 @@ static func _feel_no_pain_reference_error(model: Dictionary, damage: int, payloa
 static func _charge_reference_error(models: Array, charger_index: int, target_index: int, payload: Dictionary, terrain: Array) -> String:
 	var charger: Dictionary = models[charger_index]
 	var target: Dictionary = models[target_index]
-	if bool(charger.get("advanced", false)):
+	var charger_abilities := UnitAbilities.modifiers(charger.get("ability_ids", []))
+	if bool(charger.get("advanced", false)) and not bool(charger_abilities.advance_and_charge):
 		return "ADVANCED CANNOT CHARGE"
 	if bool(charger.get("fell_back", false)):
 		return "FELL BACK"
@@ -377,7 +379,7 @@ static func _charge_reference_error(models: Array, charger_index: int, target_in
 			charge_distance += float(roll)
 	var starting_distance := _position_of(charger).distance_to(_position_of(target))
 	if not is_inf(charge_distance):
-		var target_error := Charge.target_reason(charger, target, int(charger.get("team", -1)), starting_distance, int(charge_distance))
+		var target_error := Charge.target_reason(charger, target, int(charger.get("team", -1)), starting_distance, int(charge_distance), 1.0, bool(charger_abilities.advance_and_charge))
 		if not target_error.is_empty():
 			return target_error
 	var destination_value: Variant = payload.get("to", [])
