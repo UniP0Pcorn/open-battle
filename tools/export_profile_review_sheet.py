@@ -37,6 +37,10 @@ def _weapon_range_fixed(value: object) -> bool:
 def review_flags(draft: dict) -> list[str]:
     """Return structural flags without deciding whether a profile is approved."""
     flags: list[str] = []
+    if not draft.get("keywords"):
+        flags.append("missing_keywords")
+    if not draft.get("faction_keywords"):
+        flags.append("missing_faction_keywords")
     model = (draft.get("models") or [{}])[0]
     for field in ["movement", "toughness", "save", "wounds", "leadership", "objective_control"]:
         if not _fixed(model.get(field, "")):

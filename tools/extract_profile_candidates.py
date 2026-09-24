@@ -23,7 +23,10 @@ WEAPON_RE = re.compile(
     r"(?P<strength>[0-9-]+)\s+(?P<ap>-?[0-9]+)\s+(?P<damage>[0-9Dd+\-]+)(?P<tail>\s+.*)?$"
 )
 TAG_RE = re.compile(r"\[([^\]]+)\]")
-KEYWORD_RE = re.compile(r"关键词：(?P<unit>.*?)(?:阵营关键词：(?P<faction>.*))?$")
+UNIT_KEYWORD_RE = re.compile(
+    r"^(?:关键词|關鍵字)\s*[:：]?\s*(?P<unit>.*?)(?:\s+(?:阵营关键词|陣營關鍵字)\s*[:：]?\s*(?P<faction>.*))?$"
+)
+FACTION_KEYWORD_RE = re.compile(r"^(?:阵营关键词|陣營關鍵字)\s*[:：]?\s*(?P<faction>.+)$")
 POINT_RE = re.compile(r"(?P<count>[0-9]+)\s*个\s*模型.*?(?P<points>[0-9]+)\s*分")
 POINT_SHORT_RE = re.compile(r"(?P<count>[0-9]+)\s*\+\s*个(?:\s*模型)?\s*(?P<points>[0-9]+)\s*分")
 POINT_PAIR_RE = re.compile(r"(?P<base>[0-9]+)\s*分\s+(?P<count>[0-9]+)\s*\+\s*个(?:\s*模型)?\s*(?P<points>[0-9]+)\s*分")
@@ -80,12 +83,14 @@ def extract(pdf_path: Path, edition: str = "", max_pages: int = 0) -> dict:
                 unit_keywords: list[str] = []
                 faction_keywords: list[str] = []
                 for keyword_line in lines:
-                    keyword_match = KEYWORD_RE.search(keyword_line)
-                    if keyword_match:
-                        unit_keywords = [x.strip() for x in re.split(r"[，,、]", keyword_match.group("unit")) if x.strip()]
-                        faction_text = keyword_match.group("faction") or ""
-                        faction_keywords = [x.strip() for x in re.split(r"[，,、]", faction_text) if x.strip()]
-                        break
+                    unit_match = UNIT_KEYWORD_RE.match(keyword_line)
+                    if unit_match:
+                        unit_keywords = [x.strip() for x in re.split(r"[，,、]", unit_match.group("unit")) if x.strip()]
+                        if unit_match.group("faction"):
+                            faction_keywords = [x.strip() for x in re.split(r"[，,、]", unit_match.group("faction")) if x.strip()]
+                    faction_match = FACTION_KEYWORD_RE.match(keyword_line)
+                    if faction_match:
+                        faction_keywords = [x.strip() for x in re.split(r"[，,、]", faction_match.group("faction")) if x.strip()]
                 base_diameter_mm = ""
                 for source_line in lines[: max(i + 1, 8)]:
                     base_match = BASE_MM_RE.search(source_line)

@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 from tools.export_profile_review_sheet import review_flags, rows, source_lookup
-from tools.extract_profile_candidates import BASE_MM_RE, POINT_COMPOSITION_RE, POINT_PAIR_RE, POINT_RE, POINT_SHORT_RE, WEAPON_RE, _weapon_tags
+from tools.extract_profile_candidates import BASE_MM_RE, FACTION_KEYWORD_RE, POINT_COMPOSITION_RE, POINT_PAIR_RE, POINT_RE, POINT_SHORT_RE, UNIT_KEYWORD_RE, WEAPON_RE, _weapon_tags
 from tools.index_promotable_candidates import weapon_range_fixed
 from tools.promote_profile_draft import inches
 from tools.weapon_tag_support import unsupported_tags
@@ -41,6 +41,8 @@ class ReviewSheetTests(unittest.TestCase):
 
     def test_complete_candidate_only_needs_explicit_base_and_faction(self) -> None:
         draft = {
+            "keywords": ["步兵"],
+            "faction_keywords": ["沃坦联盟"],
             "models": [{"movement": "6", "toughness": "4", "save": "4+", "wounds": "2", "leadership": "7", "objective_control": "1"}],
             "weapons": [{"range": "24", "attacks": "2", "skill": "3", "strength": "5", "damage": "2", "ap": "-1"}],
             "points": [{"models": 5, "points": 100}],
@@ -51,6 +53,8 @@ class ReviewSheetTests(unittest.TestCase):
         match = WEAPON_RE.match("链锯剑 近战 4 3+ 4 0 1")
         self.assertIsNotNone(match)
         draft = {
+            "keywords": ["步兵"],
+            "faction_keywords": ["沃坦联盟"],
             "models": [{"movement": "6", "toughness": "4", "save": "4+", "wounds": "2", "leadership": "7", "objective_control": "1"}],
             "weapons": [{"range": "近战", "attacks": "4", "skill": "3+", "strength": "4", "damage": "1", "ap": "0"}],
             "points": [{"models": 1, "points": 100}],
@@ -79,6 +83,23 @@ class ReviewSheetTests(unittest.TestCase):
         self.assertEqual(match.group("range"), "36")
         self.assertEqual(_weapon_tags(match.group(0), match), ["爆炸", "连击1"])
         self.assertEqual(POINT_RE.search("单位构成 1 个模型，415 分").group("points"), "415")
+        unit = UNIT_KEYWORD_RE.match("关键词 步兵、人物")
+        faction = FACTION_KEYWORD_RE.match("阵营关键词 沃坦联盟")
+        combined = UNIT_KEYWORD_RE.match("关键词：载具，飞行器 阵营关键词：钛帝国")
+        traditional = UNIT_KEYWORD_RE.match("關鍵字 載具、煙幕")
+        traditional_faction = FACTION_KEYWORD_RE.match("陣營關鍵字 帝國特勤")
+        self.assertIsNotNone(unit)
+        self.assertIsNotNone(faction)
+        self.assertIsNotNone(combined)
+        self.assertIsNotNone(traditional)
+        self.assertIsNotNone(traditional_faction)
+        assert unit is not None and faction is not None and combined is not None and traditional is not None and traditional_faction is not None
+        self.assertEqual(unit.group("unit"), "步兵、人物")
+        self.assertEqual(faction.group("faction"), "沃坦联盟")
+        self.assertEqual(combined.group("unit"), "载具，飞行器")
+        self.assertEqual(combined.group("faction"), "钛帝国")
+        self.assertEqual(traditional.group("unit"), "載具、煙幕")
+        self.assertEqual(traditional_faction.group("faction"), "帝國特勤")
 
     def test_extractor_accepts_compact_multi_model_points(self) -> None:
         pair = POINT_PAIR_RE.search("战马骑士 265分 3+个 280分")
