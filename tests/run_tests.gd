@@ -239,6 +239,11 @@ func run() -> void:
 	one_shot_log = CommandLog.append(one_shot_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "shot_m001", "target": 1, "target_id": "shot_target_m001", "weapon": "Single-use weapon", "one_shot": true, "damage": 1})
 	var one_shot_replay := Replay.replay(Replay.initial_state(one_shot_models, "SHOOTING", 0), one_shot_log)
 	check(not one_shot_replay.ok and one_shot_replay.reason == "ONE SHOT ALREADY USED", "replay rejects repeated one-shot weapon")
+	var one_shot_fight_log: Array = []
+	one_shot_fight_log = CommandLog.append(one_shot_fight_log, 0, "FIGHT", {"attacker": 0, "attacker_id": "shot_m001", "target": 1, "target_id": "shot_target_m001", "weapon": "Single-use melee", "one_shot": true, "damage": 1})
+	one_shot_fight_log = CommandLog.append(one_shot_fight_log, 0, "FIGHT", {"attacker": 0, "attacker_id": "shot_m001", "target": 1, "target_id": "shot_target_m001", "weapon": "Single-use melee", "one_shot": true, "damage": 1})
+	var one_shot_fight_replay := Replay.replay(Replay.initial_state(one_shot_models, "FIGHT", 0), one_shot_fight_log)
+	check(not one_shot_fight_replay.ok and one_shot_fight_replay.reason == "ONE SHOT ALREADY USED", "replay rejects repeated one-shot melee weapon")
 	var phase_replay_log: Array = []
 	phase_replay_log = CommandLog.append(phase_replay_log, 0, "PHASE_ADVANCE", {"from": "MOVEMENT", "to": "SHOOTING"})
 	phase_replay_log = CommandLog.append(phase_replay_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "attacker_m001", "target": 1, "target_id": "target_m001", "damage": 1})

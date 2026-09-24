@@ -642,9 +642,17 @@ func fight_selected() -> void:
 		return
 	var attacker_abilities := UnitAbilities.modifiers(attacker.get("ability_ids", []))
 	var weapon := weapon_for_model(attacker)
+	var weapon_ids := WeaponRules.ids_from_weapon(weapon)
+	var weapon_name := str(weapon.get("name", ""))
+	if weapon_ids.has("one_shot") and attacker.get("used_weapon_names", []).has(weapon_name):
+		message = "一次性武器已经使用过。"
+		queue_redraw()
+		return
 	var result := Melee.resolve_attack(weapon, models[target_index], combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls), models[target_index].get("keywords", []))
 	reroll_next_attack = false
-	command_log = CommandLog.append(command_log, active_team, "FIGHT", {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "hits": result.hits, "damage": result.damage})
+	if weapon_ids.has("one_shot") and not attacker.get("used_weapon_names", []).has(weapon_name):
+		attacker.used_weapon_names.append(weapon_name)
+	command_log = CommandLog.append(command_log, active_team, "FIGHT", {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "weapon": weapon_name, "one_shot": weapon_ids.has("one_shot"), "hits": result.hits, "damage": result.damage})
 	var damage_result := Damage.allocate_to_unit(models, int(result.damage), target_index)
 	if int(damage_result.destroyed) > 0:
 		selected = -1 if selected == target_index else selected
