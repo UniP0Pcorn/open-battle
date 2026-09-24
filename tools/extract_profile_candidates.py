@@ -25,6 +25,9 @@ WEAPON_RE = re.compile(
 TAG_RE = re.compile(r"\[([^\]]+)\]")
 KEYWORD_RE = re.compile(r"关键词：(?P<unit>.*?)(?:阵营关键词：(?P<faction>.*))?$")
 POINT_RE = re.compile(r"(?P<count>[0-9]+)\s*个\s*模型.*?(?P<points>[0-9]+)\s*分")
+POINT_SHORT_RE = re.compile(r"(?P<count>[0-9]+)\s*\+\s*个(?:\s*模型)?\s*(?P<points>[0-9]+)\s*分")
+POINT_PAIR_RE = re.compile(r"(?P<base>[0-9]+)\s*分\s+(?P<count>[0-9]+)\s*\+\s*个(?:\s*模型)?\s*(?P<points>[0-9]+)\s*分")
+POINT_COMPOSITION_RE = re.compile(r"(?:单位构成|单位组成).*?(?P<points>[0-9]+)\s*分")
 POINT_SIMPLE_RE = re.compile(r"(?P<points>[0-9]+)\s*分\s*$")
 
 
@@ -102,17 +105,40 @@ def extract(pdf_path: Path, edition: str = "", max_pages: int = 0) -> dict:
                         entry = {"models": int(point.group("count")), "points": int(point.group("points"))}
                         if entry not in points:
                             points.append(entry)
+                    composition = POINT_COMPOSITION_RE.search(candidate_line)
+                    if composition:
+                        entry = {"models": 1, "points": int(composition.group("points"))}
+                        if entry not in points:
+                            points.append(entry)
                 # Single-model profiles frequently print only "Name 415分".
                 # Limit this fallback to the heading immediately before the
                 # statline, avoiding arbitrary numbers in rules prose.
-                for candidate_line in lines[max(0, i - 8) : i + 1]:
-                    if "个" in candidate_line or "+" in candidate_line:
-                        continue
-                    simple = POINT_SIMPLE_RE.search(candidate_line)
-                    if simple and not POINT_RE.search(candidate_line):
-                        entry = {"models": 1, "points": int(simple.group("points"))}
-                        if entry not in points:
-                            points.append(entry)
+                has_composition_points = False
+                for candidate_line in lines:
+                    if POINT_COMPOSITION_RE.search(candidate_line):
+                        has_composition_points = True
+                        break
+                # Header prices such as "265分 3+个 280分" are useful only
+                # when the page has no explicit unit-composition price. Prefer
+                # the composition table when both are present.
+                if not has_composition_points:
+                    for candidate_line in lines[max(0, i - 8) : i + 1]:
+                        for pair in POINT_PAIR_RE.finditer(candidate_line):
+                            base_entry = {"models": 1, "points": int(pair.group("base"))}
+                            count_entry = {"models": int(pair.group("count")), "points": int(pair.group("points"))}
+                            if base_entry not in points:
+                                points.append(base_entry)
+                            if count_entry not in points:
+                                points.append(count_entry)
+                        for short in POINT_SHORT_RE.finditer(candidate_line):
+                            entry = {"models": int(short.group("count")), "points": int(short.group("points"))}
+                            if entry not in points:
+                                points.append(entry)
+                        simple = POINT_SIMPLE_RE.search(candidate_line)
+                        if simple and not POINT_RE.search(candidate_line) and not POINT_PAIR_RE.search(candidate_line) and not POINT_SHORT_RE.search(candidate_line):
+                            entry = {"models": 1, "points": int(simple.group("points"))}
+                            if entry not in points:
+                                points.append(entry)
                 candidates.append(
                     {
                         "source_file": pdf_path.name,

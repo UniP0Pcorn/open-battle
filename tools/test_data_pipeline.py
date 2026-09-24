@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 from tools.export_profile_review_sheet import review_flags, rows, source_lookup
-from tools.extract_profile_candidates import POINT_RE, WEAPON_RE, _weapon_tags
+from tools.extract_profile_candidates import POINT_COMPOSITION_RE, POINT_PAIR_RE, POINT_RE, POINT_SHORT_RE, WEAPON_RE, _weapon_tags
 from tools.index_promotable_candidates import weapon_range_fixed
 from tools.promote_profile_draft import inches
 from tools.weapon_tag_support import unsupported_tags
@@ -77,6 +77,20 @@ class ReviewSheetTests(unittest.TestCase):
         self.assertEqual(match.group("range"), "36")
         self.assertEqual(_weapon_tags(match.group(0), match), ["爆炸", "连击1"])
         self.assertEqual(POINT_RE.search("单位构成 1 个模型，415 分").group("points"), "415")
+
+    def test_extractor_accepts_compact_multi_model_points(self) -> None:
+        pair = POINT_PAIR_RE.search("战马骑士 265分 3+个 280分")
+        self.assertIsNotNone(pair)
+        assert pair is not None
+        self.assertEqual((pair.group("base"), pair.group("count"), pair.group("points")), ("265", "3", "280"))
+        short = POINT_SHORT_RE.search("3+个模型 280分")
+        self.assertIsNotNone(short)
+        assert short is not None
+        self.assertEqual((short.group("count"), short.group("points")), ("3", "280"))
+        composition = POINT_COMPOSITION_RE.search("单位构成 一台战马骑士，250分")
+        self.assertIsNotNone(composition)
+        assert composition is not None
+        self.assertEqual(composition.group("points"), "250")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,777 @@
 {
   "schema_version": 1,
-  "promotable_count": 48,
+  "promotable_count": 261,
   "promotable": [
+    {
+      "name": "圣血祭司",
+      "source_file": "圣血天使11版中文1.01.pdf",
+      "source_page": 30,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "巴尔掠食者",
+      "source_file": "圣血天使11版中文1.01.pdf",
+      "source_page": 38,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 125
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "大掠夺者阿巴顿",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 36,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 295
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "夺星者哈肯",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 37,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 90
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "瓦什托尔",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 38,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 220
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "法比乌斯拜尔",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 39,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 100
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "黑心休伦",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 40,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 1305
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "大漩涡主宰",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 41,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 145
+        }
+      ],
+      "weapon_count": 8,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "克拉维克·莫恩",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 42,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 120
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "赛佛",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 43,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 90
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "混沌领主",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 45,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 90
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "终结者领主",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 46,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 85
+        }
+      ],
+      "weapon_count": 6,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "跳跃背包混沌领主",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 47,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 5,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Master of executions",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 52,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "阿斯塔特叛军恶魔亲王",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 53,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 165
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "阿斯塔特叛军带翼恶魔亲王",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 54,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 180
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "黑暗使徒",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 56,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 65
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "红海盗连长",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 57,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "混沌终结者",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 62,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 175
+        }
+      ],
+      "weapon_count": 5,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "神选战士",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 63,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 135
+        }
+      ],
+      "weapon_count": 8,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "附魔战士",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 64,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 120
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "噪音战士",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 71,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 145
+        }
+      ],
+      "weapon_count": 5,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "恐虐狂战士",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 73,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 170
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "次元爪",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 75,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 125
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "黑暗巫会",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 77,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 90
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "叛军执法者",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 78,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "剧毒爬行者",
+      "source_file": "混沌星际战士11版中文1.01.pdf",
+      "source_page": 86,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 120
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Lion El’Jonson",
+      "source_file": "黑暗天使11版中文1.02.pdf",
+      "source_page": 15,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 265
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "阿兹瑞尔大导师",
+      "source_file": "黑暗天使11版中文1.02.pdf",
+      "source_page": 16,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 140
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Asmodai",
+      "source_file": "黑暗天使11版中文1.02.pdf",
+      "source_page": 17,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "贝利亚大导师",
+      "source_file": "黑暗天使11版中文1.02.pdf",
+      "source_page": 19,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Lazarus",
+      "source_file": "黑暗天使11版中文1.02.pdf",
+      "source_page": 21,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Inner Circle Companions",
+      "source_file": "黑暗天使11版中文1.02.pdf",
+      "source_page": 22,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Deathwing Knights",
+      "source_file": "黑暗天使11版中文1.02.pdf",
+      "source_page": 25,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 240
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Ravenwing Darkshroud",
+      "source_file": "黑暗天使11版中文1.02.pdf",
+      "source_page": 28,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "血腥魔女",
+      "source_file": "黑暗灵族11版中文1.0.pdf",
+      "source_page": 25,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 50
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "玛勒斯夫人",
+      "source_file": "黑暗灵族11版中文1.0.pdf",
+      "source_page": 27,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 100
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "达查尔",
+      "source_file": "黑暗灵族11版中文1.0.pdf",
+      "source_page": 28,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 85
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "莉莉丝.赫斯佩拉克斯",
+      "source_file": "黑暗灵族11版中文1.0.pdf",
+      "source_page": 29,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "凌虐者",
+      "source_file": "黑暗灵族11版中文1.0.pdf",
+      "source_page": 32,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 60
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "曼德拉",
+      "source_file": "黑暗灵族11版中文1.0.pdf",
+      "source_page": 39,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "滑板恶徒",
+      "source_file": "黑暗灵族11版中文1.0.pdf",
+      "source_page": 40,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 90
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "毒灾飞艇",
+      "source_file": "黑暗灵族11版中文1.0.pdf",
+      "source_page": 49,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "永恒者卢修斯",
+      "source_file": "帝皇之子10版中文老湿腐版1.06.pdf",
+      "source_page": 22,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 150
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "极乐领主",
+      "source_file": "帝皇之子10版中文老湿腐版1.06.pdf",
+      "source_page": 23,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 7,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "爆音领主",
+      "source_file": "帝皇之子10版中文老湿腐版1.06.pdf",
+      "source_page": 24,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "色孽恶魔亲王",
+      "source_file": "帝皇之子10版中文老湿腐版1.06.pdf",
+      "source_page": 26,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 180
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "有翼色孽恶魔亲王",
+      "source_file": "帝皇之子10版中文老湿腐版1.06.pdf",
+      "source_page": 27,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 215
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "破戒者",
+      "source_file": "帝皇之子10版中文老湿腐版1.06.pdf",
+      "source_page": 28,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 85
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "无瑕剑魔",
+      "source_file": "帝皇之子10版中文老湿腐版1.06.pdf",
+      "source_page": 30,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 100
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "噪音战士",
+      "source_file": "帝皇之子10版中文老湿腐版1.06.pdf",
+      "source_page": 31,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 145
+        }
+      ],
+      "weapon_count": 5,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "混沌终结者",
+      "source_file": "帝皇之子10版中文老湿腐版1.06.pdf",
+      "source_page": 32,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 145
+        }
+      ],
+      "weapon_count": 6,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "守密者",
+      "source_file": "帝皇之子10版中文老湿腐版1.06.pdf",
+      "source_page": 39,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 240
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "狂兽",
+      "source_file": "帝皇之子10版中文老湿腐版1.06.pdf",
+      "source_page": 41,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 95
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "寻觅者",
+      "source_file": "帝皇之子10版中文老湿腐版1.06.pdf",
+      "source_page": 42,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
     {
       "name": "Eversor Assassin",
       "source_file": "10E-帝国特勤2.0YAZE版.pdf",
@@ -168,6 +938,608 @@
         }
       ],
       "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "太阳领主里昂图斯",
+      "source_file": "星界军11版中文1.01.pdf",
+      "source_page": 21,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 130
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "克里德堡主",
+      "source_file": "星界军11版中文1.01.pdf",
+      "source_page": 22,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 85
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "卡迪安堡主",
+      "source_file": "星界军11版中文1.01.pdf",
+      "source_page": 23,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 55
+        }
+      ],
+      "weapon_count": 8,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "领主元帅德雷尔",
+      "source_file": "星界军11版中文1.01.pdf",
+      "source_page": 26,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "孤胆英雄马博",
+      "source_file": "星界军11版中文1.01.pdf",
+      "source_page": 31,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 55
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "保镖诺克",
+      "source_file": "星界军11版中文1.01.pdf",
+      "source_page": 40,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 60
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "国教牧师",
+      "source_file": "星界军11版中文1.01.pdf",
+      "source_page": 42,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 35
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "政委",
+      "source_file": "星界军11版中文1.01.pdf",
+      "source_page": 43,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 30
+        }
+      ],
+      "weapon_count": 5,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "技术牧师工造士",
+      "source_file": "星界军11版中文1.01.pdf",
+      "source_page": 44,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 45
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "格雷弗斯政委（坐车）",
+      "source_file": "星界军11版中文1.01.pdf",
+      "source_page": 47,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 125
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "格雷弗斯政委(步行)",
+      "source_file": "星界军11版中文1.01.pdf",
+      "source_page": 48,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 65
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "卡塔昌丛林战士",
+      "source_file": "星界军11版中文1.01.pdf",
+      "source_page": 55,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "欧格林小队",
+      "source_file": "星界军11版中文1.01.pdf",
+      "source_page": 66,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 60
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "奇美拉装甲车",
+      "source_file": "星界军11版中文1.01.pdf",
+      "source_page": 75,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 5,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "野牛装甲车",
+      "source_file": "星界军11版中文1.01.pdf",
+      "source_page": 85,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 65
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "半人马装甲车",
+      "source_file": "星界军11版中文1.01.pdf",
+      "source_page": 88,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 65
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "ÛTHAR THE DESTINED[⌀40mm]",
+      "source_file": "11E沃坦index 分数更新6.17.pdf",
+      "source_page": 30,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 90
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "BURI AEGNIRSSEN [⌀40mm]",
+      "source_file": "11E沃坦index 分数更新6.17.pdf",
+      "source_page": 31,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 95
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Berehk Stornbrow [⌀40mm]",
+      "source_file": "11E沃坦index 分数更新6.17.pdf",
+      "source_page": 32,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 95
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Kâhl [⌀40mm]",
+      "source_file": "11E沃坦index 分数更新6.17.pdf",
+      "source_page": 33,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 65
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "MEMNYR STRATEGIST [⌀32mm]",
+      "source_file": "11E沃坦index 分数更新6.17.pdf",
+      "source_page": 36,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 45
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "ARKANYST EVALUATOR [⌀32mm]",
+      "source_file": "11E沃坦index 分数更新6.17.pdf",
+      "source_page": 37,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "BRÔKHYR THUNDERKY [⌀40mm]",
+      "source_file": "11E沃坦index 分数更新6.17.pdf",
+      "source_page": 47,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 160
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "KAPRICUS CARRIER [⌀105 x 70mm ]",
+      "source_file": "11E沃坦index 分数更新6.17.pdf",
+      "source_page": 51,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "工造修士",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 22,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 55
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "控电神甫",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 23,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 60
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Technoarcheologist",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 24,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 45
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "护教军元帅",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 26,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 35
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "智控数据技师",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 27,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 25
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "哈斯塔利歼灭者",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 31,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 105
+        }
+      ],
+      "weapon_count": 5,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Sicarian Infiltrators",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 33,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Sicarian Ruststalkers",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 34,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "翼龙军天猎兵",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 35,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "翼龙军净炎兵",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 36,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Serberys Raiders",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 37,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 60
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "武装奴工毁灭者",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 40,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 100
+        }
+      ],
+      "weapon_count": 5,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Corpuscarii Electro-Priests",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 42,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 65
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Fulgurite Electro-Priests",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 43,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Kastelan Robots",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 44,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 160
+        }
+      ],
+      "weapon_count": 6,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "西多尼亚枪骑兵",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 46,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 60
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "西多尼亚龙骑兵",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 47,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 55
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Skorpius Duneriders",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 49,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "始祖鸟矢量飞梭",
+      "source_file": "机械修会11版中文1.01.pdf",
+      "source_page": 53,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 145
+        }
+      ],
+      "weapon_count": 2,
       "promotion_status": "needs_explicit_base_and_faction"
     },
     {
@@ -420,6 +1792,1126 @@
         }
       ],
       "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "战争头目",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 22,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "兽霸头目",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 24,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "骑乘跳龙的兽霸头目",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 27,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 110
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "剧痛头目",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 29,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "剧痛小子",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 30,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "鬼祟鼠",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 31,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "碎骨者萨拉卡",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 33,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 225
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "监工祖哥高德",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 38,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 90
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "瓦兹达卡",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 39,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 175
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "屁精小队",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 42,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 40
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "脏枪混混",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 46,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "超重装老大",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 47,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 65
+        }
+      ],
+      "weapon_count": 5,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "老大队",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 48,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 105
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "风暴小子",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 49,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 65
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "破拆小子",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 51,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 140
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "轰轰飚速车",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 61,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "魔改爆裂车",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 62,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "跳跳骑兵",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 68,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 150
+        }
+      ],
+      "weapon_count": 6,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "摩托小子",
+      "source_file": "兽人10版中文老湿腐版1.11.pdf",
+      "source_page": 69,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 65
+        }
+      ],
+      "weapon_count": 6,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "罗伯特.基里曼",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 48,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 355
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "装备安提洛科斯装甲的卡尔加",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 49,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 155
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "西卡留斯卫队长",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 51,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 105
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Captain Uriel Ventris",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 52,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 105
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "泰图斯连长",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 53,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 100
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "托尔连长",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 56,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "铁父费罗斯",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 57,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 85
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "坎托战团长",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 58,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "凯万史瑞克",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 59,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 100
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "艾索·沙恩",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 60,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 100
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "伏尔甘·赫斯坦",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 61,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 85
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Adrax Agatone",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 62,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "阔萨罗可汗",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 63,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 55
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Captain",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 66,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 8,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Captain in gravis armour",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 67,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 6,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Captain in Phobos armour",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 68,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Captain in Terminator armour",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 69,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 85
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Captain with jump pack",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 70,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 5,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Lieutenant",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 71,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 45
+        }
+      ],
+      "weapon_count": 8,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Lieutenant in reiver armour",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 72,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 45
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Lieutenant in Phobos armour",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 73,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 45
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "装备复合武器的先锋军副官",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 74,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 95
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Chaplain",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 78,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 60
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Chaplain in Terminator armour",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 79,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Chaplain on bike",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 80,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Techmarine",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 82,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 55
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "药剂师",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 83,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 40
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "生物学药剂师",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 84,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "旗手",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 85,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 40
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "终结者旗手",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 86,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 65
+        }
+      ],
+      "weapon_count": 6,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "剑卫旗手",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 87,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 40
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "裁决士",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 88,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 55
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "连队英雄",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 89,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 105
+        }
+      ],
+      "weapon_count": 5,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "常胜荣誉卫队",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 90,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 110
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "跳跃背包突击仲裁者小队",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 92,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 85
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "突击仲裁者小队",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 93,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 7,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "焚狱者小队",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 94,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 585
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "剑卫老兵小队",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 95,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "肃卫老兵小队",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 96,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 100
+        }
+      ],
+      "weapon_count": 8,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "地狱轰击者小队",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 97,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 110
+        }
+      ],
+      "weapon_count": 5,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "重装仲裁者小队",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 99,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 100
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "重爆弹根除者小队",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 102,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "拦截者小队",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 103,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 125
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "渗透者小队",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 104,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 110
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "入侵者小队",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 105,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 85
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "劫掠者小队",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 106,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "突击终结者小队",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 108,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 155
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "压制者小队",
+      "source_file": "星际战士11版中文1.03.pdf",
+      "source_page": 118,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 85
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "罗根.格里姆纳尔",
+      "source_file": "太空野狼11版中文1.01.pdf",
+      "source_page": 13,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 100
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "阿贾克石拳",
+      "source_file": "太空野狼11版中文1.01.pdf",
+      "source_page": 16,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 95
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "屠杀者乌里克",
+      "source_file": "太空野狼11版中文1.01.pdf",
+      "source_page": 17,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "黑鬃拉格纳",
+      "source_file": "太空野狼11版中文1.01.pdf",
+      "source_page": 18,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 90
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "杀戮牙",
+      "source_file": "太空野狼11版中文1.01.pdf",
+      "source_page": 19,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 150
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "狼卫指挥官",
+      "source_file": "太空野狼11版中文1.01.pdf",
+      "source_page": 20,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 65
+        }
+      ],
+      "weapon_count": 5,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "狼牧师",
+      "source_file": "太空野狼11版中文1.01.pdf",
+      "source_page": 21,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "钢铁牧师",
+      "source_file": "太空野狼11版中文1.01.pdf",
+      "source_page": 22,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 50
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "灰猎手",
+      "source_file": "太空野狼11版中文1.01.pdf",
+      "source_page": 23,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 165
+        }
+      ],
+      "weapon_count": 6,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "血爪",
+      "source_file": "太空野狼11版中文1.01.pdf",
+      "source_page": 24,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 135
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "狼卫终结者",
+      "source_file": "太空野狼11版中文1.01.pdf",
+      "source_page": 26,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 150
+        }
+      ],
+      "weapon_count": 5,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "雷狼骑兵",
+      "source_file": "太空野狼11版中文1.01.pdf",
+      "source_page": 33,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 100
+        }
+      ],
+      "weapon_count": 6,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "芬里斯狼群",
+      "source_file": "太空野狼11版中文1.01.pdf",
+      "source_page": 34,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 45
+        }
+      ],
+      "weapon_count": 1,
       "promotion_status": "needs_explicit_base_and_faction"
     },
     {
@@ -729,11 +3221,525 @@
       ],
       "weapon_count": 2,
       "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "虫群霸主",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 21,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 210
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "有翼泰伦王虫",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 27,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 65
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "长鞭泰伦王虫",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 28,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Neurotyrant",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 29,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 130
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "脑虫",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 30,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 90
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "族群领主",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 31,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        },
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Deathleaper",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 32,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        },
+        {
+          "models": 1,
+          "points": 60
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Neurolictor",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 33,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        },
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "孢子空投仓",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 36,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "石像鬼",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 37,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        },
+        {
+          "models": 1,
+          "points": 55
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "沙蟒",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 38,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 135
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "掘蟒",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 39,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 140
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "蛇虫",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 40,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 125
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "超进化蛇虫",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 41,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 165
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "红色恐惧",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 42,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 130
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "撕裂虫群",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 44,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 30
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "喷焰虫",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 46,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 45
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Hormagaunt",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 53,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        },
+        {
+          "models": 1,
+          "points": 45
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "暴君护卫",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 55,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Venomthropes",
+      "source_file": "泰伦虫族11版中文1.0.pdf",
+      "source_page": 56,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 55
+        },
+        {
+          "models": 1,
+          "points": 60
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "背叛者卡恩",
+      "source_file": "吞世者10版中文DavidZ版1.05.pdf",
+      "source_page": 21,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 100
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "领主因维卡图斯",
+      "source_file": "吞世者10版中文DavidZ版1.05.pdf",
+      "source_page": 22,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 110
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "钢牛领主",
+      "source_file": "吞世者10版中文DavidZ版1.05.pdf",
+      "source_page": 24,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 105
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "枭首魔将",
+      "source_file": "吞世者10版中文DavidZ版1.05.pdf",
+      "source_page": 25,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 60
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "恐虐恶魔王子",
+      "source_file": "吞世者10版中文DavidZ版1.05.pdf",
+      "source_page": 26,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 200
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "有翼恐虐恶魔王子",
+      "source_file": "吞世者10版中文DavidZ版1.05.pdf",
+      "source_page": 27,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 180
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "恐虐狂战士",
+      "source_file": "吞世者10版中文DavidZ版1.05.pdf",
+      "source_page": 28,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 180
+        }
+      ],
+      "weapon_count": 5,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "豺狼邪教徒",
+      "source_file": "吞世者10版中文DavidZ版1.05.pdf",
+      "source_page": 29,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 65
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "洒血鬼教徒",
+      "source_file": "吞世者10版中文DavidZ版1.05.pdf",
+      "source_page": 30,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "混沌终结者",
+      "source_file": "吞世者10版中文DavidZ版1.05.pdf",
+      "source_page": 33,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 185
+        }
+      ],
+      "weapon_count": 6,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "混沌犀牛运兵车",
+      "source_file": "吞世者10版中文DavidZ版1.05.pdf",
+      "source_page": 35,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 85
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "斯卡布兰德",
+      "source_file": "吞世者10版中文DavidZ版1.05.pdf",
+      "source_page": 45,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 305
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "恐虐碾血者",
+      "source_file": "吞世者10版中文DavidZ版1.05.pdf",
+      "source_page": 47,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 110
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "放血鬼",
+      "source_file": "吞世者10版中文DavidZ版1.05.pdf",
+      "source_page": 48,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 90
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "觅血猎犬",
+      "source_file": "吞世者10版中文DavidZ版1.05.pdf",
+      "source_page": 49,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
     }
   ],
   "rejected_reasons": {
-    "missing_points": 530,
     "complex_weapon_damage": 239,
+    "missing_points": 89,
     "complex_weapon_attacks": 204,
     "missing_weapons": 23,
     "non_numeric_oc": 18,
