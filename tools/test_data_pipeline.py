@@ -8,7 +8,7 @@ from pathlib import Path
 
 from tools.export_profile_review_sheet import review_flags, rows, source_lookup
 from tools.extract_profile_candidates import BASE_MM_RE, COMBINED_KEYWORD_RE, FACTION_KEYWORD_RE, POINT_COMPOSITION_RE, POINT_PAIR_RE, POINT_RE, POINT_SHORT_RE, UNIT_KEYWORD_RE, WEAPON_RE, _weapon_tags
-from tools.index_promotable_candidates import weapon_range_fixed
+from tools.index_promotable_candidates import reason, weapon_range_fixed
 from tools.promote_profile_draft import inches
 from tools.weapon_tag_support import unsupported_tags
 
@@ -76,6 +76,18 @@ class ReviewSheetTests(unittest.TestCase):
             "points": [{"models": 5, "points": 100}],
         }
         self.assertIn("unsupported_weapon_keywords", review_flags(draft))
+
+    def test_supported_dice_expressions_do_not_create_complex_flags(self) -> None:
+        draft = {
+            "keywords": ["步兵"],
+            "faction_keywords": ["沃坦联盟"],
+            "models": [{"movement": "6", "toughness": "4", "save": "4+", "wounds": "2", "leadership": "7", "objective_control": "1"}],
+            "weapons": [{"range": "24", "attacks": "D3", "skill": "3+", "strength": "5", "damage": "D6+1", "ap": "-1"}],
+            "points": [{"models": 5, "points": 100}],
+        }
+        self.assertNotIn("complex_weapon_attacks", review_flags(draft))
+        self.assertNotIn("complex_weapon_damage", review_flags(draft))
+        self.assertNotIn("complex_weapon_attacks", reason({"statline": {"m": "6", "t": "4", "sv": "4+", "w": "2", "ld": "7+", "oc": "1"}, "weapons": draft["weapons"], "points": draft["points"]}))
 
     def test_extractor_accepts_bare_range_and_spaced_points(self) -> None:
         match = WEAPON_RE.match("脉冲激光炮 36 2D6 2+ 7 -1 2 爆炸，连击1")

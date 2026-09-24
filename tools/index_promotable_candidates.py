@@ -12,6 +12,13 @@ def fixed(value: object, signed: bool = False) -> bool:
     return re.fullmatch(pattern, str(value).replace("+", "").replace("”", "").replace('"', "").strip()) is not None
 
 
+def fixed_or_dice(value: object, signed: bool = False) -> bool:
+    text = str(value).replace("”", "").replace('"', "").strip()
+    if fixed(text, signed):
+        return True
+    return re.fullmatch(r"(?:\d+)?D(?:3|6)(?:[+-]\d+)?", text, re.I) is not None
+
+
 def weapon_range_fixed(value: object) -> bool:
     return str(value).strip().lower() in {"近战", "melee"} or fixed(value)
 
@@ -28,7 +35,12 @@ def reason(candidate: dict) -> list[str]:
         problems.append("missing_weapons")
     for weapon in candidate.get("weapons", []):
         for field in ["range", "attacks", "skill", "strength", "damage"]:
-            valid = weapon_range_fixed(weapon.get(field, "")) if field == "range" else fixed(weapon.get(field, ""))
+            if field == "range":
+                valid = weapon_range_fixed(weapon.get(field, ""))
+            elif field in {"attacks", "damage"}:
+                valid = fixed_or_dice(weapon.get(field, ""))
+            else:
+                valid = fixed(weapon.get(field, ""))
             if not valid:
                 problems.append("complex_weapon_" + field)
         if not fixed(weapon.get("ap", ""), True):

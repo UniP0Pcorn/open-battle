@@ -34,7 +34,7 @@ def number_or_expression(value: object, label: str) -> object:
     text = str(value).replace("”", "").replace('"', "").strip().upper()
     if re.fullmatch(r"\d+", text):
         return int(text)
-    if re.fullmatch(r"(?:\d+)?D\d+(?:[+-]\d+)?", text):
+    if re.fullmatch(r"(?:\d+)?D(?:3|6)(?:[+-]\d+)?", text):
         return text
     raise ValueError(f"{label} is not a supported dice expression: {value}")
 

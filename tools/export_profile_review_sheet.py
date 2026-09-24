@@ -30,6 +30,13 @@ def _fixed(value: object, signed: bool = False) -> bool:
     return re.fullmatch(pattern, str(value).replace("+", "").replace("”", "").replace('"', "").strip()) is not None
 
 
+def _fixed_or_dice(value: object, signed: bool = False) -> bool:
+    text = str(value).replace("”", "").replace('"', "").strip()
+    if _fixed(text, signed):
+        return True
+    return re.fullmatch(r"(?:\d+)?D(?:3|6)(?:[+-]\d+)?", text, re.I) is not None
+
+
 def _weapon_range_fixed(value: object) -> bool:
     return str(value).strip().lower() in {"近战", "melee"} or _fixed(value)
 
@@ -51,7 +58,12 @@ def review_flags(draft: dict) -> list[str]:
         flags.append("missing_weapons")
     for weapon in draft.get("weapons", []):
         for field in ["range", "attacks", "skill", "strength", "damage"]:
-            fixed = _weapon_range_fixed(weapon.get(field, "")) if field == "range" else _fixed(weapon.get(field, ""))
+            if field == "range":
+                fixed = _weapon_range_fixed(weapon.get(field, ""))
+            elif field in {"attacks", "damage"}:
+                fixed = _fixed_or_dice(weapon.get(field, ""))
+            else:
+                fixed = _fixed(weapon.get(field, ""))
             if not fixed:
                 flags.append("complex_weapon_" + field)
         if not _fixed(weapon.get("ap", ""), signed=True):
