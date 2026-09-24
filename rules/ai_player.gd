@@ -171,7 +171,8 @@ static func _battle_shock_action(state: Dictionary, team: int) -> Dictionary:
 		var unit_id := Attachments.group_id(model)
 		var has_pass_effect := false
 		for effect in state.get("stratagem_effects", []):
-			if effect is Dictionary and str(effect.get("effect", "")) == "PASS_BATTLE_SHOCK" and int(effect.get("team", -1)) == team and not bool(effect.get("consumed", false)) and str(effect.get("payload", {}).get("unit_id", "")) == unit_id:
+			var effect_payload: Variant = effect.get("payload", {}) if effect is Dictionary else {}
+			if effect is Dictionary and str(effect.get("effect", "")) == "PASS_BATTLE_SHOCK" and int(effect.get("team", -1)) == team and not bool(effect.get("consumed", false)) and effect_payload is Dictionary and str(effect_payload.get("unit_id", "")) == unit_id:
 				has_pass_effect = true
 				break
 		if has_pass_effect:
