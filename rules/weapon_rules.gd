@@ -55,6 +55,8 @@ static func canonical_id(value: Variant) -> String:
 	var anti_prefix := ""
 	if compact.begins_with("针对"):
 		anti_prefix = compact.substr(2)
+	elif compact.begins_with("反"):
+		anti_prefix = compact.substr(1)
 	elif compact.begins_with("anti-"):
 		anti_prefix = compact.substr(5)
 	elif compact.begins_with("anti_"):

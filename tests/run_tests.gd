@@ -234,6 +234,7 @@ func run() -> void:
 	var devastating_context := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["毁灭伤害"]}, 10.0)
 	check(devastating_context.weapon.devastating_wounds, "devastating wounds context is explicit")
 	check(WeaponRules.canonical_id("针对步兵 4+") == "anti_infantry_4" and WeaponRules.canonical_id("双联") == "twin_linked" and WeaponRules.canonical_id("手枪") == "pistol", "anti, twin-linked and pistol keywords normalize")
+	check(WeaponRules.canonical_id("反步兵4+") == "anti_infantry_4", "anti keyword accepts reverse Chinese alias")
 	var anti_context := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["针对步兵4+", "致命一击", "双联", "持续命中1"]}, 10.0, 0, 1, ["步兵"])
 	check(anti_context.weapon.anti_wound_on == 4 and anti_context.weapon.lethal_hits and anti_context.weapon.twin_linked and anti_context.weapon.sustained_hits == 1, "anti, lethal, twin-linked and sustained hits apply to matching target")
 	var anti_miss := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["针对步兵4+"]}, 10.0, 0, 1, ["载具"])

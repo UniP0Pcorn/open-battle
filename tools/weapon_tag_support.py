@@ -45,7 +45,7 @@ def canonical_tag(value: object) -> str:
     melta = re.fullmatch(r"热熔(\d+)|melta(\d+)", compact)
     if melta:
         return "melta_" + next(group for group in melta.groups() if group is not None)
-    anti = re.fullmatch(r"(?:针对|anti[-_]?)([^+]+)([2-6])\+", compact)
+    anti = re.fullmatch(r"(?:针对|反|anti[-_]?)([^+]+)([2-6])\+", compact)
     if anti:
         return "anti_" + anti.group(1) + "_" + anti.group(2)
     sustained = re.fullmatch(r"持续命中(\d+)|sustainedhits(\d+)", compact)
