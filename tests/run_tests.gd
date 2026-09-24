@@ -1284,6 +1284,18 @@ func run() -> void:
 	check(MissionRules.controller(Vector2(10, 10), objective_models, 3.0) == 0, "objective controller is detected")
 	var mission_score := MissionRules.score_objectives([{"position": Vector2(10, 10), "points": 2}], objective_models, 3.0)
 	check(mission_score.score[0] == 2 and mission_score.controllers[0] == 0, "objective value is scored")
+	var oc_aura := {"id": "fixture_oc_aura", "aura": {"radius_inches": 3.0, "event": "objective_control", "include_self": false, "keywords": ["INFANTRY"], "when": {"phase": "COMMAND", "kind": "OBJECTIVE_CONTROL"}, "modifiers": {"objective_control_bonus": 2}}}
+	var oc_source := {"model_id": "oc_source", "team": 0, "position": Vector2(10, 10), "radius": 0.5, "wounds": 3, "objective_control": 1, "ability_ids": [oc_aura]}
+	var oc_recipient := {"model_id": "oc_recipient", "team": 0, "position": Vector2(12, 10), "radius": 0.5, "wounds": 3, "objective_control": 1, "keywords": ["INFANTRY"], "ability_ids": []}
+	var oc_enemy := {"model_id": "oc_enemy", "team": 1, "position": Vector2(10, 10), "radius": 0.5, "wounds": 3, "objective_control": 3, "ability_ids": []}
+	check(UnitAbilities.validate([oc_aura]).is_empty(), "objective control aura schema accepts timing and bonus")
+	check(MissionRules.controller(Vector2(10, 10), [oc_source, oc_recipient, oc_enemy], 3.0) == 0, "objective control aura changes authoritative controller")
+	oc_recipient.position = Vector2(20, 10)
+	check(MissionRules.controller(Vector2(10, 10), [oc_source, oc_recipient, oc_enemy], 3.0) == 1, "objective control aura expires outside radius")
+	oc_recipient.position = Vector2(12, 10)
+	oc_recipient.keywords = []
+	check(MissionRules.controller(Vector2(10, 10), [oc_source, oc_recipient, oc_enemy], 3.0) == 1, "objective control aura enforces keywords")
+	check(MissionRules.controller(Vector2(10, 10), [oc_source, oc_recipient, oc_enemy], 3.0, {"phase": "MOVEMENT", "kind": "OBJECTIVE_CONTROL"}) == 1, "objective control aura enforces phase")
 	check(MissionRules.winner([5, 2], 5) == 0 and MissionRules.winner([2, 2], 5) == -1, "mission winner is detected")
 	var command_points := CommandPoints.new_state()
 	command_points = CommandPoints.gain(command_points, 0)

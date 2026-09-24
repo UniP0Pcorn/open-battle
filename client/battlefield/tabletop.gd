@@ -946,7 +946,7 @@ func score_objectives(team_id: int) -> int:
 	var objective_data: Array = []
 	for index in range(objectives.size()):
 		objective_data.append({"position": objectives[index], "points": int(objective_values[index]) if index < objective_values.size() else 1})
-	var scored := MissionRules.score_objectives(objective_data, models, control_radius)
+	var scored := MissionRules.score_objectives(objective_data, models, control_radius, {"phase": "COMMAND", "kind": "OBJECTIVE_CONTROL"})
 	return int(scored.score[team_id])
 
 func undo_last() -> void:

@@ -178,7 +178,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			_expire_grants(next.models, ["PHASE", "TURN"])
 			var objective_data: Array = next.get("objectives", []).duplicate(true)
 			if not objective_data.is_empty():
-				var scored := MissionRules.score_objectives(objective_data, next.models, float(next.get("control_radius", 3.0)))
+				var scored := MissionRules.score_objectives(objective_data, next.models, float(next.get("control_radius", 3.0)), {"phase": "COMMAND", "kind": "OBJECTIVE_CONTROL"})
 				var score: Array = next.get("score", [0, 0]).duplicate(true)
 				for score_team in range(mini(score.size(), scored.score.size())):
 					score[score_team] = int(score[score_team]) + int(scored.score[score_team])
