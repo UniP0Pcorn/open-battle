@@ -38,6 +38,9 @@ func connect_to_room(room_id: String, address: String, port: int) -> String:
 func connect_invite(invite: String, now: int = 0) -> String:
 	return lobby.connect_invite(invite, now)
 
+func connect_to_relay(url: String, room_id: String) -> String:
+	return lobby.connect_to_relay(url, room_id)
+
 func set_ready(ready: bool = true) -> String:
 	return lobby.set_ready(ready)
 

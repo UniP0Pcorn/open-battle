@@ -873,6 +873,7 @@ func run() -> void:
 	check(lobby_probe.connect_invite("not-an-invite", 4102444700) == "INVALID ROOM INVITE", "lobby validates an invite before connecting")
 	check(lobby_probe.connect_invite(invite, 4102444801) == "INVALID ROOM INVITE", "lobby rejects an expired invite before connecting")
 	check(lobby_probe.list_public_rooms("directory.invalid") == "INVALID DIRECTORY URL" and lobby_probe.publish_public_room("directory.invalid", "203.0.113.20", 4102444800) == "INVALID DIRECTORY URL", "lobby validates optional directory endpoints")
+	check(lobby_probe.connect_to_relay("http://relay.invalid", "relay-room") == "INVALID RELAY URL", "lobby validates optional relay endpoints")
 	AccountStore.remove_identity(identity_path)
 	var trust_path := "user://open_battle_trusted_test.json"
 	AccountStore.remove_trusted_identities(trust_path)

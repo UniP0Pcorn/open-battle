@@ -10,6 +10,7 @@ const Room = preload("res://rules/room.gd")
 const NetworkSync = preload("res://rules/network_sync.gd")
 const RoomDirectory = preload("res://rules/room_directory.gd")
 const RoomDirectoryClient = preload("res://client/room_directory_client.gd")
+const RelayTransport = preload("res://client/relay_transport.gd")
 
 signal lobby_changed(room: Dictionary)
 signal battle_snapshot_received(state: Dictionary)
@@ -30,6 +31,7 @@ var server_port := 0
 var trusted_identities: Dictionary = {}
 var authenticated_peers: Dictionary = {}
 var directory: Node
+var relay_transport: Node
 
 func _ready() -> void:
 	transport = P2PTransport.new()
@@ -42,6 +44,11 @@ func _ready() -> void:
 	add_child(directory)
 	directory.rooms_received.connect(func(rooms: Array): directory_rooms_received.emit(rooms))
 	directory.request_completed.connect(func(ok: bool, payload: Variant): directory_request_completed.emit(ok, payload))
+	relay_transport = RelayTransport.new()
+	add_child(relay_transport)
+	relay_transport.packet_received.connect(_on_packet_received)
+	relay_transport.peer_state_changed.connect(_on_peer_state_changed)
+	relay_transport.transport_error.connect(_on_transport_error)
 	for trusted in AccountStore.load_trusted_identities():
 		trusted_identities[str(trusted.fingerprint)] = trusted.duplicate(true)
 
@@ -101,6 +108,18 @@ func connect_invite(invite: String, now: int = 0) -> String:
 	if record.is_empty():
 		return "INVALID ROOM INVITE"
 	return connect_to_room(str(record.room_id), str(record.address), int(record.port))
+
+func connect_to_relay(url: String, room_id: String) -> String:
+	if identity.is_empty():
+		return "IDENTITY REQUIRED"
+	room = Room.create(room_id)
+	if room.is_empty():
+		return "ROOM CREATE FAILED"
+	transport.close()
+	transport = relay_transport
+	is_host = false
+	pending_join = true
+	return relay_transport.connect_to_host(url, room_id)
 
 ## Build a shareable public advertisement. The caller supplies the mapped or
 ## relay endpoint; the lobby never guesses a public address from local state.
