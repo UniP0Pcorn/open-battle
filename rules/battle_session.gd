@@ -11,7 +11,7 @@ const ModelState = preload("res://rules/model_state.gd")
 
 const SCHEMA_VERSION := 1
 
-static func create(models: Array, edition: int = 11, first_team: int = 0, terrain: Array = []) -> Dictionary:
+static func create(models: Array, edition: int = 11, first_team: int = 0, terrain: Array = [], objectives: Array = [], control_radius: float = 3.0, score_to_win: int = 5) -> Dictionary:
 	var ruleset := RulesetCatalog.get_ruleset(edition)
 	if ruleset.is_empty() or first_team not in [0, 1]:
 		return {}
@@ -26,6 +26,11 @@ static func create(models: Array, edition: int = 11, first_team: int = 0, terrai
 		"command_points": [0, 0],
 		"models": models.duplicate(true),
 		"terrain": terrain.duplicate(true),
+		"objectives": objectives.duplicate(true),
+		"control_radius": control_radius,
+		"score_to_win": score_to_win,
+		"score": [0, 0],
+		"winner": -1,
 		"command_log": [],
 		"events": []
 	}
@@ -34,6 +39,8 @@ static func submit(state: Dictionary, team: int, kind: String, payload: Dictiona
 	var snapshot_error := validate_snapshot(state)
 	if not snapshot_error.is_empty():
 		return {"ok": false, "reason": snapshot_error, "state": state}
+	if int(state.get("winner", -1)) >= 0:
+		return {"ok": false, "reason": "BATTLE FINISHED", "state": state}
 	var entry := {"sequence": state.command_log.size(), "team": team, "kind": kind, "payload": payload.duplicate(true)}
 	var contract_error := CommandSchema.validate_for_state(entry, state)
 	if not contract_error.is_empty():
@@ -76,6 +83,16 @@ static func validate_snapshot(state: Dictionary) -> String:
 		return model_errors[0]
 	if state.has("terrain") and not (state.terrain is Array):
 		return "INVALID TERRAIN"
+	if state.has("objectives") and not (state.objectives is Array):
+		return "INVALID OBJECTIVES"
+	if state.has("control_radius") and (not is_finite(float(state.control_radius)) or float(state.control_radius) < 0.0):
+		return "INVALID CONTROL RADIUS"
+	if state.has("score_to_win") and int(state.score_to_win) < 1:
+		return "INVALID SCORE TARGET"
+	if state.has("score") and (not (state.score is Array) or state.score.size() < 2):
+		return "INVALID SCORE"
+	if state.has("winner") and int(state.winner) not in [-1, 0, 1]:
+		return "INVALID WINNER"
 	var phase_state := {"round": int(state.round), "active_team": int(state.active_team), "phase": str(state.phase), "phase_index": int(state.phase_index), "command_points": state.get("command_points", [0, 0])}
 	if not TurnState.is_valid(phase_state):
 		return "INVALID TURN STATE"

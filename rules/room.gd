@@ -13,7 +13,7 @@ const ACTIVE := "ACTIVE"
 const FINISHED := "FINISHED"
 const ABANDONED := "ABANDONED"
 
-static func create(room_id: String, edition: int = 11, points_limit: int = 1000, mission_id: String = "control_center", terrain: Array = []) -> Dictionary:
+static func create(room_id: String, edition: int = 11, points_limit: int = 1000, mission_id: String = "control_center", terrain: Array = [], objectives: Array = [], control_radius: float = 3.0, score_to_win: int = 5) -> Dictionary:
 	var ruleset := RulesetCatalog.get_ruleset(edition)
 	if room_id.strip_edges().is_empty() or ruleset.is_empty() or points_limit < 1:
 		return {}
@@ -26,6 +26,9 @@ static func create(room_id: String, edition: int = 11, points_limit: int = 1000,
 		"points_limit": points_limit,
 		"mission_id": mission_id,
 		"terrain": terrain.duplicate(true),
+		"objectives": objectives.duplicate(true),
+		"control_radius": control_radius,
+		"score_to_win": score_to_win,
 		"players": [],
 		"session": {}
 	}
@@ -75,7 +78,7 @@ static func start(room: Dictionary, models: Array) -> Dictionary:
 	for player in room.players:
 		if not bool(player.get("ready", false)):
 			return _failure("PLAYER NOT READY", room)
-	var session := BattleSession.create(models, int(room.edition), 0, room.get("terrain", []))
+	var session := BattleSession.create(models, int(room.edition), 0, room.get("terrain", []), room.get("objectives", []), float(room.get("control_radius", 3.0)), int(room.get("score_to_win", 5)))
 	if session.is_empty():
 		return _failure("SESSION CREATE FAILED", room)
 	var next := room.duplicate(true)
@@ -97,6 +100,9 @@ static func submit(room: Dictionary, player_id: String, kind: String, payload: D
 		return {"ok": false, "reason": str(result.get("reason", "COMMAND REJECTED")), "room": room, "state": result.get("state", room.session)}
 	var next := room.duplicate(true)
 	next.session = result.state
+	if int(next.session.get("winner", -1)) >= 0:
+		next.status = FINISHED
+		next.winner = int(next.session.winner)
 	for joined in next.players:
 		if str(joined.get("id", "")) == player_id:
 			joined.connected = true
@@ -166,6 +172,12 @@ static func validate(room: Dictionary) -> String:
 		return "RULESET MISMATCH"
 	if not (room.players is Array) or room.players.size() > MAX_PLAYERS:
 		return "INVALID PLAYERS"
+	if room.has("objectives") and not (room.objectives is Array):
+		return "INVALID OBJECTIVES"
+	if room.has("control_radius") and (not is_finite(float(room.control_radius)) or float(room.control_radius) < 0.0):
+		return "INVALID CONTROL RADIUS"
+	if room.has("score_to_win") and int(room.score_to_win) < 1:
+		return "INVALID SCORE TARGET"
 	var ids: Dictionary = {}
 	var teams: Dictionary = {}
 	for player in room.players:

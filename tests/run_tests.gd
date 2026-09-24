@@ -165,6 +165,11 @@ func run() -> void:
 	check(not wrong_end_turn.ok and wrong_end_turn.reason == "NOT ACTIVE TEAM", "authoritative session rejects foreign end turn")
 	var ended_session := BattleSession.submit(accepted_move.state, 0, "END_TURN", {})
 	check(ended_session.ok and ended_session.state.active_team == 1 and ended_session.state.command_points[1] == 1, "authoritative session advances turn and grants command point")
+	var scored_session := BattleSession.create([{"model_id": "score_m001", "position": Vector2(10, 10), "unit_id": "score_unit", "team": 0, "objective_control": 3}], 11, 0, [], [{"position": Vector2(10, 10), "points": 2}], 3.0, 2)
+	var scored_turn := BattleSession.submit(scored_session, 0, "END_TURN", {})
+	check(scored_turn.ok and scored_turn.state.score[0] == 2 and scored_turn.state.winner == 0 and scored_turn.state.objectives.size() == 1 and scored_turn.state.score_to_win == 2, "authoritative session scores mission objectives and records the winner")
+	var finished_command := BattleSession.submit(scored_turn.state, 1, "END_TURN", {})
+	check(not finished_command.ok and finished_command.reason == "BATTLE FINISHED", "authoritative session rejects commands after mission victory")
 	var bad_snapshot: Dictionary = accepted_move.state.duplicate(true)
 	bad_snapshot.ruleset_id = "wh40k_unknown"
 	check(BattleSession.validate_snapshot(bad_snapshot) == "RULESET MISMATCH", "authoritative session rejects mismatched ruleset")

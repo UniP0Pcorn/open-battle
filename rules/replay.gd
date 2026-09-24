@@ -16,8 +16,9 @@ const Reserves = preload("res://rules/reserves.gd")
 const Transports = preload("res://rules/transports.gd")
 const Attachments = preload("res://rules/attachments.gd")
 const WeaponRules = preload("res://rules/weapon_rules.gd")
+const MissionRules = preload("res://rules/mission.gd")
 
-static func initial_state(models: Array, phase: String = "MOVEMENT", active_team: int = 0, terrain: Array = []) -> Dictionary:
+static func initial_state(models: Array, phase: String = "MOVEMENT", active_team: int = 0, terrain: Array = [], objectives: Array = [], control_radius: float = 3.0, score_to_win: int = 5) -> Dictionary:
 	var initial_models: Array = models.duplicate(true)
 	for model in initial_models:
 		if not model.has("reserve_status"):
@@ -25,7 +26,7 @@ static func initial_state(models: Array, phase: String = "MOVEMENT", active_team
 	if phase == "FIGHT":
 		for model in initial_models:
 			model.fought = false
-	return {"models": initial_models, "phase": phase, "phase_index": TurnState.phase_index(phase), "active_team": active_team, "round": 1, "command_points": [0, 0], "terrain": terrain.duplicate(true), "stratagem_effects": [], "events": []}
+	return {"models": initial_models, "phase": phase, "phase_index": TurnState.phase_index(phase), "active_team": active_team, "round": 1, "command_points": [0, 0], "terrain": terrain.duplicate(true), "objectives": objectives.duplicate(true), "control_radius": control_radius, "score_to_win": score_to_win, "score": [0, 0], "winner": -1, "stratagem_effects": [], "events": []}
 
 static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 	var next := state.duplicate(true)
@@ -161,6 +162,14 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 				return {"ok": false, "reason": "INVALID CHARGE", "state": state}
 			next.models[model_index].position = Vector2(float(destination[0]), float(destination[1]))
 		"END_TURN":
+			var objective_data: Array = next.get("objectives", []).duplicate(true)
+			if not objective_data.is_empty():
+				var scored := MissionRules.score_objectives(objective_data, next.models, float(next.get("control_radius", 3.0)))
+				var score: Array = next.get("score", [0, 0]).duplicate(true)
+				for score_team in range(mini(score.size(), scored.score.size())):
+					score[score_team] = int(score[score_team]) + int(scored.score[score_team])
+				next.score = score
+				next.winner = MissionRules.winner(score, int(next.get("score_to_win", 5)))
 			next.active_team = 1 - int(next.active_team)
 			next.phase = "MOVEMENT"
 			next.phase_index = TurnState.phase_index("MOVEMENT")

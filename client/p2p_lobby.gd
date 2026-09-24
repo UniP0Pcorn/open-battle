@@ -48,7 +48,8 @@ func trust_identity(value: Dictionary) -> String:
 func host_room(room_id: String, port: int, edition: int = 11, points_limit: int = 1000, mission_id: String = "control_center", terrain: Array = []) -> String:
 	if identity.is_empty():
 		return "IDENTITY REQUIRED"
-	room = Room.create(room_id, edition, points_limit, mission_id, terrain)
+	var mission_config := _load_mission_config(mission_id, terrain)
+	room = Room.create(room_id, edition, points_limit, mission_id, mission_config.terrain, mission_config.objectives, mission_config.control_radius, mission_config.score_to_win)
 	if room.is_empty():
 		return "ROOM CREATE FAILED"
 	is_host = true
@@ -244,3 +245,33 @@ func _auth_nonce() -> String:
 
 func _last_sequence() -> int:
 	return maxi(0, int(room.get("session", {}).get("command_log", []).size()) - 1)
+
+func _load_mission_config(mission_id: String, terrain_override: Array) -> Dictionary:
+	var config := {"terrain": terrain_override.duplicate(true), "objectives": [], "control_radius": 3.0, "score_to_win": 5}
+	var selected: Dictionary = {}
+	var directory := DirAccess.open("res://data/missions")
+	if directory != null:
+		for filename in directory.get_files():
+			if not filename.to_lower().ends_with(".json"):
+				continue
+			var parsed = JSON.parse_string(FileAccess.get_file_as_string("res://data/missions/" + filename))
+			if parsed is Dictionary and (str(parsed.get("id", "")) == mission_id or filename.get_basename() == mission_id):
+				selected = parsed
+				break
+	if selected.is_empty():
+		var fallback = JSON.parse_string(FileAccess.get_file_as_string("res://data/missions/control_center.json"))
+		if fallback is Dictionary:
+			selected = fallback
+	config.control_radius = float(selected.get("control_radius_inches", config.control_radius))
+	config.score_to_win = int(selected.get("score_to_win", config.score_to_win))
+	if config.terrain.is_empty():
+		config.terrain = selected.get("terrain", []).duplicate(true)
+	for objective in selected.get("objectives", []):
+		if not (objective is Dictionary):
+			continue
+		var position: Variant = objective.get("position", null)
+		if position is Vector2:
+			config.objectives.append({"id": str(objective.get("id", "")), "position": position, "points": int(objective.get("points", 1))})
+		elif objective.get("position_inches", []).size() >= 2:
+			config.objectives.append({"id": str(objective.get("id", "")), "position": Vector2(float(objective.position_inches[0]), float(objective.position_inches[1])), "points": int(objective.get("points", 1))})
+	return config

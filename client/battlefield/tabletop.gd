@@ -188,6 +188,19 @@ func apply_network_snapshot(state: Dictionary) -> void:
 	phase = str(state.phase)
 	active_team = int(state.active_team)
 	command_points = state.get("command_points", [0, 0]).duplicate(true)
+	score = state.get("score", [0, 0]).duplicate(true)
+	control_radius = float(state.get("control_radius", control_radius))
+	score_to_win = int(state.get("score_to_win", score_to_win))
+	var network_winner := int(state.get("winner", -1))
+	if state.has("terrain") and state.terrain is Array:
+		terrain = state.terrain.duplicate(true)
+	if state.has("objectives") and state.objectives is Array and not state.objectives.is_empty():
+		objectives.clear()
+		objective_values.clear()
+		for objective in state.objectives:
+			if objective is Dictionary and objective.get("position", null) is Vector2:
+				objectives.append(objective.position)
+				objective_values.append(int(objective.get("points", 1)))
 	counter_offensive_next = false
 	for effect in state.get("stratagem_effects", []):
 		if effect is Dictionary and str(effect.get("effect", "")) == "FIGHT_NEXT" and int(effect.get("team", -1)) == active_team and not bool(effect.get("consumed", false)):
@@ -201,6 +214,8 @@ func apply_network_snapshot(state: Dictionary) -> void:
 	placing = false
 	history.clear()
 	message = "已载入联机权威快照：第 %d 回合，%s方。" % [int(state.round), "金" if active_team == 0 else "蓝"]
+	if network_winner >= 0:
+		message = "%s方已获胜，比赛结束。" % ["金" if network_winner == 0 else "蓝"]
 	queue_redraw()
 
 func _submit_network_command(kind: String, payload: Dictionary) -> bool:
@@ -693,7 +708,11 @@ func run_single_player_ai() -> Dictionary:
 		message = "单机模式中，先结束金方回合再让蓝方 AI 行动。"
 		queue_redraw()
 		return {"ok": false, "reason": "NOT AI TEAM", "state": {}}
-	var state := BattleSession.create(models, 11, active_team, terrain)
+	var mission_objectives: Array = []
+	for index in range(objectives.size()):
+		mission_objectives.append({"position": objectives[index], "points": int(objective_values[index]) if index < objective_values.size() else 1})
+	var previous_score := score.duplicate(true)
+	var state := BattleSession.create(models, 11, active_team, terrain, mission_objectives, control_radius, score_to_win)
 	if state.is_empty():
 		message = "无法创建单机权威会话。"
 		queue_redraw()
@@ -715,8 +734,8 @@ func run_single_player_ai() -> Dictionary:
 	phase = str(next.phase)
 	command_points = next.command_points.duplicate(true)
 	turn_state = {"round": int(next.round), "active_team": active_team, "phase": phase, "phase_index": int(next.phase_index), "command_points": command_points.duplicate(true)}
-	var ai_score := score_objectives(1)
-	score[1] += ai_score
+	score = next.get("score", previous_score).duplicate(true)
+	var ai_score := int(score[1]) - int(previous_score[1])
 	var shock_summary := resolve_battle_shock(active_team)
 	selected = -1
 	history.clear()
