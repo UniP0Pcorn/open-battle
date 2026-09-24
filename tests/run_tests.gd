@@ -797,6 +797,23 @@ func run() -> void:
 	var morale_entry := {"sequence": 0, "team": 0, "kind": "BATTLE_SHOCK", "payload": {"unit_id": "morale_unit", "rolls": [4, 4], "total": 8, "passed": true}}
 	var morale_replay := Replay.apply_entry(morale_state, morale_entry)
 	check(morale_replay.ok and not morale_replay.state.models[1].battle_shocked, "leadership aura changes authoritative battle shock replay")
+	var morale_room := Room.create("morale-room", 11, 1000, "control_center")
+	morale_room = Room.join(morale_room, "morale_gold", 0).room
+	morale_room = Room.join(morale_room, "morale_blue", 1).room
+	morale_room = Room.set_ready(morale_room, "morale_gold").room
+	morale_room = Room.set_ready(morale_room, "morale_blue").room
+	var morale_started := Room.start(morale_room, [morale_source, morale_recipient, {"model_id": "morale_enemy", "unit_id": "morale_enemy_unit", "team": 1, "position": Vector2(30, 30)}])
+	morale_room = morale_started.room
+	var morale_session_id := PeerProtocol.hash_snapshot({"room_id": morale_room.id, "edition": int(morale_room.edition), "mission": morale_room.mission_id})
+	var morale_packet := PeerProtocol.command(morale_room.id, "morale_gold", morale_session_id, 0, -1, {"sequence": 0, "team": 0, "kind": "BATTLE_SHOCK", "payload": {"unit_id": "morale_unit", "intent": true}}, PeerProtocol.hash_snapshot(morale_room.session))
+	var expected_morale_rng := RandomNumberGenerator.new()
+	expected_morale_rng.seed = 9127
+	var expected_morale_rolls := [expected_morale_rng.randi_range(1, 6), expected_morale_rng.randi_range(1, 6)]
+	var morale_host_rng := RandomNumberGenerator.new()
+	morale_host_rng.seed = 9127
+	var morale_host := NetworkSync.host_command(morale_room, morale_packet, "morale_gold", morale_host_rng)
+	check(morale_host.ok and morale_host.entry.payload.rolls == expected_morale_rolls and morale_host.entry.payload.passed == (int(expected_morale_rolls[0]) + int(expected_morale_rolls[1]) <= 8), "host applies leadership aura when materializing battle shock")
+	check(Replay.apply_entry(morale_room.session, morale_host.entry).state.models == morale_host.room.session.models, "leadership aura battle shock replays host state")
 	conditional_aura.aura.when = {"unsupported": true}
 	check(not UnitAbilities.validate([conditional_aura]).is_empty(), "unknown aura condition rejected instead of silently ignored")
 	conditional_aura.aura.when = "SHOOTING"
