@@ -6,6 +6,11 @@ import json
 import re
 from pathlib import Path
 
+try:
+    from tools.weapon_tag_support import unsupported_tags
+except ModuleNotFoundError:
+    from weapon_tag_support import unsupported_tags
+
 
 def fixed(value: object, signed: bool = False) -> bool:
     pattern = r"-?\d+" if signed else r"\d+"
@@ -29,6 +34,8 @@ def reason(candidate: dict) -> list[str]:
     for field in ["m", "t", "sv", "w", "ld", "oc"]:
         if not fixed(stat.get(field, "")):
             problems.append("non_numeric_" + field)
+    if not candidate.get("faction_keywords"):
+        problems.append("missing_faction_keywords")
     if not candidate.get("points"):
         problems.append("missing_points")
     if not candidate.get("weapons"):
@@ -45,6 +52,8 @@ def reason(candidate: dict) -> list[str]:
                 problems.append("complex_weapon_" + field)
         if not fixed(weapon.get("ap", ""), True):
             problems.append("complex_weapon_ap")
+        if unsupported_tags(weapon.get("tags", [])):
+            problems.append("unsupported_weapon_keywords")
     return sorted(set(problems))
 
 

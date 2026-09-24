@@ -138,6 +138,15 @@ class ReviewSheetTests(unittest.TestCase):
             self.assertIn("missing_weapons", row["review_flags"])
             self.assertEqual(row["decision"], "pending_manual_review")
 
+    def test_promotable_index_has_same_four_priority_blockers(self) -> None:
+        from tools.index_promotable_candidates import reason as candidate_reason
+        candidate = {"statline": {"m": "6", "t": "4", "sv": "4+", "w": "2", "ld": "7", "oc": "1"}, "points": [{"models": 5, "points": 100}], "weapons": [{"range": "24", "attacks": "2", "skill": "3", "strength": "5", "damage": "1", "ap": "-1", "tags": ["unknown fixture"]}]}
+        problems = candidate_reason(candidate)
+        self.assertIn("missing_faction_keywords", problems)
+        self.assertIn("unsupported_weapon_keywords", problems)
+        candidate["faction_keywords"] = ["FIXTURE"]
+        self.assertNotIn("missing_faction_keywords", candidate_reason(candidate))
+
     def test_complete_candidate_only_needs_explicit_base_and_faction(self) -> None:
         draft = {
             "keywords": ["步兵"],
