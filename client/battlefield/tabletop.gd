@@ -250,49 +250,79 @@ func show_reaction_controls(state: Dictionary) -> void:
 		strategy.add_item(str(strategy_id))
 	box.add_child(strategy)
 	var units := OptionButton.new()
-	var unit_ids: Array = []
-	for model in state.models:
-		var unit_id := Attachments.group_id(model)
-		if int(model.team) == int(window.team) and Reserves.active(model) and not Transports.is_embarked(model) and not unit_ids.has(unit_id):
-			unit_ids.append(unit_id)
-			units.add_item(unit_id)
+	units.name = "Recipients"
 	box.add_child(units)
 	var shooters := OptionButton.new()
+	shooters.name = "Shooters"
 	var targets := OptionButton.new()
-	var shot_choices: Array = []
-	var target_ids: Array = []
-	var reaction_types: Dictionary = {}
+	targets.name = "Targets"
+	var definitions: Dictionary = {}
 	for model in state.models:
 		if int(model.team) == int(window.team):
 			for declared in model.get("faction_stratagems", []):
-				if declared is Dictionary:
-					reaction_types[str(declared.id)] = str(declared.get("effect", ""))
-			for weapon in model.get("weapons", []):
-				if float(weapon.get("range_inches", 0)) > 0:
-					shot_choices.append({"attacker_id": str(model.model_id), "weapon": str(weapon.name)})
-					shooters.add_item("%s / %s" % [model.model_id, weapon.name])
-		elif Attachments.group_id(model) == str(window.trigger_unit_id):
-			target_ids.append(str(model.model_id))
-			targets.add_item("移动目标：" + str(model.model_id))
-	if reaction_types.values().has("REACTION_SHOOT"):
+				if declared is Dictionary and not definitions.has(str(declared.id)):
+					definitions[str(declared.id)] = declared
+	var has_shooting := false
+	for definition in definitions.values():
+		if str(definition.get("effect", "")) == "REACTION_SHOOT":
+			has_shooting = true
+	if has_shooting:
 		box.add_child(shooters)
 		box.add_child(targets)
 	else:
 		shooters.queue_free()
 		targets.queue_free()
+	var shot_choices: Array = []
+	var target_ids: Array = []
 	var use_button := Button.new()
-	use_button.text = "对所选友军使用策略"
-	use_button.disabled = unit_ids.is_empty()
-	use_button.pressed.connect(func():
+	use_button.name = "UseStrategy"
+	var refresh_choices := func(_index: int = 0):
+		units.clear()
+		shot_choices.clear()
+		target_ids.clear()
 		var strategy_id := strategy.get_item_text(strategy.selected)
-		var payload := {"id": strategy_id, "phase": str(state.phase), "unit_id": units.get_item_text(units.selected), "window_id": str(window.id)}
-		if str(reaction_types.get(strategy_id, "")) == "REACTION_SHOOT":
-			if shot_choices.is_empty() or target_ids.is_empty():
-				message = "没有可选择的射手、武器或移动目标。"
-				queue_redraw()
+		var definition: Dictionary = definitions.get(strategy_id, {})
+		var groups := FactionRules.strategy_recipient_groups(state.models, int(window.team), definition)
+		var is_shot := str(definition.get("effect", "")) == "REACTION_SHOOT"
+		for group in groups:
+			units.add_item(str(group))
+		units.visible = not is_shot
+		use_button.text = "执行反应射击" if is_shot else "对所选友军使用策略"
+		use_button.disabled = groups.is_empty()
+		if has_shooting:
+			shooters.clear()
+			targets.clear()
+			shooters.visible = is_shot
+			targets.visible = is_shot
+			if is_shot:
+				for members in groups.values():
+					for model in members:
+						for weapon in model.get("weapons", []):
+							if float(weapon.get("range_inches", 0)) > 0:
+								shot_choices.append({"attacker_id": str(model.model_id), "weapon": str(weapon.name)})
+								shooters.add_item("%s / %s" % [model.model_id, weapon.name])
+				for model in state.models:
+					if int(model.team) != int(window.team) and Attachments.group_id(model) == str(window.trigger_unit_id) and Reserves.active(model) and not Transports.is_embarked(model) and float(model.get("wounds", 1)) > 0:
+						target_ids.append(str(model.model_id))
+						targets.add_item("移动目标：" + str(model.model_id))
+				use_button.disabled = shot_choices.is_empty() or target_ids.is_empty()
+		use_button.tooltip_text = "没有符合当前策略条件的单位或武器。" if use_button.disabled else "射程、视线及其他战斗条件仍由主机校验。"
+	strategy.item_selected.connect(refresh_choices)
+	refresh_choices.call()
+	use_button.pressed.connect(func():
+		if use_button.disabled:
+			return
+		var strategy_id := strategy.get_item_text(strategy.selected)
+		var payload := {"id": strategy_id, "phase": str(state.phase), "window_id": str(window.id)}
+		if str(definitions.get(strategy_id, {}).get("effect", "")) == "REACTION_SHOOT":
+			if shooters.selected < 0 or targets.selected < 0:
 				return
 			payload.merge(shot_choices[shooters.selected])
 			payload.target_id = target_ids[targets.selected]
+		else:
+			if units.selected < 0:
+				return
+			payload.unit_id = units.get_item_text(units.selected)
 		_submit_network_command("STRATAGEM", payload)
 	)
 	box.add_child(use_button)

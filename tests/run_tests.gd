@@ -1320,6 +1320,31 @@ func run() -> void:
 		check(scene.get_node("ReactionPanel").get_child(0).get_child_count() == 5, "responding player sees strategy target execute and pass controls")
 		scene.show_reaction_controls(shot_waiting.room.session)
 		check(scene.get_node("ReactionPanel").get_child(0).get_child_count() == 7, "reaction shooting panel offers shooter weapon and moved target choices")
+		var filtered_ui_state: Dictionary = filtered_shot_room.session.duplicate(true)
+		var ui_grant := {"id": "fixture_ui_grant", "cost": 1, "phase": "MOVEMENT", "timing": "AFTER_ENEMY_MOVE", "effect": "GRANT_ABILITY", "ability": "stealth", "duration": "PHASE", "target": "FRIENDLY_UNIT", "target_keywords": ["ELITE"]}
+		filtered_ui_state.models[1].faction_stratagems.append(ui_grant)
+		filtered_ui_state.reaction_window.stratagem_ids.append("fixture_ui_grant")
+		scene.show_reaction_controls(filtered_ui_state)
+		var reaction_box = scene.get_node("ReactionPanel").get_child(0)
+		check(reaction_box.get_node("Shooters").item_count == 1 and not reaction_box.get_node("UseStrategy").disabled, "reaction UI shows eligible keyword matched shooter")
+		var strategy_selector = reaction_box.get_child(1)
+		strategy_selector.select(1)
+		strategy_selector.item_selected.emit(1)
+		check(reaction_box.get_node("Recipients").item_count == 0 and reaction_box.get_node("UseStrategy").disabled and not reaction_box.get_node("Shooters").visible, "switching strategy refreshes filters and disables missing recipient")
+		strategy_selector.select(0)
+		strategy_selector.item_selected.emit(0)
+		check(reaction_box.get_node("Shooters").item_count == 1 and not reaction_box.get_node("UseStrategy").disabled and not reaction_box.get_node("Recipients").visible, "switching back restores shot choices without stale grant selection")
+		filtered_ui_state.models[1].embarked_in = "fixture_transport"
+		scene.show_reaction_controls(filtered_ui_state)
+		reaction_box = scene.get_node("ReactionPanel").get_child(0)
+		check(reaction_box.get_node("Shooters").item_count == 0 and reaction_box.get_node("UseStrategy").disabled, "embarked shooter absent from reaction UI")
+		check(not reaction_box.get_child(reaction_box.get_child_count() - 1).disabled, "pass remains available when reaction candidates disappear")
+		filtered_ui_state.models[1].erase("embarked_in")
+		filtered_ui_state.models[1].reserve_status = "reserve"
+		check(FactionRules.strategy_recipient_groups(filtered_ui_state.models, 1, filtered_ui_state.models[1].faction_stratagems[0]).is_empty(), "shared strategy candidates exclude reserves")
+		filtered_ui_state.models[1].reserve_status = "deployed"
+		filtered_ui_state.models[1].wounds = 0
+		check(FactionRules.strategy_recipient_groups(filtered_ui_state.models, 1, filtered_ui_state.models[1].faction_stratagems[0]).is_empty(), "shared strategy candidates exclude destroyed models")
 		scene.show_reaction_controls(passed_response.state)
 		check(scene.get_node_or_null("ReactionPanel") == null, "reaction panel closes when authoritative window closes")
 		ui_bridge.lobby.room = prior_room

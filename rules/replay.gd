@@ -9,6 +9,7 @@ const Damage = preload("res://rules/damage.gd")
 const Engagement = preload("res://rules/engagement.gd")
 const Melee = preload("res://rules/melee.gd")
 const Movement = preload("res://rules/movement.gd")
+const FactionRules = preload("res://rules/faction_rules.gd")
 const Stratagems = preload("res://rules/stratagems.gd")
 const TurnState = preload("res://rules/turn_state.gd")
 const UnitAbilities = preload("res://rules/unit_abilities.gd")
@@ -448,18 +449,7 @@ static func _open_move_reaction(state: Dictionary, entry: Dictionary) -> void:
 		state.reaction_window = {"id": "move:%d" % int(entry.sequence), "team": responder, "timing": "AFTER_ENEMY_MOVE", "trigger_unit_id": str(entry.payload.unit_id), "stratagem_ids": available}
 
 static func _has_strategy_recipient(models: Array, team: int, definition: Dictionary) -> bool:
-	var groups: Dictionary = {}
-	for model in models:
-		if int(model.get("team", -1)) != team or not Reserves.active(model) or Transports.is_embarked(model) or float(model.get("wounds", 1)) <= 0:
-			continue
-		var group := Attachments.group_id(model)
-		if not groups.has(group):
-			groups[group] = []
-		groups[group].append(model)
-	for members in groups.values():
-		if Stratagems.target_keywords_reason(definition, members).is_empty():
-			return true
-	return false
+	return not FactionRules.strategy_recipient_groups(models, team, definition).is_empty()
 
 static func _validate_references(models: Array, entry: Dictionary, kind: String, payload: Dictionary, terrain: Array = [], effects: Array = []) -> String:
 	var actor_team := int(entry.get("team", -1))

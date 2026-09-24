@@ -7,6 +7,7 @@ extends RefCounted
 ## this module, so importing another faction remains a data-only change.
 
 const UnitAbilities = preload("res://rules/unit_abilities.gd")
+const Attachments = preload("res://rules/attachments.gd")
 const Stratagems = preload("res://rules/stratagems.gd")
 
 static func abilities(profile: Dictionary) -> Array:
@@ -97,3 +98,20 @@ static func _on_table(model: Dictionary) -> bool:
 static func _position(model: Dictionary) -> Vector2:
 	var position: Variant = model.get("position", Vector2.ZERO)
 	return position if position is Vector2 else Vector2(float(position[0]), float(position[1]))
+
+## Shared recipient selection for strategy UI and authoritative reaction discovery.
+static func strategy_recipient_groups(models: Array, team: int, definition: Dictionary) -> Dictionary:
+	var groups: Dictionary = {}
+	if not Stratagems.validate(definition).is_empty():
+		return groups
+	for model in models:
+		if int(model.get("team", -1)) != team or not _on_table(model):
+			continue
+		var group := Attachments.group_id(model)
+		if not groups.has(group):
+			groups[group] = []
+		groups[group].append(model)
+	for group in groups.keys():
+		if not Stratagems.target_keywords_reason(definition, groups[group]).is_empty():
+			groups.erase(group)
+	return groups
