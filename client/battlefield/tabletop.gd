@@ -125,6 +125,8 @@ func _ready() -> void:
 	add_button("近战攻击  [X]", Vector2(976, 845), fight_selected)
 	add_button("宣布撤退  [Z]", Vector2(976, 885), fall_back_selected)
 	add_button("深入打击 / 出预备队  [H]", Vector2(976, 925), deploy_selected_reserve)
+	add_button("搭载所选单位  [F9]", Vector2(976, 965), embark_selected)
+	add_button("运输工具下车  [F10]", Vector2(976, 1005), disembark_selected)
 
 func add_button(title: String, position_px: Vector2, action: Callable) -> void:
 	var button := Button.new()
@@ -485,6 +487,92 @@ func deploy_selected_reserve() -> void:
 		unit_models[index].spent = 0.0
 	command_log = CommandLog.append(command_log, active_team, "DEPLOY_RESERVE", payload)
 	message = "单位以深入打击入场；距离敌方至少 9 英寸。"
+	queue_redraw()
+
+func embark_selected() -> void:
+	if phase != "MOVEMENT":
+		message = "搭载只能在移动阶段进行。"
+		queue_redraw()
+		return
+	if selected < 0 or selected >= models.size() or models[selected].team != active_team:
+		message = "请选择当前阵营要搭载的单位。"
+		queue_redraw()
+		return
+	var unit_id := str(models[selected].get("unit_id", ""))
+	var nearest_id := ""
+	var nearest := INF
+	for model in models:
+		if int(model.get("team", -1)) != active_team or not Transports.is_transport(model):
+			continue
+		var reason := Transports.embark_reason(models, unit_id, str(model.get("model_id", "")), active_team)
+		if reason.is_empty():
+			var distance: float = models[selected].position.distance_to(model.position)
+			if distance < nearest:
+				nearest = distance
+				nearest_id = str(model.get("model_id", ""))
+	if nearest_id.is_empty():
+		message = "附近没有可用运输工具，或容量/距离/移动状态不符合搭载条件。"
+		queue_redraw()
+		return
+	var payload := {"unit_id": unit_id, "transport_id": nearest_id}
+	if _submit_network_command("EMBARK", payload):
+		return
+	for model in models:
+		if str(model.get("unit_id", "")) == unit_id:
+			model.embarked_in = nearest_id
+			model.spent = 0.0
+			model.advanced = false
+			model.advance_bonus = 0
+			model.fell_back = false
+	command_log = CommandLog.append(command_log, active_team, "EMBARK", payload)
+	message = "单位已搭载运输工具。"
+	queue_redraw()
+
+func disembark_selected() -> void:
+	if phase != "MOVEMENT":
+		message = "下车只能在移动阶段进行。"
+		queue_redraw()
+		return
+	if selected < 0 or selected >= models.size() or models[selected].team != active_team:
+		message = "请选择要下车的单位。"
+		queue_redraw()
+		return
+	var unit_models := selected_unit_models()
+	if unit_models.is_empty() or not Transports.is_embarked(unit_models[0]):
+		message = "所选单位没有搭载在运输工具内。"
+		queue_redraw()
+		return
+	var transport_id := str(unit_models[0].get("embarked_in", ""))
+	var transport: Dictionary = {}
+	for model in models:
+		if str(model.get("model_id", "")) == transport_id:
+			transport = model
+			break
+	if transport.is_empty():
+		message = "找不到搭载运输工具。"
+		queue_redraw()
+		return
+	var radius := float(unit_models[0].get("radius", 0.5))
+	var side_offset := float(transport.get("radius", 1.0)) + radius + 0.2
+	var positions: Array = []
+	for index in range(unit_models.size()):
+		var row_offset := (float(index) - float(unit_models.size() - 1) / 2.0) * (radius * 2.0 + 0.1)
+		positions.append([transport.position.x + side_offset, transport.position.y + row_offset])
+	var reason := Transports.disembark_reason(models, str(models[selected].get("unit_id", "")), positions, active_team)
+	if not reason.is_empty():
+		message = "非法下车：" + display_reason(reason)
+		queue_redraw()
+		return
+	var payload := {"unit_id": str(models[selected].get("unit_id", "")), "positions": positions}
+	if _submit_network_command("DISEMBARK", payload):
+		return
+	for index in range(unit_models.size()):
+		unit_models[index].position = Vector2(float(positions[index][0]), float(positions[index][1]))
+		unit_models[index].embarked_in = ""
+		unit_models[index].spent = 0.0
+		unit_models[index].disembarked = true
+	command_log = CommandLog.append(command_log, active_team, "DISEMBARK", payload)
+	message = "单位已从运输工具下车。"
 	queue_redraw()
 
 func end_turn() -> void:
@@ -1157,6 +1245,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				fall_back_selected()
 			KEY_H:
 				deploy_selected_reserve()
+			KEY_F9:
+				embark_selected()
+			KEY_F10:
+				disembark_selected()
 			KEY_R:
 				reset_table()
 			KEY_T:
@@ -1227,6 +1319,11 @@ func display_reason(reason: String) -> String:
 		"TOO CLOSE TO ENEMY": return "距离敌方不足 9 英寸"
 		"UNIT IN RESERVE": return "单位仍在预备队"
 		"UNIT LACKS DEEP STRIKE": return "单位没有深入打击"
+		"TRANSPORT CAPACITY EXCEEDED": return "运输容量不足"
+		"TRANSPORT OUT OF RANGE": return "运输工具距离超过 3 英寸"
+		"TRANSPORT ALREADY MOVED": return "运输工具本回合已经移动"
+		"DISEMBARK TOO FAR": return "下车位置距离运输工具超过 3 英寸"
+		"DISEMBARK IN ENGAGEMENT": return "下车位置处于接战范围"
 	return reason
 
 func _draw() -> void:
