@@ -41,6 +41,8 @@ def number_or_expression(value: object, label: str) -> object:
 
 def inches(value: object, label: str) -> float:
     text = str(value).replace("”", "").replace('"', "").strip()
+    if text.lower() in {"近战", "melee"}:
+        return 0.0
     try:
         return float(text)
     except ValueError as exc:

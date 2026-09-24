@@ -30,6 +30,10 @@ def _fixed(value: object, signed: bool = False) -> bool:
     return re.fullmatch(pattern, str(value).replace("+", "").replace("”", "").replace('"', "").strip()) is not None
 
 
+def _weapon_range_fixed(value: object) -> bool:
+    return str(value).strip().lower() in {"近战", "melee"} or _fixed(value)
+
+
 def review_flags(draft: dict) -> list[str]:
     """Return structural flags without deciding whether a profile is approved."""
     flags: list[str] = []
@@ -43,7 +47,8 @@ def review_flags(draft: dict) -> list[str]:
         flags.append("missing_weapons")
     for weapon in draft.get("weapons", []):
         for field in ["range", "attacks", "skill", "strength", "damage"]:
-            if not _fixed(weapon.get(field, "")):
+            fixed = _weapon_range_fixed(weapon.get(field, "")) if field == "range" else _fixed(weapon.get(field, ""))
+            if not fixed:
                 flags.append("complex_weapon_" + field)
         if not _fixed(weapon.get("ap", ""), signed=True):
             flags.append("complex_weapon_ap")

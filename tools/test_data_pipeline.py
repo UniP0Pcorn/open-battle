@@ -8,6 +8,8 @@ from pathlib import Path
 
 from tools.export_profile_review_sheet import review_flags, rows, source_lookup
 from tools.extract_profile_candidates import POINT_RE, WEAPON_RE, _weapon_tags
+from tools.index_promotable_candidates import weapon_range_fixed
+from tools.promote_profile_draft import inches
 from tools.weapon_tag_support import unsupported_tags
 
 
@@ -44,6 +46,18 @@ class ReviewSheetTests(unittest.TestCase):
             "points": [{"models": 5, "points": 100}],
         }
         self.assertEqual(review_flags(draft), [])
+
+    def test_melee_weapon_rows_are_valid(self) -> None:
+        match = WEAPON_RE.match("链锯剑 近战 4 3+ 4 0 1")
+        self.assertIsNotNone(match)
+        draft = {
+            "models": [{"movement": "6", "toughness": "4", "save": "4+", "wounds": "2", "leadership": "7", "objective_control": "1"}],
+            "weapons": [{"range": "近战", "attacks": "4", "skill": "3+", "strength": "4", "damage": "1", "ap": "0"}],
+            "points": [{"models": 1, "points": 100}],
+        }
+        self.assertEqual(review_flags(draft), [])
+        self.assertEqual(inches("近战", "weapon range"), 0.0)
+        self.assertTrue(weapon_range_fixed("近战"))
 
     def test_unimplemented_weapon_keywords_stay_in_review(self) -> None:
         self.assertEqual(unsupported_tags(["突击", "手枪", "曲射", "一次性", "一次性武器", "精准"]), ["精准"])

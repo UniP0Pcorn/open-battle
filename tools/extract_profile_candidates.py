@@ -89,7 +89,7 @@ def extract(pdf_path: Path, edition: str = "", max_pages: int = 0) -> dict:
                     if candidate_line.startswith("M T "):
                         break
                     weapon = WEAPON_RE.match(candidate_line)
-                    if weapon and weapon.group("range") != "近战":
+                    if weapon:
                         item = {k: weapon.group(k) for k in ["name", "range", "attacks", "skill", "strength", "ap", "damage"]}
                         item["tags"] = _weapon_tags(candidate_line, weapon)
                         weapons.append(item)

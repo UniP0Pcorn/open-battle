@@ -12,6 +12,10 @@ def fixed(value: object, signed: bool = False) -> bool:
     return re.fullmatch(pattern, str(value).replace("+", "").replace("”", "").replace('"', "").strip()) is not None
 
 
+def weapon_range_fixed(value: object) -> bool:
+    return str(value).strip().lower() in {"近战", "melee"} or fixed(value)
+
+
 def reason(candidate: dict) -> list[str]:
     problems: list[str] = []
     stat = candidate.get("statline", {})
@@ -24,7 +28,8 @@ def reason(candidate: dict) -> list[str]:
         problems.append("missing_weapons")
     for weapon in candidate.get("weapons", []):
         for field in ["range", "attacks", "skill", "strength", "damage"]:
-            if not fixed(weapon.get(field, "")):
+            valid = weapon_range_fixed(weapon.get(field, "")) if field == "range" else fixed(weapon.get(field, ""))
+            if not valid:
                 problems.append("complex_weapon_" + field)
         if not fixed(weapon.get("ap", ""), True):
             problems.append("complex_weapon_ap")
