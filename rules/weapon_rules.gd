@@ -3,6 +3,7 @@ extends RefCounted
 ## Data-driven weapon keyword normalization and attack context.
 
 const Dice = preload("res://rules/dice.gd")
+const UnitKeywords = preload("res://rules/unit_keywords.gd")
 
 const ALIASES := {
 	"喷射": "torrent",
@@ -17,12 +18,19 @@ const ALIASES := {
 	"hazardous": "hazardous",
 	"毁灭伤害": "devastating_wounds",
 	"devastating wounds": "devastating_wounds",
+	"致命一击": "lethal_hits",
+	"lethal hits": "lethal_hits",
+	"双联": "twin_linked",
+	"twin-linked": "twin_linked",
+	"twin linked": "twin_linked",
+	"持续命中": "sustained_hits",
 	"爆炸": "blast",
 	"blast": "blast"
 }
 
 static func canonical_id(value: Variant) -> String:
 	var text := str(value).strip_edges().to_lower()
+	var compact := text.replace(" ", "").replace("　", "")
 	if text.begins_with("速射") and text.substr(2).is_valid_int():
 		return "rapid_fire_" + text.substr(2)
 	if text.begins_with("rapid fire ") and text.substr(11).is_valid_int():
@@ -31,6 +39,24 @@ static func canonical_id(value: Variant) -> String:
 		return "melta_" + text.substr(2)
 	if text.begins_with("melta ") and text.substr(6).is_valid_int():
 		return "melta_" + text.substr(6)
+	var anti_prefix := ""
+	if compact.begins_with("针对"):
+		anti_prefix = compact.substr(2)
+	elif compact.begins_with("anti-"):
+		anti_prefix = compact.substr(5)
+	elif compact.begins_with("anti_"):
+		anti_prefix = compact.substr(5)
+	if not anti_prefix.is_empty():
+		var plus_index := anti_prefix.find("+")
+		if plus_index > 1:
+			var threshold_text := anti_prefix.substr(plus_index - 1, 1)
+			if threshold_text.is_valid_int():
+				var target_text := anti_prefix.substr(0, plus_index - 1)
+				return "anti_" + UnitKeywords.canonical_id(target_text) + "_" + threshold_text
+	if compact.begins_with("持续命中") and compact.substr(4).is_valid_int():
+		return "sustained_hits_" + compact.substr(4)
+	if compact.begins_with("sustainedhits") and compact.substr(13).is_valid_int():
+		return "sustained_hits_" + compact.substr(13)
 	return str(ALIASES.get(text, text))
 
 static func ids_from_weapon(weapon: Dictionary) -> Array:
@@ -39,9 +65,22 @@ static func ids_from_weapon(weapon: Dictionary) -> Array:
 		result.append(canonical_id(value))
 	return result
 
-static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, target_models: int = 1) -> Dictionary:
+static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, target_models: int = 1, target_keywords: Array = []) -> Dictionary:
 	var result := weapon.duplicate(true)
 	var ids := ids_from_weapon(result)
+	var normalized_target_keywords: Array = []
+	for value in target_keywords:
+		var target_keyword := UnitKeywords.canonical_id(str(value).strip_edges())
+		if not normalized_target_keywords.has(target_keyword):
+			normalized_target_keywords.append(target_keyword)
+	for keyword in ids:
+		var keyword_text := str(keyword)
+		if keyword_text.begins_with("anti_"):
+			var split_at := keyword_text.rfind("_")
+			if split_at > 5:
+				var anti_target := keyword_text.substr(5, split_at - 5)
+				if normalized_target_keywords.has(anti_target):
+					result.anti_wound_on = int(keyword_text.substr(split_at + 1))
 	if ids.has("torrent"):
 		result.hit_on = 1
 	if ids.has("ignores_cover"):
@@ -68,6 +107,13 @@ static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, t
 		result.hazardous_damage = int(result.get("hazardous_damage", 3))
 	if ids.has("devastating_wounds"):
 		result.devastating_wounds = true
+	if ids.has("lethal_hits"):
+		result.lethal_hits = true
+	if ids.has("twin_linked"):
+		result.twin_linked = true
+	for keyword in ids:
+		if str(keyword).begins_with("sustained_hits_"):
+			result.sustained_hits = maxi(0, int(str(keyword).trim_prefix("sustained_hits_")))
 	if ids.has("blast") and target_models >= 5:
 		result.attacks = int(result.get("attacks", 1)) + (target_models / 5)
 	return {"weapon": result, "cover_bonus": cover_bonus, "keywords": ids}

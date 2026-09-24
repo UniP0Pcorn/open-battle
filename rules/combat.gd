@@ -45,6 +45,8 @@ static func resolve_ranged_attack(weapon: Dictionary, target: Dictionary, rng: R
 	var hit_on := int(weapon.get("hit_on", 4))
 	var strength := int(weapon.get("strength", 4))
 	var wounds_needed := wound_target(strength, int(target.get("toughness", 4)))
+	if int(weapon.get("anti_wound_on", 0)) > 0:
+		wounds_needed = int(weapon.get("anti_wound_on", 0))
 	var save_needed := save_target(int(target.get("save_on", 7)) + int(target.get("cover_save_bonus", 0)), int(weapon.get("ap", 0)), int(target.get("invulnerable_save", 0)))
 	var hits := 0
 	var wounds := 0
@@ -53,26 +55,45 @@ static func resolve_ranged_attack(weapon: Dictionary, target: Dictionary, rng: R
 	var damage_rolls: Array = []
 	var hazardous_failures := 0
 	var devastating_wounds := 0
+	var sustained_hits := 0
 	var rerolls_left := maxi(0, hit_rerolls)
+	var twin_linked := bool(weapon.get("twin_linked", false))
+	var lethal_hits := bool(weapon.get("lethal_hits", false))
+	var sustained_bonus := maxi(0, int(weapon.get("sustained_hits", 0)))
 	for _i in range(attacks):
 		var hit_roll := rng.randi_range(1, 6)
 		if hit_roll < hit_on and rerolls_left > 0:
 			rerolls_left -= 1
 			hit_roll = rng.randi_range(1, 6)
 		if hit_roll >= hit_on:
-			hits += 1
-			var wound_roll := rng.randi_range(1, 6)
-			if wound_roll >= wounds_needed:
-				wounds += 1
-				var bypass_save := bool(weapon.get("devastating_wounds", false)) and wound_roll == 6
-				if bypass_save:
-					devastating_wounds += 1
-				if bypass_save or not save_passes(rng.randi_range(1, 6), save_needed):
-					failed_saves += 1
-					var damage_roll := Dice.roll_expression(rng, weapon.get("damage", 1))
-					if damage_roll.valid:
-						damage_total += int(damage_roll.total)
-						damage_rolls.append(damage_roll)
+			var hit_events: Array = [hit_roll]
+			if hit_roll == 6 and sustained_bonus > 0:
+				sustained_hits += sustained_bonus
+				for _extra in range(sustained_bonus):
+					hit_events.append(0)
+			for event_roll in hit_events:
+				hits += 1
+				var wound_roll := 0
+				var wound_success := false
+				if lethal_hits and event_roll == 6:
+					wound_success = true
+				else:
+					wound_roll = rng.randi_range(1, 6)
+					wound_success = wound_roll >= wounds_needed
+					if not wound_success and twin_linked:
+						wound_roll = rng.randi_range(1, 6)
+						wound_success = wound_roll >= wounds_needed
+				if wound_success:
+					wounds += 1
+					var bypass_save := bool(weapon.get("devastating_wounds", false)) and wound_roll == 6
+					if bypass_save:
+						devastating_wounds += 1
+					if bypass_save or not save_passes(rng.randi_range(1, 6), save_needed):
+						failed_saves += 1
+						var damage_roll := Dice.roll_expression(rng, weapon.get("damage", 1))
+						if damage_roll.valid:
+							damage_total += int(damage_roll.total)
+							damage_rolls.append(damage_roll)
 		if bool(weapon.get("hazardous", false)) and hit_roll == 1:
 			hazardous_failures += 1
-	return {"attacks": attacks, "attack_roll": attacks_roll, "hits": hits, "wounds": wounds, "failed_saves": failed_saves, "damage": damage_total, "damage_rolls": damage_rolls, "hazardous_failures": hazardous_failures, "devastating_wounds": devastating_wounds, "wound_on": wounds_needed, "save_on": save_needed}
+	return {"attacks": attacks, "attack_roll": attacks_roll, "hits": hits, "wounds": wounds, "failed_saves": failed_saves, "damage": damage_total, "damage_rolls": damage_rolls, "hazardous_failures": hazardous_failures, "devastating_wounds": devastating_wounds, "sustained_hits": sustained_hits, "wound_on": wounds_needed, "save_on": save_needed}

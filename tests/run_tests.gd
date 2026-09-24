@@ -182,6 +182,13 @@ func run() -> void:
 	check(blast_context.weapon.attacks == 5, "blast adds attacks for large units")
 	var devastating_context := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["毁灭伤害"]}, 10.0)
 	check(devastating_context.weapon.devastating_wounds, "devastating wounds context is explicit")
+	check(WeaponRules.canonical_id("针对步兵 4+") == "anti_infantry_4" and WeaponRules.canonical_id("双联") == "twin_linked", "anti and twin-linked keywords normalize")
+	var anti_context := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["针对步兵4+", "致命一击", "双联", "持续命中1"]}, 10.0, 0, 1, ["步兵"])
+	check(anti_context.weapon.anti_wound_on == 4 and anti_context.weapon.lethal_hits and anti_context.weapon.twin_linked and anti_context.weapon.sustained_hits == 1, "anti, lethal, twin-linked and sustained hits apply to matching target")
+	var anti_miss := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["针对步兵4+"]}, 10.0, 0, 1, ["载具"])
+	check(not anti_miss.weapon.has("anti_wound_on"), "anti keyword does not affect a non-matching target")
+	var anti_attack := Combat.resolve_ranged_attack({"attacks": 0, "hit_on": 4, "strength": 10, "anti_wound_on": 4, "damage": 1}, {"toughness": 4, "save_on": 7}, dice_rng)
+	check(anti_attack.wound_on == 4, "anti wound threshold is used by combat resolver")
 	var replay_models: Array = [{"unit_id": "u", "team": 0, "position": Vector2(1, 1)}]
 	var replay_log: Array = []
 	replay_log = CommandLog.append(replay_log, 0, "MOVE", {"unit_id": "u", "delta": [2, 0]})
