@@ -646,6 +646,13 @@ func run() -> void:
 	unsupported_grant = grant.duplicate(true)
 	unsupported_grant.ability = "invented_ability"
 	check(Stratagems.validate(unsupported_grant) == "UNKNOWN GRANTED ABILITY", "grant validates executable ability identifier")
+	var objective_grant: Dictionary = grant.duplicate(true)
+	objective_grant.ability = "objective_control_plus_1"
+	check(Stratagems.validate(objective_grant).is_empty(), "strategy can declare an executable objective control grant")
+	var objective_grant_state: Dictionary = grant_room.session.duplicate(true)
+	objective_grant_state.models[0].faction_stratagems = [objective_grant]
+	var objective_granted := Replay.apply_entry(objective_grant_state, grant_entry)
+	check(objective_granted.ok and objective_granted.state.models[0].ability_ids.has("objective_control_plus_1") and UnitAbilities.modifiers(objective_granted.state.models[0].ability_ids).objective_control_bonus == 1, "objective control strategy grant changes the shared rules consumer")
 	check(UnitAbilities.modifiers(["invulnerable_4", "invulnerable_5"]).invulnerable_save == 4, "stacked defensive passives choose best save instead of adding thresholds")
 	check(UnitAbilities.modifiers(["feel_no_pain_6", "feel_no_pain_5"]).feel_no_pain == 5, "stacked damage prevention chooses best threshold")
 	var detachment_profile := {"abilities": ["stealth"], "faction_abilities": ["reroll_hit"], "detachment_abilities": ["fall_back_and_shoot"]}
