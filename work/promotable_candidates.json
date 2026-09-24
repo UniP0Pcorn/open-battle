@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "promotable_count": 261,
+  "promotable_count": 259,
   "promotable": [
     {
       "name": "圣血祭司",
@@ -2953,7 +2953,7 @@
           "points": 50
         }
       ],
-      "weapon_count": 2,
+      "weapon_count": 1,
       "promotion_status": "needs_explicit_base_and_faction"
     },
     {
@@ -3117,24 +3117,6 @@
       "promotion_status": "needs_explicit_base_and_faction"
     },
     {
-      "name": "克鲁特猎犬队",
-      "source_file": "钛帝国11版规则-20260919.pdf",
-      "source_page": 38,
-      "edition": "11",
-      "points": [
-        {
-          "models": 5,
-          "points": 45
-        },
-        {
-          "models": 10,
-          "points": 65
-        }
-      ],
-      "weapon_count": 1,
-      "promotion_status": "needs_explicit_base_and_faction"
-    },
-    {
       "name": "潮汐兵蜂平台",
       "source_file": "钛帝国11版规则-20260919.pdf",
       "source_page": 50,
@@ -3188,20 +3170,6 @@
         }
       ],
       "weapon_count": 3,
-      "promotion_status": "needs_explicit_base_and_faction"
-    },
-    {
-      "name": "安’史",
-      "source_file": "钛帝国11版规则-20260919.pdf",
-      "source_page": 67,
-      "edition": "11",
-      "points": [
-        {
-          "models": 1,
-          "points": 50
-        }
-      ],
-      "weapon_count": 1,
       "promotion_status": "needs_explicit_base_and_faction"
     },
     {
@@ -3738,10 +3706,10 @@
     }
   ],
   "rejected_reasons": {
-    "complex_weapon_damage": 239,
+    "complex_weapon_damage": 238,
     "missing_points": 89,
     "complex_weapon_attacks": 204,
-    "missing_weapons": 23,
+    "missing_weapons": 25,
     "non_numeric_oc": 18,
     "non_numeric_m": 24,
     "complex_weapon_strength": 1
