@@ -257,11 +257,43 @@ func show_reaction_controls(state: Dictionary) -> void:
 			unit_ids.append(unit_id)
 			units.add_item(unit_id)
 	box.add_child(units)
+	var shooters := OptionButton.new()
+	var targets := OptionButton.new()
+	var shot_choices: Array = []
+	var target_ids: Array = []
+	var reaction_types: Dictionary = {}
+	for model in state.models:
+		if int(model.team) == int(window.team):
+			for declared in model.get("faction_stratagems", []):
+				if declared is Dictionary:
+					reaction_types[str(declared.id)] = str(declared.get("effect", ""))
+			for weapon in model.get("weapons", []):
+				if float(weapon.get("range_inches", 0)) > 0:
+					shot_choices.append({"attacker_id": str(model.model_id), "weapon": str(weapon.name)})
+					shooters.add_item("%s / %s" % [model.model_id, weapon.name])
+		elif Attachments.group_id(model) == str(window.trigger_unit_id):
+			target_ids.append(str(model.model_id))
+			targets.add_item("移动目标：" + str(model.model_id))
+	if reaction_types.values().has("REACTION_SHOOT"):
+		box.add_child(shooters)
+		box.add_child(targets)
+	else:
+		shooters.queue_free()
+		targets.queue_free()
 	var use_button := Button.new()
 	use_button.text = "对所选友军使用策略"
 	use_button.disabled = unit_ids.is_empty()
 	use_button.pressed.connect(func():
-		_submit_network_command("STRATAGEM", {"id": strategy.get_item_text(strategy.selected), "phase": str(state.phase), "unit_id": units.get_item_text(units.selected), "window_id": str(window.id)})
+		var strategy_id := strategy.get_item_text(strategy.selected)
+		var payload := {"id": strategy_id, "phase": str(state.phase), "unit_id": units.get_item_text(units.selected), "window_id": str(window.id)}
+		if str(reaction_types.get(strategy_id, "")) == "REACTION_SHOOT":
+			if shot_choices.is_empty() or target_ids.is_empty():
+				message = "没有可选择的射手、武器或移动目标。"
+				queue_redraw()
+				return
+			payload.merge(shot_choices[shooters.selected])
+			payload.target_id = target_ids[targets.selected]
+		_submit_network_command("STRATAGEM", payload)
 	)
 	box.add_child(use_button)
 	var pass_button := Button.new()

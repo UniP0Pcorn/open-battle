@@ -16,6 +16,8 @@ const FactionRules = preload("res://rules/faction_rules.gd")
 const Visibility = preload("res://rules/visibility.gd")
 const WeaponRules = preload("res://rules/weapon_rules.gd")
 const Attachments = preload("res://rules/attachments.gd")
+const Replay = preload("res://rules/replay.gd")
+const Stratagems = preload("res://rules/stratagems.gd")
 
 static func host_command(room: Dictionary, packet: Dictionary, expected_peer_id: String) -> Dictionary:
 	var packet_error := PeerProtocol.validate(packet)
@@ -28,6 +30,26 @@ static func host_command(room: Dictionary, packet: Dictionary, expected_peer_id:
 	if str(packet.snapshot_hash) != PeerProtocol.hash_snapshot(room.get("session", {})):
 		return {"ok": false, "reason": "STALE SNAPSHOT", "room": room}
 	var command: Dictionary = packet.command.duplicate(true)
+	var actor_team := -1
+	for player in room.get("players", []):
+		if str(player.get("id", "")) == expected_peer_id:
+			actor_team = int(player.get("team", -1))
+	if actor_team not in [0, 1] or int(command.get("team", -1)) != actor_team:
+		return {"ok": false, "reason": "PLAYER TEAM MISMATCH", "room": room}
+	if str(command.get("kind", "")) in ["SHOOT", "FIGHT", "BATTLE_SHOCK"] and not bool(command.get("payload", {}).get("intent", false)):
+		return {"ok": false, "reason": "HOST RESOLUTION REQUIRED", "room": room}
+	if str(command.get("kind", "")) == "STRATAGEM":
+		var definition := Replay._stratagem_for(room.session, actor_team, str(command.payload.get("id", "")))
+		if str(definition.get("effect", "")) == "REACTION_SHOOT":
+			var definition_error := Stratagems.validate(definition)
+			if not definition_error.is_empty() or str(definition.get("timing", "")) != "AFTER_ENEMY_MOVE":
+				return {"ok": false, "reason": "INVALID REACTION SHOOTING", "room": room}
+			var intent: Dictionary = command.payload.duplicate(true)
+			intent.erase("attack")
+			var reaction_attack := _materialize_attack(room.session, {"team": actor_team, "kind": "SHOOT", "payload": intent}, packet, definition)
+			if not reaction_attack.ok:
+				return {"ok": false, "reason": reaction_attack.reason, "room": room}
+			command.payload.attack = reaction_attack.payload
 	if str(command.get("kind", "")) in ["SHOOT", "FIGHT"] and bool(command.get("payload", {}).get("intent", false)):
 		var materialized := _materialize_attack(room.session, command, packet)
 		if not bool(materialized.get("ok", false)):
@@ -48,7 +70,7 @@ static func host_command(room: Dictionary, packet: Dictionary, expected_peer_id:
 	var snapshot := PeerProtocol.snapshot(str(next_room.id), expected_peer_id, str(packet.session_id), int(next_room.session.get("command_log", []).size()) - 1, next_room.session, str(packet.get("reconnect_token", "")))
 	return {"ok": true, "reason": "", "room": next_room, "entry": submitted.entry, "snapshot": snapshot}
 
-static func _materialize_attack(state: Dictionary, command: Dictionary, packet: Dictionary) -> Dictionary:
+static func _materialize_attack(state: Dictionary, command: Dictionary, packet: Dictionary, reaction: Dictionary = {}) -> Dictionary:
 	var payload: Dictionary = command.get("payload", {}).duplicate(true)
 	for derived_field in ["attacker", "target", "hits", "damage", "one_shot", "feel_no_pain_rolls", "hazardous_damage", "hazardous_feel_no_pain_rolls"]:
 		payload.erase(derived_field)
@@ -67,6 +89,8 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, packet: 
 			break
 	if weapon.is_empty():
 		return {"ok": false, "reason": "UNKNOWN WEAPON"}
+	if not reaction.is_empty():
+		weapon.hit_on = int(reaction.hit_on)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = (str(packet.get("session_id", "")) + ":" + str(packet.get("sequence", 0))).hash()
 	var result: Dictionary

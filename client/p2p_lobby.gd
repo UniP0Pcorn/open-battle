@@ -126,12 +126,19 @@ func _send_lobby(action: String, payload: Dictionary = {}) -> String:
 	return transport.send(PeerProtocol.lobby(str(room.id), player_id, _session_id(), action, payload), 1)
 
 func _submit_host_command(actor_id: String, kind: String, payload: Dictionary) -> String:
-	var result := Room.submit(room, actor_id, kind, payload)
+	var actor_team := -1
+	for player in room.get("players", []):
+		if str(player.get("id", "")) == actor_id:
+			actor_team = int(player.get("team", -1))
+	var sequence := int(room.session.get("command_log", []).size())
+	var command := {"sequence": sequence, "team": actor_team, "kind": kind, "payload": payload}
+	var packet := PeerProtocol.command(str(room.id), actor_id, _session_id(), sequence, sequence - 1, command, PeerProtocol.hash_snapshot(room.session))
+	var result := NetworkSync.host_command(room, packet, actor_id) if kind == "STRATAGEM" else Room.submit(room, actor_id, kind, payload)
 	if not bool(result.get("ok", false)):
 		return str(result.get("reason", "COMMAND REJECTED"))
 	room = result.room
-	var packet := PeerProtocol.snapshot(str(room.id), player_id, _session_id(), _last_sequence(), room.session, reconnect_token)
-	transport.broadcast(packet)
+	var snapshot_packet := PeerProtocol.snapshot(str(room.id), player_id, _session_id(), _last_sequence(), room.session, reconnect_token)
+	transport.broadcast(snapshot_packet)
 	battle_snapshot_received.emit(room.session)
 	lobby_changed.emit(Room.public_snapshot(room))
 	return ""

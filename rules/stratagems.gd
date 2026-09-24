@@ -54,6 +54,9 @@ static func validate(stratagem: Dictionary) -> String:
 		return "INVALID STRATAGEM"
 	if str(stratagem.effect) not in SUPPORTED_EFFECTS:
 		return "UNSUPPORTED EFFECT"
+	if str(stratagem.effect) == "REACTION_SHOOT" and str(stratagem.timing) == "AFTER_ENEMY_MOVE":
+		if str(stratagem.phase) != "MOVEMENT" or typeof(stratagem.get("hit_on")) not in [TYPE_INT, TYPE_FLOAT] or float(stratagem.hit_on) != float(int(stratagem.hit_on)) or int(stratagem.hit_on) not in range(1, 7):
+			return "INVALID REACTION SHOOTING"
 	if str(stratagem.effect) == "GRANT_ABILITY":
 		if str(stratagem.get("target", "")) != "FRIENDLY_UNIT" or str(stratagem.get("duration", "")) not in ["BATTLE", "PHASE", "TURN"]:
 			return "INVALID ABILITY TARGET OR DURATION"
@@ -66,7 +69,7 @@ static func validate(stratagem: Dictionary) -> String:
 	return ""
 
 static func use(stratagem: Dictionary, phase: String, team: int, points: Array) -> Dictionary:
-	if str(stratagem.get("effect", "")) == "REACTION_SHOOT":
+	if str(stratagem.get("effect", "")) == "REACTION_SHOOT" and str(stratagem.get("timing", "")) != "AFTER_ENEMY_MOVE":
 		return {"ok": false, "reason": "REACTION SHOOT NOT IMPLEMENTED", "points": points.duplicate(), "effect": ""}
 	var schema_error := validate(stratagem)
 	if not schema_error.is_empty():

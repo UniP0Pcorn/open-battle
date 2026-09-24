@@ -17,6 +17,7 @@ const Transports = preload("res://rules/transports.gd")
 const Attachments = preload("res://rules/attachments.gd")
 const WeaponRules = preload("res://rules/weapon_rules.gd")
 const MissionRules = preload("res://rules/mission.gd")
+const Visibility = preload("res://rules/visibility.gd")
 
 static func initial_state(models: Array, phase: String = "MOVEMENT", active_team: int = 0, terrain: Array = [], objectives: Array = [], control_radius: float = 3.0, score_to_win: int = 5) -> Dictionary:
 	var initial_models: Array = models.duplicate(true)
@@ -307,6 +308,34 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			if not bool(stratagem_result.get("ok", false)):
 				return {"ok": false, "reason": str(stratagem_result.get("reason", "STRATAGEM REJECTED")), "state": state}
 			var effect_id := str(stratagem_result.get("effect", ""))
+			if effect_id == "REACTION_SHOOT":
+				var attack: Variant = payload.get("attack")
+				if not (attack is Dictionary):
+					return {"ok": false, "reason": "REACTION ATTACK REQUIRED", "state": state}
+				var target_index := _index_for(next.models, attack, "target_id", "target")
+				if target_index < 0 or Attachments.group_id(next.models[target_index]) != str(window.get("trigger_unit_id", "")):
+					return {"ok": false, "reason": "REACTION TARGET MUST BE TRIGGER UNIT", "state": state}
+				var shooter_index := _index_for(next.models, attack, "attacker_id", "attacker")
+				if shooter_index < 0:
+					return {"ok": false, "reason": "INVALID REACTION SHOOTER", "state": state}
+				var indirect := false
+				for weapon in next.models[shooter_index].get("weapons", []):
+					if str(weapon.get("name", "")) == str(attack.get("weapon", "")):
+						indirect = WeaponRules.ids_from_weapon(weapon).has("indirect_fire")
+				if not indirect and Visibility.blocked(_position_of(next.models[shooter_index]), _position_of(next.models[target_index]), next.get("terrain", [])):
+					return {"ok": false, "reason": "REACTION LINE OF SIGHT BLOCKED", "state": state}
+				var attack_state: Dictionary = next.duplicate(true)
+				attack_state.erase("reaction_window")
+				attack_state.active_team = int(entry.team)
+				attack_state.phase = "SHOOTING"
+				attack_state.phase_index = TurnState.phase_index("SHOOTING")
+				var attack_payload: Dictionary = attack.duplicate(true)
+				attack_payload.erase("window_id")
+				var resolved := apply_entry(attack_state, {"sequence": entry.sequence, "team": entry.team, "kind": "SHOOT", "payload": attack_payload})
+				if not resolved.ok:
+					return {"ok": false, "reason": resolved.reason, "state": state}
+				next.models = resolved.state.models
+				next.stratagem_effects = resolved.state.get("stratagem_effects", [])
 			if effect_id == "GRANT_ABILITY":
 				var grant_unit := str(payload.get("unit_id", ""))
 				var recipients: Array = []
@@ -360,7 +389,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 				"timing": str(stratagem_result.get("timing", "")),
 				"round": int(next.get("round", 1)),
 				"phase": str(next.get("phase", "")),
-				"consumed": effect_id == "GRANT_ABILITY",
+				"consumed": effect_id in ["GRANT_ABILITY", "REACTION_SHOOT"],
 				"payload": payload.duplicate(true)
 			})
 			next.stratagem_effects = effects
@@ -390,7 +419,7 @@ static func _open_move_reaction(state: Dictionary, entry: Dictionary) -> void:
 	var responder := 1 - int(entry.team)
 	var available: Array = []
 	for model in state.models:
-		if int(model.get("team", -1)) != responder or not Reserves.active(model) or Transports.is_embarked(model):
+		if int(model.get("team", -1)) != responder or not Reserves.active(model) or Transports.is_embarked(model) or float(model.get("wounds", 1)) <= 0:
 			continue
 		for definition in model.get("faction_stratagems", []):
 			if not (definition is Dictionary) or not Stratagems.validate(definition).is_empty():

@@ -272,6 +272,61 @@ func run() -> void:
 	var no_budget_move := Replay.apply_entry(no_budget, trigger_entry)
 	check(no_budget_move.ok and not no_budget_move.state.has("reaction_window"), "unaffordable reactions do not stall movement")
 	var unimplemented_reaction := Stratagems.use(Stratagems.definition("fire_overwatch"), "MOVEMENT", 0, [1, 0])
+	var shooting_rule := {"id": "fixture_reaction_shot", "cost": 1, "phase": "MOVEMENT", "timing": "AFTER_ENEMY_MOVE", "effect": "REACTION_SHOOT", "hit_on": 6}
+	var shooting_room: Dictionary = reaction_room.duplicate(true)
+	shooting_room.session.models[0].wounds = 100
+	shooting_room.session.models[0].save_on = 7
+	shooting_room.session.models[0].toughness = 4
+	shooting_room.session.models[1].faction_stratagems = [shooting_rule]
+	shooting_room.session.models[1].weapons = [{"name": "fixture_rifle", "range_inches": 24, "attacks": 30, "hit_on": 2, "strength": 5, "damage": 1}]
+	var shot_trigger: Dictionary = trigger_packet.duplicate(true)
+	shot_trigger.snapshot_hash = PeerProtocol.hash_snapshot(shooting_room.session)
+	var shot_waiting := NetworkSync.host_command(shooting_room, shot_trigger, "player_gold")
+	var shot_payload := {"id": "fixture_reaction_shot", "phase": "MOVEMENT", "window_id": "move:0", "attacker_id": "responding", "target_id": "moving", "weapon": "fixture_rifle", "attack": {"damage": 999}, "damage": 999, "hits": 999, "hit_on": 1}
+	var shot_packet := PeerProtocol.command(room.id, "player_blue", peer_session_id, 1, 0, {"sequence": 1, "team": 1, "kind": "STRATAGEM", "payload": shot_payload}, PeerProtocol.hash_snapshot(shot_waiting.room.session))
+	var shot_result := NetworkSync.host_command(shot_waiting.room, shot_packet, "player_blue")
+	check(shot_result.ok and shot_result.entry.payload.attack.damage < 999 and shot_result.room.session.command_points[1] == 0, "reaction shooting overwrites client results and spends authoritative cost")
+	var expected_shot_rng := RandomNumberGenerator.new()
+	expected_shot_rng.seed = (peer_session_id + ":1").hash()
+	var expected_shot := Combat.resolve_ranged_attack({"attacks": 30, "hit_on": 6, "strength": 5, "damage": 1}, {"toughness": 4, "save_on": 7}, expected_shot_rng)
+	check(shot_result.entry.payload.attack.hits == expected_shot.hits and shot_result.entry.payload.attack.damage == expected_shot.damage, "reaction hit threshold comes from definition rather than client weapon override")
+	check(shot_result.room.session.models[0].wounds == 100 - expected_shot.damage and not shot_result.room.session.has("reaction_window"), "reaction damage applied and window closes atomically")
+	var shot_replay := Replay.replay(shooting_room.session, shot_result.room.session.command_log)
+	check(shot_replay.ok and shot_replay.state.models == shot_result.room.session.models, "reaction attack result replays through normal damage rules")
+	var unknown_weapon_packet: Dictionary = shot_packet.duplicate(true)
+	unknown_weapon_packet.command.payload.weapon = "fake"
+	var bad_weapon := NetworkSync.host_command(shot_waiting.room, unknown_weapon_packet, "player_blue")
+	check(not bad_weapon.ok and bad_weapon.room == shot_waiting.room, "unknown reaction weapon leaves CP and pending window unchanged")
+	var distant_room: Dictionary = shot_waiting.room.duplicate(true)
+	distant_room.session.models[1].position = Vector2(59, 43)
+	var distant_packet: Dictionary = shot_packet.duplicate(true)
+	distant_packet.snapshot_hash = PeerProtocol.hash_snapshot(distant_room.session)
+	check(not NetworkSync.host_command(distant_room, distant_packet, "player_blue").ok, "reaction validates actual weapon range")
+	var blocked_room: Dictionary = shot_waiting.room.duplicate(true)
+	blocked_room.session.terrain = [{"x": 24.0, "y": 10.0, "width": 2.0, "height": 20.0}]
+	var blocked_packet: Dictionary = shot_packet.duplicate(true)
+	blocked_packet.snapshot_hash = PeerProtocol.hash_snapshot(blocked_room.session)
+	check(not NetworkSync.host_command(blocked_room, blocked_packet, "player_blue").ok, "direct reaction shot cannot cross blocking terrain")
+	var shot_no_window: Dictionary = shot_waiting.room.duplicate(true)
+	shot_no_window.session.erase("reaction_window")
+	var shot_no_window_packet: Dictionary = shot_packet.duplicate(true)
+	shot_no_window_packet.snapshot_hash = PeerProtocol.hash_snapshot(shot_no_window.session)
+	check(not NetworkSync.host_command(shot_no_window, shot_no_window_packet, "player_blue").ok, "reaction shooting cannot execute after its window closes")
+	var host_reaction_probe = P2PLobby.new()
+	root.add_child(host_reaction_probe)
+	await process_frame
+	host_reaction_probe.room = shot_waiting.room.duplicate(true)
+	host_reaction_probe.player_id = "player_blue"
+	host_reaction_probe.is_host = true
+	var host_reaction_error: String = host_reaction_probe.submit_command("STRATAGEM", shot_payload)
+	check(host_reaction_error.is_empty() and not host_reaction_probe.room.session.has("reaction_window"), "host player's reaction uses same materialization path as remote player")
+	host_reaction_probe.queue_free()
+	var wrong_target_room: Dictionary = shot_waiting.room.duplicate(true)
+	wrong_target_room.session.models.append({"model_id": "unrelated", "unit_id": "unrelated_unit", "team": 0, "position": Vector2(30, 25), "wounds": 3})
+	var wrong_target_packet: Dictionary = shot_packet.duplicate(true)
+	wrong_target_packet.snapshot_hash = PeerProtocol.hash_snapshot(wrong_target_room.session)
+	wrong_target_packet.command.payload.target_id = "unrelated"
+	check(not NetworkSync.host_command(wrong_target_room, wrong_target_packet, "player_blue").ok, "reaction cannot select unrelated enemy unit")
 	check(not unimplemented_reaction.ok and unimplemented_reaction.points == [1, 0], "unimplemented reaction shooting fails without spending points")
 	var corrupt_window: Dictionary = waiting_state.duplicate(true)
 	corrupt_window.reaction_window.team = 0
@@ -372,6 +427,14 @@ func run() -> void:
 	attack_room.session.phase_index = TurnState.phase_index("SHOOTING")
 	var intent_packet := PeerProtocol.command("attack-room", "attacker", "network-test", 0, -1, {"sequence": 0, "team": 0, "kind": "SHOOT", "payload": {"attacker": 0, "attacker_id": "net_attacker", "target": 1, "target_id": "net_target", "weapon": "net gun", "intent": true, "damage": 999, "hazardous_damage": 999, "feel_no_pain_rolls": [6]}}, PeerProtocol.hash_snapshot(attack_room.session))
 	var intent_result := NetworkSync.host_command(attack_room, intent_packet, "attacker")
+	var forged_result_packet: Dictionary = intent_packet.duplicate(true)
+	forged_result_packet.command.payload.intent = false
+	forged_result_packet.command.payload.hits = 999
+	var forged_result := NetworkSync.host_command(attack_room, forged_result_packet, "attacker")
+	check(not forged_result.ok and forged_result.reason == "HOST RESOLUTION REQUIRED" and forged_result.room == attack_room, "remote materialized damage packet cannot bypass host resolution")
+	var forged_team_packet: Dictionary = intent_packet.duplicate(true)
+	forged_team_packet.command.team = 1
+	check(NetworkSync.host_command(attack_room, forged_team_packet, "attacker").reason == "PLAYER TEAM MISMATCH", "attack modifier team comes from authenticated room identity")
 	check(intent_result.ok and intent_result.entry.payload.damage >= 0 and int(intent_result.entry.payload.damage) != 999 and int(intent_result.entry.payload.hazardous_damage) != 999 and intent_result.entry.payload.has("hazardous_damage") and not bool(intent_result.entry.payload.get("intent", false)), "host materializes network attack intent deterministically")
 	var shock_room := Room.create("shock-room")
 	var aura_rule := {"id": "fixture_guidance", "aura": {"radius_inches": 6.0, "event": "before_attack", "include_self": false, "keywords": ["INFANTRY"], "modifiers": {"hit_rerolls": 1}}}
@@ -448,6 +511,9 @@ func run() -> void:
 	var shock_session_id := PeerProtocol.hash_snapshot({"room_id": shock_room.id, "mission": shock_room.mission_id})
 	var shock_packet := PeerProtocol.command(shock_room.id, "shock_gold", shock_session_id, 0, -1, {"sequence": 0, "team": 0, "kind": "BATTLE_SHOCK", "payload": {"unit_id": "shock_unit", "intent": true}}, PeerProtocol.hash_snapshot(shock_room.session))
 	var network_shock_result := NetworkSync.host_command(shock_room, shock_packet, "shock_gold")
+	var forged_shock: Dictionary = shock_packet.duplicate(true)
+	forged_shock.command.payload = {"unit_id": "shock_unit", "passed": true, "rolls": [1, 1], "total": 2}
+	check(not NetworkSync.host_command(shock_room, forged_shock, "shock_gold").ok, "client cannot submit precomputed battle shock result")
 	check(network_shock_result.ok and not bool(network_shock_result.entry.payload.get("intent", false)) and network_shock_result.entry.payload.get("rolls", []).size() == 2, "host materializes network battle shock intent deterministically")
 	var lobby_probe = P2PLobby.new()
 	root.add_child(lobby_probe)
@@ -1065,6 +1131,8 @@ func run() -> void:
 		ui_bridge.lobby.player_id = "player_blue"
 		scene.show_reaction_controls(waiting_state)
 		check(scene.get_node("ReactionPanel").get_child(0).get_child_count() == 5, "responding player sees strategy target execute and pass controls")
+		scene.show_reaction_controls(shot_waiting.room.session)
+		check(scene.get_node("ReactionPanel").get_child(0).get_child_count() == 7, "reaction shooting panel offers shooter weapon and moved target choices")
 		scene.show_reaction_controls(passed_response.state)
 		check(scene.get_node_or_null("ReactionPanel") == null, "reaction panel closes when authoritative window closes")
 		ui_bridge.lobby.room = prior_room
