@@ -55,7 +55,7 @@ static func validate(stratagem: Dictionary) -> String:
 	if str(stratagem.effect) not in SUPPORTED_EFFECTS:
 		return "UNSUPPORTED EFFECT"
 	if str(stratagem.effect) == "GRANT_ABILITY":
-		if str(stratagem.get("target", "")) != "FRIENDLY_UNIT" or str(stratagem.get("duration", "")) != "BATTLE":
+		if str(stratagem.get("target", "")) != "FRIENDLY_UNIT" or str(stratagem.get("duration", "")) not in ["BATTLE", "PHASE", "TURN"]:
 			return "INVALID ABILITY TARGET OR DURATION"
 		if str(stratagem.phase) not in ["COMMAND", "MOVEMENT", "SHOOTING", "CHARGE", "FIGHT"] or str(stratagem.timing) != str(stratagem.phase):
 			return "INVALID ABILITY TIMING"

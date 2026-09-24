@@ -24,6 +24,18 @@ static func validate_model(model: Variant, index: int = 0, ids: Dictionary = {})
 	ids[model_id] = true
 	if str(model.get("unit_id", "")).is_empty():
 		return "MISSING UNIT ID " + model_id
+	if model.has("ability_grants"):
+		if not (model.ability_grants is Dictionary):
+			return "INVALID ABILITY GRANTS " + model_id
+		for ability in model.ability_grants:
+			var grant: Variant = model.ability_grants[ability]
+			if not (grant is Dictionary) or typeof(grant.get("native", null)) != TYPE_BOOL or not (grant.get("durations", null) is Array):
+				return "INVALID ABILITY GRANTS " + model_id
+			if not (model.get("ability_ids", null) is Array) or not model.ability_ids.has(ability) or grant.durations.is_empty():
+				return "INVALID ABILITY GRANTS " + model_id
+			for duration in grant.durations:
+				if duration not in ["PHASE", "TURN", "BATTLE"]:
+					return "INVALID ABILITY GRANTS " + model_id
 	if int(model.get("team", -1)) not in [0, 1]:
 		return "INVALID MODEL TEAM " + model_id
 	var position: Variant = model.get("position", null)

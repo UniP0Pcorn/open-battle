@@ -52,7 +52,7 @@ func send(packet: Dictionary, target_peer: int = 1) -> String:
 		return error
 	if peer == null or peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
 		return "TRANSPORT NOT CONNECTED"
-	var encoded := JSON.stringify(packet)
+	var encoded := PeerProtocol.encode(packet)
 	rpc_id(target_peer, "_receive_packet", encoded)
 	return ""
 
@@ -62,7 +62,7 @@ func broadcast(packet: Dictionary) -> String:
 		return error
 	if peer == null or peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
 		return "TRANSPORT NOT CONNECTED"
-	rpc("_receive_packet", JSON.stringify(packet))
+	rpc("_receive_packet", PeerProtocol.encode(packet))
 	return ""
 
 @rpc("any_peer", "call_remote", "reliable")

@@ -166,6 +166,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 				if Attachments.group_id(charged_model) == charged_unit_id:
 					charged_model.charged = true
 		"END_TURN":
+			_expire_grants(next.models, ["PHASE", "TURN"])
 			var objective_data: Array = next.get("objectives", []).duplicate(true)
 			if not objective_data.is_empty():
 				var scored := MissionRules.score_objectives(objective_data, next.models, float(next.get("control_radius", 3.0)))
@@ -192,6 +193,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 					model.transport_moved = false
 					model.disembarked = false
 		"PHASE_ADVANCE":
+			_expire_grants(next.models, ["PHASE", "TURN"] if str(next.phase) == "FIGHT" else ["PHASE"])
 			var phase_state := {
 				"round": int(next.get("round", 1)),
 				"active_team": int(next.get("active_team", 0)),
@@ -314,6 +316,14 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 					return {"ok": false, "reason": "UNKNOWN UNIT", "state": state}
 				for model in recipients:
 					var abilities: Array = model.get("ability_ids", []).duplicate(true)
+					var grants: Dictionary = model.get("ability_grants", {}).duplicate(true)
+					var ability_id := str(stratagem.ability)
+					if not grants.has(ability_id):
+						grants[ability_id] = {"native": abilities.has(ability_id), "durations": []}
+					var duration := str(stratagem.duration)
+					if not grants[ability_id].durations.has(duration):
+						grants[ability_id].durations.append(duration)
+					model.ability_grants = grants
 					if not abilities.has(stratagem.ability):
 						abilities.append(stratagem.ability)
 					model.ability_ids = abilities
@@ -350,6 +360,20 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			return {"ok": false, "reason": "UNKNOWN COMMAND", "state": state}
 	next.events.append(kind)
 	return {"ok": true, "reason": "", "state": next}
+
+static func _expire_grants(models: Array, expired: Array) -> void:
+	for model in models:
+		var grants: Dictionary = model.get("ability_grants", {})
+		for ability_id in grants.keys():
+			var grant: Dictionary = grants[ability_id]
+			for duration in expired:
+				grant.durations.erase(duration)
+			if grant.durations.is_empty():
+				if not bool(grant.native):
+					model.ability_ids.erase(ability_id)
+				grants.erase(ability_id)
+		if grants.is_empty():
+			model.erase("ability_grants")
 
 static func _validate_references(models: Array, entry: Dictionary, kind: String, payload: Dictionary, terrain: Array = [], effects: Array = []) -> String:
 	var actor_team := int(entry.get("team", -1))

@@ -8,7 +8,7 @@ extends RefCounted
 
 const CommandSchema = preload("res://rules/command_schema.gd")
 
-const VERSION := 1
+const VERSION := 2
 const COMMAND := "COMMAND"
 const SNAPSHOT := "SNAPSHOT"
 const RECONNECT := "RECONNECT"
@@ -104,6 +104,9 @@ static func hash_snapshot(state: Dictionary) -> String:
 	context.update(JSON.stringify(canonical).to_utf8_buffer())
 	return context.finish().hex_encode()
 
+static func encode(packet: Dictionary) -> String:
+	return JSON.stringify(_canonical(packet), "", true, true)
+
 static func _canonical(value: Variant) -> Variant:
 	if value is Dictionary:
 		var result := {}
@@ -118,5 +121,7 @@ static func _canonical(value: Variant) -> Variant:
 			array_result.append(_canonical(item))
 		return array_result
 	if value is Vector2:
-		return [value.x, value.y]
+		return _canonical([value.x, value.y])
+	if typeof(value) == TYPE_FLOAT and is_finite(value) and absf(value) <= 9007199254740991.0 and value == floor(value):
+		return int(value)
 	return value

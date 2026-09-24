@@ -161,7 +161,11 @@ static func accept_snapshot(local_state: Dictionary, packet: Dictionary) -> Dict
 		return {"ok": false, "reason": packet_error, "state": local_state}
 	if str(packet.kind) != PeerProtocol.SNAPSHOT:
 		return {"ok": false, "reason": "NOT A SNAPSHOT", "state": local_state}
-	return {"ok": true, "reason": "", "state": packet.state.duplicate(true)}
+	var restored: Dictionary = packet.state.duplicate(true)
+	for model in restored.get("models", []):
+		if model.get("position") is Array:
+			model.position = _position(model)
+	return {"ok": true, "reason": "", "state": restored}
 
 static func reconnect_snapshot(room: Dictionary, player_id: String, token: String, last_sequence: int = -1) -> Dictionary:
 	return Room.reconnect(room, player_id, token, last_sequence)
