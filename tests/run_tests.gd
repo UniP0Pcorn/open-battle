@@ -616,6 +616,12 @@ func run() -> void:
 	check(DatasheetValidation.validate_profile(ability_profile).is_empty(), "datasheet validates executable abilities")
 	ability_profile.abilities = ["unknown_ability"]
 	check(DatasheetValidation.validate_profile(ability_profile) == "UNKNOWN ABILITY unknown_ability", "datasheet rejects unknown ability")
+	var faction_data_profile: Dictionary = profile.duplicate(true)
+	faction_data_profile.faction_abilities = ["stealth"]
+	faction_data_profile.faction_stratagems = ["command_reroll"]
+	check(DatasheetValidation.validate_profile(faction_data_profile).is_empty(), "datasheet validates faction ability and stratagem declarations")
+	faction_data_profile.faction_stratagems = ["unknown_faction_stratagem"]
+	check(DatasheetValidation.validate_profile(faction_data_profile) == "UNKNOWN STRATAGEM unknown_faction_stratagem", "datasheet rejects unknown faction stratagem")
 	var keyword_profile: Dictionary = profile.duplicate(true)
 	keyword_profile.keywords = ["步兵", "飞行"]
 	keyword_profile.faction_keywords = ["钛帝国"]

@@ -3,6 +3,7 @@ extends RefCounted
 ## Structural validation for versioned, external unit profiles.
 
 const UnitAbilities = preload("res://rules/unit_abilities.gd")
+const FactionRules = preload("res://rules/faction_rules.gd")
 const UnitKeywords = preload("res://rules/unit_keywords.gd")
 const Dice = preload("res://rules/dice.gd")
 const RulesetCatalog = preload("res://rules/ruleset_catalog.gd")
@@ -28,6 +29,9 @@ static func validate_profile(profile: Dictionary) -> String:
 	var ability_errors := UnitAbilities.validate(UnitAbilities.ids_from_profile(profile))
 	if not ability_errors.is_empty():
 		return ability_errors[0]
+	var faction_errors := FactionRules.validate(profile)
+	if not faction_errors.is_empty():
+		return faction_errors[0]
 	if not (profile.get("keywords", []) is Array) or not (profile.get("faction_keywords", []) is Array):
 		return "INVALID KEYWORDS"
 	var keyword_errors := UnitKeywords.validate(profile.get("keywords", []))
