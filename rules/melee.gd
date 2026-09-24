@@ -4,6 +4,7 @@ extends RefCounted
 
 const Combat = preload("res://rules/combat.gd")
 const Engagement = preload("res://rules/engagement.gd")
+const WeaponRules = preload("res://rules/weapon_rules.gd")
 
 static func target_reason(attacker: Dictionary, target: Dictionary, active_team: int, engagement_range: float = 1.0) -> String:
 	if attacker.is_empty() or target.is_empty():
@@ -19,5 +20,6 @@ static func target_reason(attacker: Dictionary, target: Dictionary, active_team:
 		return "NOT IN ENGAGEMENT"
 	return ""
 
-static func resolve_attack(weapon: Dictionary, target: Dictionary, rng: RandomNumberGenerator, hit_rerolls: int = 0) -> Dictionary:
-	return Combat.resolve_ranged_attack(weapon, target, rng, hit_rerolls)
+static func resolve_attack(weapon: Dictionary, target: Dictionary, rng: RandomNumberGenerator, hit_rerolls: int = 0, target_keywords: Array = []) -> Dictionary:
+	var context := WeaponRules.context(weapon, INF, 0, 1, target_keywords, false)
+	return Combat.resolve_ranged_attack(context.weapon, target, rng, hit_rerolls)

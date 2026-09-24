@@ -275,6 +275,8 @@ func run() -> void:
 	var positioned_target := {"team": 1, "position": Vector2(13.5, 10), "radius": 1.0}
 	check(is_equal_approx(Engagement.separation(positioned_attacker, positioned_target), 0.5) and Engagement.in_engagement(positioned_attacker, positioned_target), "engagement subtracts both base radii")
 	check(Melee.target_reason(positioned_attacker, positioned_target, 0).is_empty(), "melee uses positioned engagement geometry")
+	var melee_keyword_result := Melee.resolve_attack({"attacks": 0, "hit_on": 4, "strength": 4, "damage": 1, "abilities": ["针对步兵4+"]}, {"toughness": 8, "save_on": 7}, combat_rng, 0, ["步兵"])
+	check(melee_keyword_result.wound_on == 4, "melee resolves weapon keyword context")
 	var obstacles: Array = [{"x": 4.0, "y": 4.0, "width": 2.0, "height": 2.0}]
 	check(Terrain.circle_reason(Vector2(5, 5), 0.5, obstacles) == "TERRAIN BLOCKED", "terrain blocks base placement")
 	check(Terrain.path_reason(Vector2(2, 5), Vector2(8, 5), 0.5, obstacles) == "TERRAIN BLOCKED", "terrain blocks movement path")

@@ -602,7 +602,7 @@ func fight_selected() -> void:
 		return
 	var attacker_abilities := UnitAbilities.modifiers(attacker.get("ability_ids", []))
 	var weapon := weapon_for_model(attacker)
-	var result := Melee.resolve_attack(weapon, models[target_index], combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls))
+	var result := Melee.resolve_attack(weapon, models[target_index], combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls), models[target_index].get("keywords", []))
 	reroll_next_attack = false
 	command_log = CommandLog.append(command_log, active_team, "FIGHT", {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "hits": result.hits, "damage": result.damage})
 	var damage_result := Damage.allocate_to_unit(models, int(result.damage), target_index)
