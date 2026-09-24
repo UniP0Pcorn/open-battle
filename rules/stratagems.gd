@@ -11,7 +11,7 @@ const UnitAbilities = preload("res://rules/unit_abilities.gd")
 
 const SUPPORTED_EFFECTS := ["REROLL_HIT", "PASS_BATTLE_SHOCK", "FIGHT_NEXT", "REACTION_SHOOT", "TEMPORARY_COVER", "GRANT_ABILITY"]
 ## Only abilities evaluated dynamically by existing action consumers are grantable.
-const GRANTABLE_ABILITIES := ["fall_back_and_shoot", "fall_back_and_charge", "advance_and_charge", "shoot_after_advance", "fights_first", "reroll_hit", "reroll_hit_ones", "reroll_wound", "reroll_wound_ones", "stealth", "lone_operator"]
+const GRANTABLE_ABILITIES := ["fall_back_and_shoot", "fall_back_and_charge", "advance_and_charge", "shoot_after_advance", "fights_first", "reroll_hit", "reroll_hit_ones", "reroll_wound", "reroll_wound_ones", "stealth", "lone_operator", "reroll_save", "reroll_save_ones", "invulnerable_4", "invulnerable_5"]
 
 const DEFINITIONS := {
 	"command_reroll": {"id": "command_reroll", "cost": 1, "phase": "ANY", "effect": "REROLL_HIT", "timing": "AFTER_ROLL"},

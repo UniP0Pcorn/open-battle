@@ -71,6 +71,8 @@ static func combat_modifiers(models: Array, recipient: Dictionary, event: String
 			if not (ability is Dictionary) or not ability.has("aura") or not UnitAbilities.validate([ability]).is_empty():
 				continue
 			var aura: Dictionary = ability.aura
+			if not UnitAbilities._conditions_match(aura.get("when", {}), context):
+				continue
 			var aura_id := str(ability.id)
 			if seen.has(aura_id) or str(aura.event) != event:
 				continue

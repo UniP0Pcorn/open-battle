@@ -140,7 +140,7 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, rng: Ran
 		resolved_weapon = melee_context.weapon
 		if bool(attacker.get("charged", false)) and WeaponRules.ids_from_weapon(resolved_weapon).has("lance"):
 			resolved_weapon.wound_bonus = 1
-		result = Melee.resolve_attack(resolved_weapon, target, rng, hit_rerolls, target.get("keywords", []), FactionRules.combat_modifiers(models, attacker, "before_attack", {"phase": "FIGHT", "kind": "FIGHT"}), defense)
+		result = Melee.resolve_attack(resolved_weapon, target, rng, hit_rerolls, target.get("keywords", []), ability_modifiers, defense)
 	else:
 		hit_rerolls += int(ability_modifiers.get("hit_rerolls", 0))
 		var distance := _position(attacker).distance_to(_position(target))
@@ -155,7 +155,7 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, rng: Ran
 		resolved_weapon = context.weapon
 		target = target.duplicate(true)
 		target.cover_save_bonus = int(context.cover_bonus)
-		result = Combat.resolve_ranged_attack(resolved_weapon, target, rng, hit_rerolls, FactionRules.combat_modifiers(models, attacker, "before_attack", {"phase": "SHOOTING", "kind": "SHOOT"}), defense)
+		result = Combat.resolve_ranged_attack(resolved_weapon, target, rng, hit_rerolls, ability_modifiers, defense)
 	payload.intent = false
 	payload.attacker = attacker_index
 	payload.target = target_index

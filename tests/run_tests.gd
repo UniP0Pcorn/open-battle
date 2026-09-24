@@ -371,6 +371,18 @@ func run() -> void:
 	check(shot_result.room.session.models[0].wounds == 100 - expected_shot.damage and not shot_result.room.session.has("reaction_window"), "reaction damage applied and window closes atomically")
 	var shot_replay := Replay.replay(shooting_room.session, shot_result.room.session.command_log)
 	check(shot_replay.ok and shot_replay.state.models == shot_result.room.session.models, "reaction attack result replays through normal damage rules")
+	var conditional_shot_room: Dictionary = shot_waiting.room.duplicate(true)
+	conditional_shot_room.session.models[1].ability_ids = [{"id": "fixture_reaction_wounds", "events": {"before_attack": {"when": {"phase": "MOVEMENT", "kind": "SHOOT"}, "modifiers": {"wound_rerolls": 100}}}}]
+	var conditional_shot_packet: Dictionary = shot_packet.duplicate(true)
+	conditional_shot_packet.snapshot_hash = PeerProtocol.hash_snapshot(conditional_shot_room.session)
+	var conditional_shot := NetworkSync.host_command(conditional_shot_room, conditional_shot_packet, "player_blue", seeded_rng(87))
+	var conditional_expected := Combat.resolve_ranged_attack({"attacks": 30, "hit_on": 6, "strength": 5, "damage": 1}, {"toughness": 4, "save_on": 7}, seeded_rng(87), 0, {"wound_rerolls": 100})
+	check(conditional_shot.ok and conditional_shot.entry.payload.attack.damage == conditional_expected.damage, "reaction attack event evaluates actual movement phase")
+	conditional_shot_room.session.models[1].ability_ids[0].events.before_attack.when.phase = "SHOOTING"
+	conditional_shot_packet.snapshot_hash = PeerProtocol.hash_snapshot(conditional_shot_room.session)
+	conditional_shot = NetworkSync.host_command(conditional_shot_room, conditional_shot_packet, "player_blue", seeded_rng(87))
+	conditional_expected = Combat.resolve_ranged_attack({"attacks": 30, "hit_on": 6, "strength": 5, "damage": 1}, {"toughness": 4, "save_on": 7}, seeded_rng(87))
+	check(conditional_shot.ok and conditional_shot.entry.payload.attack.damage == conditional_expected.damage, "shooting phase only passive cannot leak into movement reaction")
 	var unknown_weapon_packet: Dictionary = shot_packet.duplicate(true)
 	unknown_weapon_packet.command.payload.weapon = "fake"
 	var bad_weapon := NetworkSync.host_command(shot_waiting.room, unknown_weapon_packet, "player_blue")
@@ -421,6 +433,14 @@ func run() -> void:
 	var phase_command := {"sequence": 3, "team": 0, "kind": "PHASE_ADVANCE", "payload": {"from": "MOVEMENT", "to": "SHOOTING"}}
 	var expired_phase := Replay.apply_entry(phase_granted.state, phase_command)
 	check(expired_phase.ok and not expired_phase.state.models[0].ability_ids.has("fall_back_and_shoot"), "phase grant expires before next phase actions")
+	var defensive_grant_state: Dictionary = phase_grant_state.duplicate(true)
+	defensive_grant_state.models[0].faction_stratagems[0].ability = "invulnerable_4"
+	var defensive_granted := Replay.apply_entry(defensive_grant_state, grant_entry)
+	var defensive_preview := Combat.resolve_ranged_attack({"attacks": 1}, defensive_granted.state.models[0], seeded_rng(87))
+	check(defensive_granted.ok and defensive_preview.save_on == 4, "data strategy grants executable invulnerable save")
+	var defensive_expired := Replay.apply_entry(defensive_granted.state, phase_command)
+	defensive_preview = Combat.resolve_ranged_attack({"attacks": 1}, defensive_expired.state.models[0], seeded_rng(87))
+	check(defensive_expired.ok and defensive_preview.save_on == 7, "temporary defensive grant expires without stale cached save")
 	var turn_grant_state: Dictionary = phase_grant_state.duplicate(true)
 	turn_grant_state.models[0].faction_stratagems[0].duration = "TURN"
 	var turn_granted := Replay.apply_entry(turn_grant_state, grant_entry)
@@ -608,6 +628,19 @@ func run() -> void:
 	check(Replay.apply_entry(save_room.session, save_host.entry).state.models == save_host.room.session.models, "defensive aura attack result replays identically")
 	var save_melee := Melee.resolve_attack(defense_weapon, defense_target, seeded_rng(87), 0, [], {}, {"save_rerolls": 100, "invulnerable_save": 2})
 	check(save_melee == Combat.resolve_ranged_attack(defense_weapon, defense_target, seeded_rng(87), 0, {}, {"save_rerolls": 100, "invulnerable_save": 2}), "melee shares defensive save resolution")
+	var conditional_aura: Dictionary = save_aura.duplicate(true)
+	conditional_aura.aura.when = {"phase": "SHOOTING", "kind": "SHOOT"}
+	var conditional_source: Dictionary = save_room.session.models[1].duplicate(true)
+	conditional_source.ability_ids = [conditional_aura]
+	check(UnitAbilities.validate([conditional_aura]).is_empty(), "aura accepts phase and attack kind conditions")
+	check(FactionRules.combat_modifiers([conditional_source], conditional_source, "before_defend", {"phase": "SHOOTING", "kind": "SHOOT"}).invulnerable_save == 4, "conditional aura applies on matching phase and attack kind")
+	check(FactionRules.combat_modifiers([conditional_source], conditional_source, "before_defend", {"phase": "MOVEMENT", "kind": "SHOOT"}).invulnerable_save == 0, "conditional aura does not treat reaction as shooting phase")
+	check(FactionRules.combat_modifiers([conditional_source], conditional_source, "before_defend", {"phase": "SHOOTING", "kind": "FIGHT"}).invulnerable_save == 0, "conditional aura excludes other attack kinds")
+	check(FactionRules.combat_modifiers([conditional_source], conditional_source, "before_defend").invulnerable_save == 0, "missing context cannot activate conditional aura")
+	conditional_aura.aura.when = {"unsupported": true}
+	check(not UnitAbilities.validate([conditional_aura]).is_empty(), "unknown aura condition rejected instead of silently ignored")
+	conditional_aura.aura.when = "SHOOTING"
+	check(not UnitAbilities.validate([conditional_aura]).is_empty(), "malformed aura conditions are rejected")
 	var cover_rng := RandomNumberGenerator.new()
 	cover_rng.seed = 87
 	var cover_weapon := {"attacks": 200, "hit_on": 2, "strength": 8, "damage": 1}

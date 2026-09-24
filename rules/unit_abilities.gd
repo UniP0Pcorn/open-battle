@@ -105,6 +105,14 @@ static func validate(ids: Array) -> Array[String]:
 				for keyword in aura.keywords:
 					if not (keyword is String) or keyword.is_empty():
 						errors.append("INVALID AURA KEYWORD")
+			var conditions: Variant = aura.get("when", {})
+			if not (conditions is Dictionary):
+				errors.append("INVALID AURA CONDITIONS")
+			else:
+				for field in conditions:
+					var allowed := ["COMMAND", "MOVEMENT", "SHOOTING", "CHARGE", "FIGHT"] if field == "phase" else ["SHOOT", "FIGHT"]
+					if field not in ["phase", "kind"] or conditions[field] not in allowed:
+						errors.append("UNSUPPORTED AURA CONDITION")
 			var values: Variant = aura.get("modifiers", null)
 			if not (values is Dictionary) or values.is_empty():
 				errors.append("INVALID AURA MODIFIERS")
