@@ -65,6 +65,7 @@ def write_frame(sock, text: str) -> None:
 class RelayStore:
     def __init__(self) -> None:
         self.rooms: dict[str, dict[str, object]] = {}
+        self.pending: dict[str, dict[str, list[str]]] = {}
         self.lock = threading.Lock()
 
     def join(self, room_id: str, role: str, handler) -> tuple[bool, str]:
@@ -72,6 +73,7 @@ class RelayStore:
             return False, "INVALID HELLO"
         with self.lock:
             room = self.rooms.setdefault(room_id, {})
+            self.pending.setdefault(room_id, {"host": [], "client": []})
             if role in room:
                 return False, "ROLE ALREADY CONNECTED"
             if len(room) >= 2:
@@ -86,10 +88,21 @@ class RelayStore:
                 room.pop(role, None)
             if not room:
                 self.rooms.pop(room_id, None)
+                self.pending.pop(room_id, None)
 
     def other(self, room_id: str, role: str):
         with self.lock:
             return self.rooms.get(room_id, {}).get("client" if role == "host" else "host")
+
+    def queue(self, room_id: str, role: str, message: str) -> None:
+        with self.lock:
+            self.pending.setdefault(room_id, {"host": [], "client": []})[role].append(message)
+
+    def drain(self, room_id: str, role: str) -> list[str]:
+        with self.lock:
+            queued = self.pending.get(room_id, {}).get(role, [])
+            self.pending.get(room_id, {}).get(role, []).clear()
+            return queued
 
 
 class RelayHandler(socketserver.BaseRequestHandler):
@@ -100,9 +113,15 @@ class RelayHandler(socketserver.BaseRequestHandler):
         self.role = ""
 
     def handle(self) -> None:
-        self.request.settimeout(10)
+        self.request.settimeout(120)
         try:
-            headers = self.request.recv(8192).decode("latin1")
+            header_bytes = b""
+            while b"\r\n\r\n" not in header_bytes and len(header_bytes) <= 8192:
+                chunk = self.request.recv(1)
+                if not chunk:
+                    return
+                header_bytes += chunk
+            headers = header_bytes.decode("latin1")
             if "\r\n\r\n" not in headers or not headers.startswith("GET "):
                 return
             values = {}
@@ -125,6 +144,8 @@ class RelayHandler(socketserver.BaseRequestHandler):
                 write_frame(self.request, json.dumps({"type": "error", "reason": reason}))
                 return
             write_frame(self.request, json.dumps({"type": "ready", "room_id": self.room_id}))
+            for queued in self.store.drain(self.room_id, "client" if self.role == "host" else "host"):
+                write_frame(self.request, queued)
             while True:
                 message = read_frame(self.request)
                 peer = self.store.other(self.room_id, self.role)
@@ -133,6 +154,8 @@ class RelayHandler(socketserver.BaseRequestHandler):
                         write_frame(peer.request, message)
                     except OSError:
                         pass
+                else:
+                    self.store.queue(self.room_id, self.role, message)
         except (ConnectionError, OSError, ValueError, json.JSONDecodeError):
             return
         finally:
@@ -167,4 +190,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main()`r`n
