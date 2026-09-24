@@ -8,6 +8,7 @@ const PeerProtocol = preload("res://rules/peer_protocol.gd")
 const P2PTransport = preload("res://client/p2p_transport.gd")
 const Room = preload("res://rules/room.gd")
 const NetworkSync = preload("res://rules/network_sync.gd")
+const RoomDirectory = preload("res://rules/room_directory.gd")
 
 signal lobby_changed(room: Dictionary)
 signal battle_snapshot_received(state: Dictionary)
@@ -60,6 +61,7 @@ func host_room(room_id: String, port: int, edition: int = 11, points_limit: int 
 	if room.is_empty():
 		return "ROOM CREATE FAILED"
 	is_host = true
+	server_port = port
 	var error: String = transport.host(port, 1, use_upnp)
 	if not error.is_empty():
 		return error
@@ -85,6 +87,14 @@ func connect_to_room(room_id: String, address: String, port: int) -> String:
 	if not error.is_empty():
 		pending_join = false
 	return error
+
+## Build a shareable public advertisement. The caller supplies the mapped or
+## relay endpoint; the lobby never guesses a public address from local state.
+func room_invite(address: String, expires_at: int) -> String:
+	if not is_host or room.is_empty() or identity.is_empty():
+		return ""
+	var advertisement := RoomDirectory.advertise(str(room.id), identity, address, server_port, int(room.get("edition", 0)), str(room.get("mission_id", "")), expires_at)
+	return RoomDirectory.encode(advertisement)
 
 func set_ready(ready: bool = true) -> String:
 	var result := Room.set_ready(room, player_id, ready)

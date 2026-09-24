@@ -13,6 +13,7 @@ const AccountStore = preload("res://rules/account_store.gd")
 const NatMapping = preload("res://client/nat_mapping.gd")
 const P2PTransport = preload("res://client/p2p_transport.gd")
 const P2PLobby = preload("res://client/p2p_lobby.gd")
+const RoomDirectory = preload("res://rules/room_directory.gd")
 const NetworkSync = preload("res://rules/network_sync.gd")
 const LobbyScreen = preload("res://client/lobby/lobby_screen.gd")
 const Deployment = preload("res://rules/deployment.gd")
@@ -822,6 +823,18 @@ func run() -> void:
 	var identity_path := "user://open_battle_identity_test.json"
 	AccountStore.remove_identity(identity_path)
 	check(AccountStore.save_identity(identity, identity_path).is_empty() and AccountStore.load_identity(identity_path).fingerprint == identity.fingerprint, "account identity persists without plaintext password")
+	var advertisement := RoomDirectory.advertise("public-room", identity, "203.0.113.20", 24567, 11, "control_center", 4102444800)
+	var invite := RoomDirectory.encode(advertisement, 4102444700)
+	var decoded_advertisement := RoomDirectory.decode(invite, 4102444700)
+	check(not invite.is_empty() and decoded_advertisement.get("room_id", "") == "public-room" and decoded_advertisement.host.get("fingerprint", "") == identity.fingerprint and not decoded_advertisement.host.has("credential_hash"), "room advertisement invite round trips without credentials")
+	check(RoomDirectory.validate(advertisement, 4102444801) == "ROOM ADVERTISEMENT EXPIRED", "expired room advertisement is rejected")
+	var invalid_advertisement := advertisement.duplicate(true)
+	invalid_advertisement.host.fingerprint = "not-a-fingerprint"
+	check(RoomDirectory.encode(invalid_advertisement).is_empty(), "room advertisement rejects malformed host fingerprint")
+	lobby_probe.identity = identity
+	lobby_probe.is_host = true
+	lobby_probe.server_port = 24567
+	check(RoomDirectory.decode(lobby_probe.room_invite("203.0.113.20", 4102444800), 4102444700).get("room_id", "") == str(room.id), "lobby exposes an expiring public room invite")
 	AccountStore.remove_identity(identity_path)
 	var trust_path := "user://open_battle_trusted_test.json"
 	AccountStore.remove_trusted_identities(trust_path)

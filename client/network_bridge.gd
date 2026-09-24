@@ -43,6 +43,9 @@ func submit_command(kind: String, payload: Dictionary) -> String:
 func reconnect() -> String:
 	return lobby.reconnect()
 
+func room_invite(address: String, expires_at: int) -> String:
+	return lobby.room_invite(address, expires_at)
+
 func active_room() -> Dictionary:
 	return lobby.room.duplicate(true) if lobby != null and lobby.room is Dictionary else {}
 
