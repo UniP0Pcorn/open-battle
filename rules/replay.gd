@@ -12,7 +12,7 @@ const Stratagems = preload("res://rules/stratagems.gd")
 const TurnState = preload("res://rules/turn_state.gd")
 
 static func initial_state(models: Array, phase: String = "MOVEMENT", active_team: int = 0, terrain: Array = []) -> Dictionary:
-	return {"models": models.duplicate(true), "phase": phase, "phase_index": TurnState.phase_index(phase), "active_team": active_team, "round": 1, "command_points": [0, 0], "terrain": terrain.duplicate(true), "events": []}
+	return {"models": models.duplicate(true), "phase": phase, "phase_index": TurnState.phase_index(phase), "active_team": active_team, "round": 1, "command_points": [0, 0], "terrain": terrain.duplicate(true), "stratagem_effects": [], "events": []}
 
 static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 	var next := state.duplicate(true)
@@ -142,13 +142,25 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 				next.models[attacker_index] = hazardous_result
 		"STRATAGEM":
 			var stratagem_id := str(payload.get("id", ""))
-			var stratagem: Dictionary = Stratagems.command_reroll() if stratagem_id == "command_reroll" else {}
+			var stratagem: Dictionary = Stratagems.definition(stratagem_id)
 			if stratagem.is_empty():
 				return {"ok": false, "reason": "UNKNOWN STRATAGEM", "state": state}
 			var stratagem_result := Stratagems.use(stratagem, str(next.phase), int(entry.team), next.get("command_points", [0, 0]))
 			if not bool(stratagem_result.get("ok", false)):
 				return {"ok": false, "reason": str(stratagem_result.get("reason", "STRATAGEM REJECTED")), "state": state}
 			next.command_points = stratagem_result.points
+			var effects: Array = next.get("stratagem_effects", []).duplicate(true)
+			effects.append({
+				"sequence": int(entry.get("sequence", -1)),
+				"team": int(entry.team),
+				"id": str(stratagem_result.get("stratagem_id", stratagem.id)),
+				"effect": str(stratagem_result.get("effect", "")),
+				"timing": str(stratagem_result.get("timing", "")),
+				"round": int(next.get("round", 1)),
+				"phase": str(next.get("phase", "")),
+				"payload": payload.duplicate(true)
+			})
+			next.stratagem_effects = effects
 		_:
 			return {"ok": false, "reason": "UNKNOWN COMMAND", "state": state}
 	next.events.append(kind)
@@ -224,7 +236,8 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 
 static func _apply_damage(model: Dictionary, damage: int) -> Dictionary:
 	var next := model.duplicate(true)
-	next.wounds = maxi(0, int(next.get("wounds", 0)) - damage)
+	var reduction := maxi(0, int(next.get("damage_reduction", 0)))
+	next.wounds = maxi(0, int(next.get("wounds", 0)) - maxi(0, damage - reduction))
 	if int(next.wounds) <= 0:
 		next.destroyed = true
 		next.can_control = false

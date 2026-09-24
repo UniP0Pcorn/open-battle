@@ -3,6 +3,7 @@ extends RefCounted
 ## Converts validated unit profiles and roster entries into battle units.
 
 const ArmyValidation = preload("res://rules/army_validation.gd")
+const UnitAbilities = preload("res://rules/unit_abilities.gd")
 
 static func build(roster: Dictionary, profiles: Dictionary, team: int = 0) -> Dictionary:
 	var errors: Array = []
@@ -63,6 +64,7 @@ static func points_for_count(profile: Dictionary, count: int) -> int:
 static func expand_unit(profile: Dictionary, count: int, team: int, unit_id: String) -> Dictionary:
 	var model_template: Dictionary = profile.models[0]
 	var ability_ids: Array = profile.get("abilities", []).duplicate(true)
+	var ability_mods: Dictionary = UnitAbilities.modifiers(ability_ids)
 	var models: Array = []
 	for index in range(count):
 		models.append({
@@ -74,9 +76,11 @@ static func expand_unit(profile: Dictionary, count: int, team: int, unit_id: Str
 			"toughness": int(model_template.get("toughness", 0)),
 			"wounds": int(model_template.get("wounds", 0)),
 			"save_on": int(model_template.get("save_on", 7)),
-			"invulnerable_save": int(model_template.get("invulnerable_save", 0)),
-			"leadership": int(model_template.get("leadership", 7)),
-			"objective_control": int(model_template.get("objective_control", 1)),
+			"invulnerable_save": maxi(int(model_template.get("invulnerable_save", 0)), int(ability_mods.get("invulnerable_save", 0))),
+			"feel_no_pain": int(ability_mods.get("feel_no_pain", 0)),
+			"damage_reduction": int(ability_mods.get("damage_reduction", 0)),
+			"leadership": maxi(2, int(model_template.get("leadership", 7)) - int(ability_mods.get("leadership_bonus", 0))),
+			"objective_control": int(model_template.get("objective_control", 1)) + int(ability_mods.get("objective_control_bonus", 0)),
 			"base_diameter_mm": float(model_template.get("base_diameter_mm", 0.0)),
 			"coherency_inches": float(model_template.get("coherency_inches", 2.0)),
 			"ability_ids": ability_ids.duplicate(true),

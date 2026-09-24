@@ -4,7 +4,8 @@ extends RefCounted
 
 static func apply_to_model(model: Dictionary, damage: int) -> Dictionary:
 	var before := int(model.get("wounds", 0))
-	var applied := maxi(0, damage)
+	var reduction := maxi(0, int(model.get("damage_reduction", 0)))
+	var applied := maxi(0, damage - reduction)
 	var after := maxi(0, before - applied)
 	return {"wounds_before": before, "damage": applied, "wounds_after": after, "destroyed": after <= 0}
 

@@ -34,6 +34,7 @@ const UnitKeywords = preload("res://rules/unit_keywords.gd")
 const RulesetCatalog = preload("res://rules/ruleset_catalog.gd")
 const MissionValidation = preload("res://rules/mission_validation.gd")
 const ModelState = preload("res://rules/model_state.gd")
+const AIPlayer = preload("res://rules/ai_player.gd")
 var failures := 0
 var checks := 0
 
@@ -171,6 +172,13 @@ func run() -> void:
 	check(not Room.public_snapshot(room).session.has("command_log"), "room public snapshot omits command log")
 	var abandoned_room := Room.leave(room, "player_gold")
 	check(abandoned_room.ok and abandoned_room.room.status == Room.ABANDONED, "room marks active player leave")
+	var ai_models: Array = [
+		{"model_id": "ai_gold", "unit_id": "ai_gold_unit", "team": 0, "position": Vector2(10, 10), "radius": 0.5, "movement_inches": 6.0, "spent": 0.0, "wounds": 3, "toughness": 4, "save_on": 4, "leadership": 7, "objective_control": 1, "weapons": [{"name": "ai cannon", "range_inches": 24.0, "attacks": 6, "hit_on": 2, "strength": 8, "damage": 3}]},
+		{"model_id": "ai_blue", "unit_id": "ai_blue_unit", "team": 1, "position": Vector2(20, 10), "radius": 0.5, "movement_inches": 6.0, "spent": 0.0, "wounds": 4, "toughness": 4, "save_on": 7, "leadership": 7, "objective_control": 1, "weapons": [{"name": "blue blade", "range_inches": 0.0, "attacks": 1, "hit_on": 4, "strength": 3, "damage": 1}]}
+	]
+	var ai_session := BattleSession.create(ai_models, 11, 0)
+	var ai_turn := AIPlayer.play_turn(ai_session, 0, 2026, 32)
+	check(ai_turn.ok and ai_turn.state.active_team == 1 and ai_turn.commands.size() > 5, "single-player AI completes a deterministic turn")
 	var invalid_model := {"model_id": "bad_m001", "unit_id": "bad", "team": 0, "position": Vector2(INF, 2)}
 	check(ModelState.validate_models([invalid_model]).has("INVALID MODEL POSITION bad_m001"), "model state rejects non-finite position")
 	check(ModelState.validate_models([{ "model_id": "advance_m001", "unit_id": "advance", "team": 0, "position": Vector2.ZERO, "advance_bonus": 4 }]).is_empty(), "model state accepts advance metadata")
@@ -209,6 +217,12 @@ func run() -> void:
 	check(UnitAbilities.validate(["隐匿", "斥候6英寸"]).is_empty(), "localized ability aliases validate")
 	var ability_mods := UnitAbilities.modifiers(["stealth", "objective_control_plus_1", "reroll_hit_ones"])
 	check(ability_mods.cover_bonus == 1 and ability_mods.objective_control_bonus == 1 and ability_mods.hit_rerolls == 1, "ability modifiers aggregate")
+	var inline_ability := {"id": "local_faction_rule", "modifiers": {"cover_bonus": 2}, "events": {"before_attack": {"when": {"phase": "SHOOTING"}, "modifiers": {"hit_rerolls": 1}, "effects": ["MARKED_TARGET"]}}}
+	check(UnitAbilities.validate([inline_ability]).is_empty(), "inline faction ability schema validates")
+	var inline_event := UnitAbilities.event_modifiers([inline_ability], "before_attack", {"phase": "SHOOTING"})
+	check(inline_event.cover_bonus == 2 and inline_event.hit_rerolls == 1 and UnitAbilities.event_effects([inline_ability], "before_attack", {"phase": "SHOOTING"}).has("MARKED_TARGET"), "inline faction ability event resolves")
+	var reduced_damage := Damage.apply_to_model({"wounds": 5, "damage_reduction": 1}, 3)
+	check(reduced_damage.damage == 2 and reduced_damage.wounds_after == 3, "ability damage reduction modifies applied damage")
 	check(UnitAbilities.validate(["not_real"]).size() == 1, "unknown ability is reported")
 	check(UnitKeywords.canonical_id("飞行") == "fly" and UnitKeywords.canonical_id("史诗英雄") == "epic_hero", "localized unit keywords normalize")
 	check(UnitKeywords.validate(["步兵", "fly"]).is_empty(), "known unit keywords validate")
@@ -547,6 +561,14 @@ func run() -> void:
 	check(reroll_use.ok and reroll_use.points[0] == 0 and reroll_use.effect == "REROLL_HIT", "command reroll spends resource")
 	var no_reroll := Stratagems.use(Stratagems.command_reroll(), "SHOOTING", 0, reroll_use.points)
 	check(not no_reroll.ok and no_reroll.reason == "NOT ENOUGH COMMAND POINTS", "command reroll requires points")
+	var counter := Stratagems.definition("counter-offensive")
+	check(counter.id == "counter_offensive" and Stratagems.validate(counter).is_empty(), "stratagem aliases resolve to registered definitions")
+	var stratagem_phase_state := Replay.initial_state([], "FIGHT", 0)
+	stratagem_phase_state.command_points = [2, 0]
+	var counter_log: Array = []
+	counter_log = CommandLog.append(counter_log, 0, "STRATAGEM", {"id": "counter_offensive", "phase": "FIGHT"})
+	var counter_replay := Replay.replay(stratagem_phase_state, counter_log)
+	check(counter_replay.ok and counter_replay.state.stratagem_effects.size() == 1 and counter_replay.state.stratagem_effects[0].effect == "FIGHT_NEXT", "replay records registered stratagem effects")
 	var source_manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/sources/manifest.json"))
 	check(SourceManifest.validate(source_manifest).is_empty() and source_manifest.sources.size() == 30, "PDF source manifest validates")
 	var catalog_profiles: Array = [profile, {"id": "other", "display_name": "Other", "edition": 10, "faction": "other", "models": [], "weapons": []}]
