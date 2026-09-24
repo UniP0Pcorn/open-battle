@@ -759,6 +759,14 @@ func run() -> void:
 	counter_log = CommandLog.append(counter_log, 0, "STRATAGEM", {"id": "counter_offensive", "phase": "FIGHT"})
 	var counter_replay := Replay.replay(stratagem_phase_state, counter_log)
 	check(counter_replay.ok and counter_replay.state.stratagem_effects.size() == 1 and counter_replay.state.stratagem_effects[0].effect == "FIGHT_NEXT", "replay records registered stratagem effects")
+	var counter_models: Array = fights_first_models.duplicate(true)
+	var counter_state := Replay.initial_state(counter_models, "FIGHT", 0)
+	counter_state.command_points = [2, 0]
+	var counter_fight_log: Array = []
+	counter_fight_log = CommandLog.append(counter_fight_log, 0, "STRATAGEM", {"id": "counter_offensive", "phase": "FIGHT"})
+	counter_fight_log = CommandLog.append(counter_fight_log, 0, "FIGHT", {"attacker": 0, "attacker_id": "normal_fighter_m001", "target": 2, "target_id": "first_target_m001", "weapon": "Test Blade", "damage": 1})
+	var counter_fight := Replay.replay(counter_state, counter_fight_log)
+	check(counter_fight.ok and counter_fight.state.models[0].fought and counter_fight.state.stratagem_effects[0].consumed, "counter offensive unlocks and consumes next fight activation")
 	var source_manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/sources/manifest.json"))
 	check(SourceManifest.validate(source_manifest).is_empty() and source_manifest.sources.size() == 30, "PDF source manifest validates")
 	var catalog_profiles: Array = [profile, {"id": "other", "display_name": "Other", "edition": 10, "faction": "other", "models": [], "weapons": []}]

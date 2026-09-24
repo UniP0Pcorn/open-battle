@@ -59,6 +59,7 @@ var deployment_depth := 12.0
 var score: Array = [0, 0]
 var command_points: Array = [0, 0]
 var reroll_next_attack := false
+var counter_offensive_next := false
 var preview := Vector2.ZERO
 var drag_offset := Vector2.ZERO
 var message := "选择底座以查看移动额度。"
@@ -124,6 +125,7 @@ func _ready() -> void:
 	add_button("进入冲锋阶段  [C]", Vector2(976, 765), enter_charge)
 	add_button("进入战斗阶段  [V]", Vector2(976, 805), enter_fight)
 	add_button("近战攻击  [X]", Vector2(976, 845), fight_selected)
+	add_button("反击先攻  [F8]", Vector2(976, 1125), use_counter_offensive)
 	add_button("宣布撤退  [Z]", Vector2(976, 885), fall_back_selected)
 	add_button("深入打击 / 出预备队  [H]", Vector2(976, 925), deploy_selected_reserve)
 	add_button("搭载所选单位  [F9]", Vector2(976, 965), embark_selected)
@@ -153,6 +155,7 @@ func reset_table() -> void:
 	score = [0, 0]
 	command_points = CommandPoints.new_state()
 	reroll_next_attack = false
+	counter_offensive_next = false
 	starting_unit_sizes.clear()
 	turn_state = TurnState.advance(TurnState.new_state(0))
 	for side in range(2):
@@ -185,6 +188,10 @@ func apply_network_snapshot(state: Dictionary) -> void:
 	phase = str(state.phase)
 	active_team = int(state.active_team)
 	command_points = state.get("command_points", [0, 0]).duplicate(true)
+	counter_offensive_next = false
+	for effect in state.get("stratagem_effects", []):
+		if effect is Dictionary and str(effect.get("effect", "")) == "FIGHT_NEXT" and int(effect.get("team", -1)) == active_team and not bool(effect.get("consumed", false)):
+			counter_offensive_next = true
 	command_log = state.get("command_log", []).duplicate(true)
 	turn_state = {"round": int(state.round), "active_team": active_team, "phase": phase, "phase_index": int(state.phase_index), "command_points": command_points.duplicate(true)}
 	network_active = true
@@ -665,6 +672,7 @@ func end_turn() -> void:
 			model.fell_back = false
 			model.fought = false
 	command_points = CommandPoints.gain(command_points, active_team)
+	counter_offensive_next = false
 	phase = "MOVEMENT"
 	if active_team == 0:
 		turn_state.round = int(turn_state.get("round", 1)) + 1
@@ -781,7 +789,7 @@ func save_state() -> void:
 		saved.y = model.position.y
 		saved.erase("position")
 		serialized_models.append(saved)
-	var state := {"active_team": active_team, "phase": phase, "turn_state": turn_state, "score": score, "command_points": command_points, "reroll_next_attack": reroll_next_attack, "roster": roster, "profile_id": str(unit_profile.get("id", "")), "starting_unit_sizes": starting_unit_sizes, "models": serialized_models, "command_log": command_log}
+	var state := {"active_team": active_team, "phase": phase, "turn_state": turn_state, "score": score, "command_points": command_points, "reroll_next_attack": reroll_next_attack, "counter_offensive_next": counter_offensive_next, "roster": roster, "profile_id": str(unit_profile.get("id", "")), "starting_unit_sizes": starting_unit_sizes, "models": serialized_models, "command_log": command_log}
 	var file := FileAccess.open("user://open_battle_save.json", FileAccess.WRITE)
 	file.store_string(JSON.stringify(state))
 	message = "对局已保存。"
@@ -824,6 +832,7 @@ func load_state() -> void:
 	command_points = state.get("command_points", [0, 0])
 	turn_state.command_points = command_points.duplicate(true)
 	reroll_next_attack = bool(state.get("reroll_next_attack", false))
+	counter_offensive_next = bool(state.get("counter_offensive_next", false))
 	starting_unit_sizes = state.get("starting_unit_sizes", {}).duplicate(true)
 	if state.get("roster", {}) is Dictionary and not state.roster.is_empty():
 		roster = state.roster
@@ -991,11 +1000,12 @@ func fight_selected() -> void:
 		queue_redraw()
 		return
 	var attacker: Dictionary = models[selected]
-	if bool(attacker.get("fought", false)):
-		message = "该单位本回合已经完成近战攻击。"
-		queue_redraw()
-		return
-	if fights_first_blocked(attacker):
+	for group_model in selected_unit_models():
+		if bool(group_model.get("fought", false)):
+			message = "该单位本回合已经完成近战攻击。"
+			queue_redraw()
+			return
+	if fights_first_blocked(attacker) and not counter_offensive_next:
 		message = "仍有处于接战中的首发单位必须先激活。"
 		queue_redraw()
 		return
@@ -1037,8 +1047,9 @@ func fight_selected() -> void:
 		attacker.used_weapon_names.append(weapon_name)
 	var damage_result := Damage.allocate_to_unit(models, int(result.damage), target_index, combat_rng)
 	for model in models:
-		if str(model.get("unit_id", "")) == str(attacker.get("unit_id", "")):
+		if Attachments.group_id(model) == Attachments.group_id(attacker):
 			model.fought = true
+	counter_offensive_next = false
 	if not damage_result.feel_no_pain_rolls.is_empty():
 		fight_payload.feel_no_pain_rolls = damage_result.feel_no_pain_rolls
 	command_log = CommandLog.append(command_log, active_team, "FIGHT", fight_payload)
@@ -1226,13 +1237,42 @@ func fights_first_blocked(attacker: Dictionary) -> bool:
 	if bool(UnitAbilities.modifiers(attacker.get("ability_ids", [])).get("fights_first", false)):
 		return false
 	for candidate in models:
-		if int(candidate.get("team", -1)) != int(attacker.get("team", -1)) or bool(candidate.get("fought", false)):
+		if int(candidate.get("team", -1)) != int(attacker.get("team", -1)) or _group_fought(candidate):
 			continue
 		if not bool(UnitAbilities.modifiers(candidate.get("ability_ids", [])).get("fights_first", false)):
 			continue
 		if model_is_engaged_with_enemy(candidate):
 			return true
 	return false
+
+func _group_fought(candidate: Dictionary) -> bool:
+	var group_id := Attachments.group_id(candidate)
+	for model in models:
+		if Attachments.group_id(model) == group_id and bool(model.get("fought", false)):
+			return true
+	return false
+
+func use_counter_offensive() -> void:
+	if phase != "FIGHT":
+		message = "反击先攻只能在战斗阶段使用。"
+		queue_redraw()
+		return
+	if counter_offensive_next:
+		message = "反击先攻已经为下一次激活生效。"
+		queue_redraw()
+		return
+	if _submit_network_command("STRATAGEM", {"id": "counter_offensive", "phase": phase}):
+		return
+	var result := Stratagems.use(Stratagems.definition("counter_offensive"), phase, active_team, command_points)
+	if not result.ok:
+		message = "无法使用反击先攻：%s。" % display_reason(str(result.reason))
+		queue_redraw()
+		return
+	command_points = result.points
+	counter_offensive_next = true
+	command_log = CommandLog.append(command_log, active_team, "STRATAGEM", {"id": "counter_offensive", "phase": phase})
+	message = "反击先攻已生效：下一次近战激活可越过首发优先级。"
+	queue_redraw()
 
 func finish_drag() -> void:
 	if not dragging:

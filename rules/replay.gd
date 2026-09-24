@@ -35,7 +35,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 	if kind == "SCOUT" and int(next.get("round", 1)) != 1:
 		return {"ok": false, "reason": "SCOUT WINDOW CLOSED", "state": state}
 	var payload: Dictionary = entry.payload
-	var reference_error := _validate_references(next.models, entry, kind, payload, next.get("terrain", []))
+	var reference_error := _validate_references(next.models, entry, kind, payload, next.get("terrain", []), next.get("stratagem_effects", []))
 	if not reference_error.is_empty():
 		return {"ok": false, "reason": reference_error, "state": state}
 	match kind:
@@ -254,6 +254,9 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 					for model in next.models:
 						if Attachments.group_id(model) == fought_unit_id:
 							model.fought = true
+				for effect in next.get("stratagem_effects", []):
+					if effect is Dictionary and str(effect.get("effect", "")) == "FIGHT_NEXT" and int(effect.get("team", -1)) == int(entry.team) and not bool(effect.get("consumed", false)):
+						effect.consumed = true
 		"HAZARDOUS":
 			var attacker_index := _index_for(next.models, payload, "attacker_id", "attacker")
 			var hazardous_damage := int(payload.get("damage", -1))
@@ -307,7 +310,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 	next.events.append(kind)
 	return {"ok": true, "reason": "", "state": next}
 
-static func _validate_references(models: Array, entry: Dictionary, kind: String, payload: Dictionary, terrain: Array = []) -> String:
+static func _validate_references(models: Array, entry: Dictionary, kind: String, payload: Dictionary, terrain: Array = [], effects: Array = []) -> String:
 	var actor_team := int(entry.get("team", -1))
 	match kind:
 		"MOVE", "FALL_BACK":
@@ -397,7 +400,7 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 					return "ONE SHOT ALREADY USED"
 			if kind == "FIGHT" and _group_fought(models, Attachments.group_id(models[attacker])):
 				return "UNIT ALREADY FOUGHT"
-			if kind == "FIGHT" and _fights_first_blocked(models, attacker):
+			if kind == "FIGHT" and _fights_first_blocked(models, attacker, effects, actor_team):
 				return "FIGHTS FIRST UNIT MUST ACTIVATE"
 		"HAZARDOUS":
 			var hazardous_attacker := _index_for(models, payload, "attacker_id", "attacker")
@@ -674,10 +677,13 @@ static func _engaged_with_enemy(models: Array, model_index: int) -> bool:
 			return true
 	return false
 
-static func _fights_first_blocked(models: Array, attacker_index: int) -> bool:
+static func _fights_first_blocked(models: Array, attacker_index: int, effects: Array = [], team: int = -1) -> bool:
 	var attacker: Dictionary = models[attacker_index]
 	if bool(UnitAbilities.modifiers(attacker.get("ability_ids", [])).get("fights_first", false)):
 		return false
+	for effect in effects:
+		if effect is Dictionary and str(effect.get("effect", "")) == "FIGHT_NEXT" and int(effect.get("team", -1)) == team and not bool(effect.get("consumed", false)):
+			return false
 	for index in range(models.size()):
 		var candidate: Dictionary = models[index]
 		if int(candidate.get("team", -1)) != int(attacker.get("team", -1)) or Reserves.in_reserve(candidate) or _group_fought(models, Attachments.group_id(candidate)):
