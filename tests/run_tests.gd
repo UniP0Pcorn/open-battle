@@ -33,6 +33,7 @@ const SourceManifest = preload("res://rules/source_manifest.gd")
 const ProfileCatalog = preload("res://rules/profile_catalog.gd")
 const RosterEditor = preload("res://rules/roster_editor.gd")
 const UnitAbilities = preload("res://rules/unit_abilities.gd")
+const FactionRules = preload("res://rules/faction_rules.gd")
 const WeaponRules = preload("res://rules/weapon_rules.gd")
 const Replay = preload("res://rules/replay.gd")
 const UnitKeywords = preload("res://rules/unit_keywords.gd")
@@ -245,6 +246,10 @@ func run() -> void:
 	check(ability_mods.cover_bonus == 1 and ability_mods.objective_control_bonus == 1 and ability_mods.hit_rerolls == 1, "ability modifiers aggregate")
 	var reroll_mods := UnitAbilities.modifiers(["reroll_wound_ones", "reroll_save_ones"])
 	check(reroll_mods.wound_reroll_ones == 1 and reroll_mods.save_reroll_ones == 1, "ability reroll ones modifiers are executable")
+	var faction_profile: Dictionary = {"abilities": []}
+	faction_profile.faction_abilities = ["stealth"]
+	faction_profile.faction_stratagems = ["command_reroll"]
+	check(FactionRules.validate(faction_profile).is_empty() and FactionRules.abilities(faction_profile).has("stealth") and FactionRules.stratagems(faction_profile).size() == 1, "faction abilities and stratagems load through one profile contract")
 	var inline_ability := {"id": "local_faction_rule", "modifiers": {"cover_bonus": 2}, "events": {"before_attack": {"when": {"phase": "SHOOTING"}, "modifiers": {"hit_rerolls": 1}, "effects": ["MARKED_TARGET"]}}}
 	check(UnitAbilities.validate([inline_ability]).is_empty(), "inline faction ability schema validates")
 	var inline_event := UnitAbilities.event_modifiers([inline_ability], "before_attack", {"phase": "SHOOTING"})

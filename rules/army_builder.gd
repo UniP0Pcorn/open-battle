@@ -4,6 +4,7 @@ extends RefCounted
 
 const ArmyValidation = preload("res://rules/army_validation.gd")
 const UnitAbilities = preload("res://rules/unit_abilities.gd")
+const FactionRules = preload("res://rules/faction_rules.gd")
 
 static func build(roster: Dictionary, profiles: Dictionary, team: int = 0) -> Dictionary:
 	var errors: Array = []
@@ -63,7 +64,7 @@ static func points_for_count(profile: Dictionary, count: int) -> int:
 
 static func expand_unit(profile: Dictionary, count: int, team: int, unit_id: String) -> Dictionary:
 	var model_template: Dictionary = profile.models[0]
-	var ability_ids: Array = profile.get("abilities", []).duplicate(true)
+	var ability_ids: Array = FactionRules.abilities(profile)
 	var ability_mods: Dictionary = UnitAbilities.modifiers(ability_ids)
 	var models: Array = []
 	for index in range(count):
@@ -84,6 +85,7 @@ static func expand_unit(profile: Dictionary, count: int, team: int, unit_id: Str
 			"base_diameter_mm": float(model_template.get("base_diameter_mm", 0.0)),
 			"coherency_inches": float(model_template.get("coherency_inches", 2.0)),
 			"ability_ids": ability_ids.duplicate(true),
+			"faction_stratagems": FactionRules.stratagems(profile),
 			"keywords": profile.get("keywords", []).duplicate(true),
 			"faction_keywords": profile.get("faction_keywords", []).duplicate(true),
 			"weapons": profile.get("weapons", []).duplicate(true)
