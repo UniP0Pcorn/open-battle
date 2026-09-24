@@ -154,6 +154,6 @@ Warhammer 40,000、Custodian Guard 等相关名称属于各自权利人，包括
 
 交互方向参考了 [New Recruit](https://www.newrecruit.eu/) 公开介绍的编成校验、跨设备列表同步、分享与离线使用等能力；本项目的大厅和规则数据保持独立。
 
-当前回归：Godot **406 项检查，0 失败**；Python 数据管线 **7 项测试通过**。
+当前回归：Godot **427 项检查，0 失败**；Python 数据管线 **7 项测试通过**。
 
-阵营规则增量：profile 可通过 `detachment_abilities` 声明分遣队被动，自定义策略可使用 `GRANT_ABILITY` 向已部署友军单位授予本局持续的受支持能力。执行、扣点与校验由统一回放器负责，网络主机使用同一路径；详见 `docs/PHASE_2_COMMAND_PROTOCOL.md`。尚未完成通用光环和完整反应窗口；AI 逻辑暂停更新。候选兵牌仍须人工审核，不会自动晋升 verified。
+阵营规则增量：profile 可通过 `detachment_abilities` 声明分遣队被动，自定义策略可使用 `GRANT_ABILITY` 向已部署友军单位授予本局持续的受支持能力。执行、扣点与校验由统一回放器负责，网络主机使用同一路径；详见 `docs/PHASE_2_COMMAND_PROTOCOL.md`。现已支持战斗光环；完整反应窗口尚未完成；AI 逻辑暂停更新。候选兵牌仍须人工审核，不会自动晋升 verified。

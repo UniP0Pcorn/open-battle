@@ -56,3 +56,42 @@ static func ids(profile: Dictionary) -> Array:
 	for ability in abilities(profile):
 		result.append(ability)
 	return result
+
+## Auras are evaluated from the current snapshot, never cached on recipients.
+## Identical aura IDs do not stack. Distances are measured base edge to edge.
+static func combat_modifiers(models: Array, recipient: Dictionary, event: String, context: Dictionary = {}) -> Dictionary:
+	var active_abilities: Array = recipient.get("ability_ids", []).duplicate(true)
+	var seen: Dictionary = {}
+	if not _on_table(recipient):
+		return UnitAbilities.event_modifiers(active_abilities, event, context)
+	for source in models:
+		if not _on_table(source) or int(source.get("team", -1)) != int(recipient.get("team", -2)):
+			continue
+		for ability in source.get("ability_ids", []):
+			if not (ability is Dictionary) or not ability.has("aura") or not UnitAbilities.validate([ability]).is_empty():
+				continue
+			var aura: Dictionary = ability.aura
+			var aura_id := str(ability.id)
+			if seen.has(aura_id) or str(aura.event) != event:
+				continue
+			if not bool(aura.get("include_self", true)) and str(source.get("model_id", "")) == str(recipient.get("model_id", "")):
+				continue
+			var eligible := true
+			for keyword in aura.get("keywords", []):
+				if keyword not in recipient.get("keywords", []) and keyword not in recipient.get("faction_keywords", []):
+					eligible = false
+			if not eligible:
+				continue
+			var gap := _position(source).distance_to(_position(recipient)) - float(source.get("radius", 0.0)) - float(recipient.get("radius", 0.0))
+			if gap > float(aura.radius_inches) + 0.00001:
+				continue
+			seen[aura_id] = true
+			active_abilities.append({"id": aura_id, "modifiers": aura.modifiers})
+	return UnitAbilities.event_modifiers(active_abilities, event, context)
+
+static func _on_table(model: Dictionary) -> bool:
+	return str(model.get("reserve_status", "deployed")) == "deployed" and str(model.get("embarked_in", "")).is_empty() and float(model.get("wounds", 1)) > 0
+
+static func _position(model: Dictionary) -> Vector2:
+	var position: Variant = model.get("position", Vector2.ZERO)
+	return position if position is Vector2 else Vector2(float(position[0]), float(position[1]))

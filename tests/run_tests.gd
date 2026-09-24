@@ -263,6 +263,7 @@ func run() -> void:
 	stale_packet.snapshot_hash = "stale"
 	check(not NetworkSync.host_command(room, stale_packet, "player_gold").ok, "host sync rejects a stale peer snapshot")
 	var attack_models: Array = [
+		# Network fixtures below remain independent of official faction data.
 		{"model_id": "net_attacker", "unit_id": "net_unit_a", "team": 0, "position": Vector2(5, 5), "radius": 0.5, "spent": 0.0, "wounds": 3, "toughness": 4, "save_on": 4, "weapons": [{"name": "net gun", "range_inches": 24.0, "attacks": 1, "hit_on": 4, "strength": 4, "damage": 1}]},
 		{"model_id": "net_target", "unit_id": "net_unit_b", "team": 1, "position": Vector2(10, 5), "radius": 0.5, "spent": 0.0, "wounds": 3, "toughness": 4, "save_on": 7, "weapons": []}
 	]
@@ -276,6 +277,71 @@ func run() -> void:
 	var intent_result := NetworkSync.host_command(attack_room, intent_packet, "attacker")
 	check(intent_result.ok and intent_result.entry.payload.damage >= 0 and int(intent_result.entry.payload.damage) != 999 and int(intent_result.entry.payload.hazardous_damage) != 999 and intent_result.entry.payload.has("hazardous_damage") and not bool(intent_result.entry.payload.get("intent", false)), "host materializes network attack intent deterministically")
 	var shock_room := Room.create("shock-room")
+	var aura_rule := {"id": "fixture_guidance", "aura": {"radius_inches": 6.0, "event": "before_attack", "include_self": false, "keywords": ["INFANTRY"], "modifiers": {"hit_rerolls": 1}}}
+	var aura_source := {"model_id": "aura_source", "team": 0, "wounds": 3, "radius": 0.5, "position": Vector2(1, 1), "ability_ids": [aura_rule]}
+	var aura_recipient := {"model_id": "aura_recipient", "team": 0, "wounds": 3, "radius": 0.5, "position": Vector2(8, 1), "keywords": ["INFANTRY"]}
+	check(UnitAbilities.validate([aura_rule]).is_empty(), "aura schema accepts supported attack modifier")
+	check(FactionRules.combat_modifiers([aura_source], aura_recipient, "before_attack").hit_rerolls == 1, "aura reaches exact base-edge boundary")
+	check(FactionRules.combat_modifiers([aura_source, aura_source.duplicate(true)], aura_recipient, "before_attack").hit_rerolls == 1, "same aura id does not stack across sources")
+	check(FactionRules.combat_modifiers([aura_source], aura_source, "before_attack").hit_rerolls == 0, "aura excludes source when requested")
+	aura_recipient.position.x += 0.01
+	check(FactionRules.combat_modifiers([aura_source], aura_recipient, "before_attack").hit_rerolls == 0, "leaving aura range removes bonus immediately")
+	aura_recipient.position = [8.0, 1.0]
+	check(FactionRules.combat_modifiers([aura_source], aura_recipient, "before_attack").hit_rerolls == 1, "aura supports serialized snapshot coordinates")
+	aura_source.reserve_status = "reserve"
+	check(FactionRules.combat_modifiers([aura_source], aura_recipient, "before_attack").hit_rerolls == 0, "reserve source emits no aura")
+	aura_source.reserve_status = "deployed"
+	aura_source.embarked_in = "transport"
+	check(FactionRules.combat_modifiers([aura_source], aura_recipient, "before_attack").hit_rerolls == 0, "embarked source emits no aura")
+	aura_source.embarked_in = ""
+	aura_source.wounds = 0
+	check(FactionRules.combat_modifiers([aura_source], aura_recipient, "before_attack").hit_rerolls == 0, "destroyed source emits no aura")
+	aura_source.wounds = 3
+	aura_recipient.team = 1
+	check(FactionRules.combat_modifiers([aura_source], aura_recipient, "before_attack").hit_rerolls == 0, "friendly aura cannot benefit enemy")
+	aura_recipient.team = 0
+	aura_recipient.keywords = []
+	check(FactionRules.combat_modifiers([aura_source], aura_recipient, "before_attack").hit_rerolls == 0, "aura enforces recipient keywords")
+	var invalid_aura: Dictionary = aura_rule.duplicate(true)
+	invalid_aura.aura.radius_inches = -1
+	check(not UnitAbilities.validate([invalid_aura]).is_empty(), "negative aura radius rejected")
+	invalid_aura = aura_rule.duplicate(true)
+	invalid_aura.aura.modifiers = {"damage": 999}
+	check(not UnitAbilities.validate([invalid_aura]).is_empty(), "unsupported aura output rejected")
+	var aura_room: Dictionary = attack_room.duplicate(true)
+	aura_source.position = Vector2(5, 7)
+	aura_source.unit_id = "aura_unit"
+	aura_room.session.models.append(aura_source)
+	aura_room.session.models[0].keywords = ["INFANTRY"]
+	aura_room.session.models[0].weapons[0].attacks = 12
+	var aura_packet: Dictionary = intent_packet.duplicate(true)
+	aura_packet.snapshot_hash = PeerProtocol.hash_snapshot(aura_room.session)
+	var aura_host := NetworkSync.host_command(aura_room, aura_packet, "attacker")
+	var aura_rng := RandomNumberGenerator.new()
+	aura_rng.seed = "network-test:0".hash()
+	var aura_expected := Combat.resolve_ranged_attack(aura_room.session.models[0].weapons[0], aura_room.session.models[1], aura_rng, 1)
+	check(aura_host.ok and aura_host.entry.payload.hits == aura_expected.hits and aura_host.entry.payload.damage == aura_expected.damage, "host materializes attack with current aura using authoritative dice")
+	var aura_replay := Replay.apply_entry(aura_room.session, aura_host.entry)
+	check(aura_replay.ok and aura_replay.state.models == aura_host.room.session.models, "aura attack replays authoritative result identically")
+	var defend_rule := {"id": "fixture_cover", "aura": {"radius_inches": 6, "event": "before_defend", "modifiers": {"cover_bonus": 1}}}
+	var defend_source: Dictionary = aura_source.duplicate(true)
+	defend_source.ability_ids = [defend_rule]
+	check(FactionRules.combat_modifiers([defend_source], defend_source, "before_defend").cover_bonus == 1, "defensive aura includes its source by default")
+	check(FactionRules.combat_modifiers([defend_source], defend_source, "before_attack").cover_bonus == 0, "defensive aura cannot leak into attack event")
+	var inactive_recipient: Dictionary = defend_source.duplicate(true)
+	inactive_recipient.embarked_in = "transport"
+	check(FactionRules.combat_modifiers([defend_source], inactive_recipient, "before_defend").cover_bonus == 0, "embarked recipient receives no aura")
+	check(FactionRules.combat_modifiers([], defend_source, "before_defend").cover_bonus == 0, "removed aura source leaves no cached modifier")
+	invalid_aura = aura_rule.duplicate(true)
+	invalid_aura.aura.keywords = [5]
+	check(not UnitAbilities.validate([invalid_aura]).is_empty(), "malformed aura keyword rejected")
+	var cover_rng := RandomNumberGenerator.new()
+	cover_rng.seed = 87
+	var cover_weapon := {"attacks": 200, "hit_on": 2, "strength": 8, "damage": 1}
+	var uncovered := Combat.resolve_ranged_attack(cover_weapon, {"toughness": 4, "save_on": 4}, cover_rng)
+	cover_rng.seed = 87
+	var covered := Combat.resolve_ranged_attack(cover_weapon, {"toughness": 4, "save_on": 4, "cover_save_bonus": 1}, cover_rng)
+	check(covered.failed_saves < uncovered.failed_saves, "positive cover benefit improves rather than worsens armor saves")
 	shock_room = Room.join(shock_room, "shock_gold", 0).room
 	shock_room = Room.join(shock_room, "shock_blue", 1).room
 	shock_room = Room.set_ready(shock_room, "shock_gold").room
@@ -739,7 +805,7 @@ func run() -> void:
 	check(not Visibility.blocked(Vector2(2, 2), Vector2(8, 2), obstacles), "clear line of sight passes")
 	var covered_obstacle: Array = [{"x": 4.0, "y": 4.0, "width": 2.0, "height": 2.0, "cover_bonus": 1}]
 	check(Visibility.cover_bonus(Vector2(2, 5), Vector2(8, 5), covered_obstacle) == 1, "terrain cover bonus is detected")
-	check(Combat.resolve_ranged_attack({"attacks": 0, "hit_on": 4, "strength": 4, "damage": 1}, {"toughness": 4, "save_on": 4, "cover_save_bonus": 1}, combat_rng).save_on == 5, "cover modifies save target")
+	check(Combat.resolve_ranged_attack({"attacks": 0, "hit_on": 4, "strength": 4, "damage": 1}, {"toughness": 4, "save_on": 4, "cover_save_bonus": 1}, combat_rng).save_on == 3, "cover improves save threshold from four to three")
 	var damage_model := {"wounds": 3}
 	var damage_result := Damage.apply_to_model(damage_model, 2)
 	check(damage_result.wounds_after == 1 and not damage_result.destroyed, "damage reduces model wounds")

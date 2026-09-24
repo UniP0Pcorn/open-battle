@@ -89,6 +89,30 @@ static func validate(ids: Array) -> Array[String]:
 		for modifier in definition.get("modifiers", {}).keys():
 			if str(modifier).is_empty():
 				errors.append("INVALID ABILITY MODIFIER " + str(ability_id))
+		if definition.has("aura"):
+			var aura: Variant = definition.aura
+			if not (aura is Dictionary):
+				errors.append("INVALID AURA")
+				continue
+			var radius: Variant = aura.get("radius_inches", -1)
+			if typeof(radius) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(radius)) or float(radius) < 0:
+				errors.append("INVALID AURA RADIUS")
+			if str(aura.get("event", "")) not in ["before_attack", "before_defend"]:
+				errors.append("INVALID AURA EVENT")
+			if not (aura.get("keywords", []) is Array) or typeof(aura.get("include_self", true)) != TYPE_BOOL:
+				errors.append("INVALID AURA TARGET")
+			elif aura.has("keywords"):
+				for keyword in aura.keywords:
+					if not (keyword is String) or keyword.is_empty():
+						errors.append("INVALID AURA KEYWORD")
+			var values: Variant = aura.get("modifiers", null)
+			if not (values is Dictionary) or values.is_empty():
+				errors.append("INVALID AURA MODIFIERS")
+				continue
+			for key in values:
+				var supported: Array = ["cover_bonus"] if str(aura.get("event", "")) == "before_defend" else ["hit_rerolls", "hit_reroll_ones", "wound_rerolls", "wound_reroll_ones"]
+				if key not in supported or typeof(values[key]) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(values[key])) or float(values[key]) < 0 or float(values[key]) != float(int(values[key])):
+					errors.append("UNSUPPORTED AURA MODIFIER")
 	return errors
 
 static func modifiers(ids: Array) -> Dictionary:
@@ -155,6 +179,8 @@ static func _definition_for(value: Variant) -> Dictionary:
 			return {}
 		if not inline.has("modifiers") and DEFINITIONS.has(inline_id):
 			inline["modifiers"] = DEFINITIONS[inline_id].duplicate(true)
+		if not inline.has("modifiers"):
+			inline["modifiers"] = {}
 		return inline
 	var canonical := canonical_id(value)
 	if not DEFINITIONS.has(canonical):

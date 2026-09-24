@@ -60,7 +60,7 @@ static func resolve_ranged_attack(weapon: Dictionary, target: Dictionary, rng: R
 		wounds_needed = maxi(2, wounds_needed - int(weapon.get("wound_bonus", 0)))
 	if int(weapon.get("anti_wound_on", 0)) > 0:
 		wounds_needed = int(weapon.get("anti_wound_on", 0))
-	var save_needed := save_target(int(target.get("save_on", 7)) + int(target.get("cover_save_bonus", 0)), int(weapon.get("ap", 0)), int(target.get("invulnerable_save", 0)))
+	var save_needed := save_target(int(target.get("save_on", 7)) - int(target.get("cover_save_bonus", 0)), int(weapon.get("ap", 0)), int(target.get("invulnerable_save", 0)))
 	var hits := 0
 	var wounds := 0
 	var failed_saves := 0
