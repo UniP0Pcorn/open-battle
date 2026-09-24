@@ -51,6 +51,9 @@ static func validate_profile(profile: Dictionary) -> String:
 		for field in ["name", "range_inches", "attacks", "hit_on", "strength", "damage"]:
 			if not weapon.has(field):
 				return "WEAPON MISSING " + field.to_upper()
+		var ap: Variant = weapon.get("ap", 0)
+		if typeof(ap) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(ap)) or float(ap) != float(int(ap)) or int(ap) > 0:
+			return "INVALID WEAPON AP"
 		for expression_field in ["attacks", "damage"]:
 			if not Dice.parse_expression(weapon.get(expression_field)).valid:
 				return "INVALID DICE " + expression_field.to_upper()

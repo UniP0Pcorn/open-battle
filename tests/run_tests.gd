@@ -87,8 +87,21 @@ func run() -> void:
 	check(Rules.path_reason(Vector2(5, 5), Vector2(5, 5), radius, blocked_path).is_empty(), "zero-length path is clear")
 	check(Combat.wound_target(5, 5) == 4, "equal strength wounds on four")
 	check(Combat.wound_target(10, 5) == 2, "double strength wounds on two")
-	check(Combat.save_target(4, -1) == 3, "armor penetration modifies saves")
-	check(Combat.save_target(4, -3, 4) == 2, "best invulnerable save is selected")
+	check(Combat.save_target(4, -1) == 5, "armor penetration modifies saves")
+	check(Combat.save_target(4, -3, 4) == 4, "best invulnerable save is selected")
+	check(Combat.save_target(3, -4) == 7, "high signed AP can make armor save impossible")
+	check(Combat.save_target(2, -1, 5) == 3, "armor remains preferable when better than invulnerable save")
+	var ap_weapon := {"attacks": 80, "hit_on": 2, "strength": 8, "damage": 1, "ap": -2}
+	var ap_target := {"toughness": 4, "save_on": 4}
+	var ap_attack := Combat.resolve_ranged_attack(ap_weapon, ap_target, seeded_rng(87))
+	var ap_zero_weapon: Dictionary = ap_weapon.duplicate(true)
+	ap_zero_weapon.ap = 0
+	var no_ap_attack := Combat.resolve_ranged_attack(ap_zero_weapon, ap_target, seeded_rng(87))
+	check(ap_attack.save_on == 6 and ap_attack.damage > no_ap_attack.damage, "negative AP worsens saves and increases resolved damage")
+	ap_target.cover_save_bonus = 1
+	check(Combat.resolve_ranged_attack(ap_weapon, ap_target, seeded_rng(87)).save_on == 5, "cover offsets one point of negative AP")
+	ap_target.invulnerable_save = 4
+	check(Combat.resolve_ranged_attack(ap_weapon, ap_target, seeded_rng(87)).save_on == 4, "AP and cover do not alter invulnerable save")
 	check(Combat.save_target(7, 0) == 7 and not Combat.save_passes(6, 7), "impossible save fails")
 	var attacker := {"team": 0}
 	var enemy := {"team": 1, "toughness": 5}
@@ -1128,6 +1141,14 @@ func run() -> void:
 	check(turn.round == 2 and turn.active_team == 1 and turn.phase == "COMMAND", "turn wraps to next round and side")
 	var profile: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/units/custodian_guard_profile.json"))
 	check(DatasheetValidation.validate_profile(profile).is_empty(), "versioned datasheet validates")
+	var ap_profile: Dictionary = profile.duplicate(true)
+	ap_profile.weapons[0].ap = -2
+	check(DatasheetValidation.validate_profile(ap_profile).is_empty(), "profile accepts signed nonpositive AP")
+	ap_profile.weapons[0].ap = 2
+	check(DatasheetValidation.validate_profile(ap_profile) == "INVALID WEAPON AP", "profile rejects positive AP convention mismatch")
+	ap_profile.weapons[0].ap = -1.5
+	check(DatasheetValidation.validate_profile(ap_profile) == "INVALID WEAPON AP", "profile rejects fractional AP")
+
 	check(RulesetCatalog.supported(10) and RulesetCatalog.get_ruleset(11).id == "wh40k_11e" and RulesetCatalog.phases(11).size() == 5, "ruleset catalog exposes supported editions")
 	var unsupported_edition := profile.duplicate(true)
 	unsupported_edition.edition = 12

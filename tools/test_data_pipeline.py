@@ -88,6 +88,17 @@ class ReviewSheetTests(unittest.TestCase):
             self.assertNotIn("Traceback", result.stderr)
             self.assertFalse(output.exists())
 
+    def test_signed_ap_is_preserved_and_positive_ap_requires_review(self) -> None:
+        draft = self.review_fixture()
+        result = promote(draft, "fixture", 40, 2)
+        self.assertEqual(result["weapons"][0]["ap"], -1)
+        draft["weapons"][0]["ap"] = "1"
+        self.assertIn("invalid_weapon_ap", review_flags(draft))
+        with self.assertRaisesRegex(ValueError, "invalid_weapon_ap"):
+            promote(draft, "fixture", 40, 2)
+        draft["weapons"][0]["ap"] = "0"
+        self.assertEqual(promote(draft, "fixture", 40, 2)["weapons"][0]["ap"], 0)
+
     def test_manifest_defaults_do_not_approve_profiles(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

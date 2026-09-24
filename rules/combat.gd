@@ -42,7 +42,7 @@ static func wound_target(strength: int, toughness: int) -> int:
 	return 5
 
 static func save_target(armor_save: int, armor_penetration: int = 0, invulnerable_save: int = 0) -> int:
-	var modified := armor_save + armor_penetration
+	var modified := armor_save - armor_penetration
 	if invulnerable_save > 0:
 		modified = mini(modified, invulnerable_save)
 	return clampi(modified, 2, 7)

@@ -67,8 +67,11 @@ def review_flags(draft: dict) -> list[str]:
                 fixed = _fixed(weapon.get(field, ""))
             if not fixed:
                 flags.append("complex_weapon_" + field)
-        if not _fixed(weapon.get("ap", ""), signed=True):
+        ap = str(weapon.get("ap", "")).strip()
+        if not re.fullmatch(r"-?\d+", ap):
             flags.append("complex_weapon_ap")
+        elif int(ap) > 0:
+            flags.append("invalid_weapon_ap")
         if unsupported_tags(weapon.get("tags", [])):
             flags.append("unsupported_weapon_keywords")
     return sorted(set(flags))
