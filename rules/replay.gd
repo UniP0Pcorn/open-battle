@@ -217,7 +217,9 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 					found_unit = true
 					if int(model.get("team", -1)) != actor_team:
 						return "NOT ACTIVE TEAM"
-			return "" if found_unit else "UNKNOWN UNIT"
+			if not found_unit:
+				return "UNKNOWN UNIT"
+			return _battle_shock_reference_error(models, str(payload.get("unit_id", "")), payload)
 	return ""
 
 static func _apply_damage(model: Dictionary, damage: int) -> Dictionary:
@@ -297,6 +299,29 @@ static func _advance_reference_error(models: Array, unit_id: String) -> String:
 			if Engagement.in_engagement(model, enemy):
 				return "ENGAGED UNIT MUST FALL BACK"
 	return ""
+
+static func _battle_shock_reference_error(models: Array, unit_id: String, payload: Dictionary) -> String:
+	var unit_models: Array = []
+	for model in models:
+		if str(model.get("unit_id", "")) == unit_id:
+			unit_models.append(model)
+	if not payload.has("rolls") or not (payload.get("rolls") is Array) or payload.rolls.is_empty():
+		return ""
+	var rolls: Array = payload.rolls
+	if rolls.size() != 2:
+		return "INVALID BATTLE SHOCK RESULT"
+	var total := 0
+	for roll in rolls:
+		if typeof(roll) not in [TYPE_INT, TYPE_FLOAT] or float(roll) != float(int(roll)) or int(roll) < 1 or int(roll) > 6:
+			return "INVALID BATTLE SHOCK RESULT"
+		total += int(roll)
+	var modifier := int(payload.get("modifier", 0))
+	var expected_total := total + modifier
+	if payload.has("total") and int(payload.get("total", expected_total)) != expected_total:
+		return "INVALID BATTLE SHOCK RESULT"
+	var leadership := int(unit_models[0].get("leadership", 7))
+	var expected_passed := expected_total <= leadership
+	return "" if bool(payload.get("passed", false)) == expected_passed else "INVALID BATTLE SHOCK RESULT"
 
 static func _charge_reference_error(models: Array, charger_index: int, target_index: int, payload: Dictionary, terrain: Array) -> String:
 	var charger: Dictionary = models[charger_index]

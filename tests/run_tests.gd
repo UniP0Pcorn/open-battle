@@ -248,6 +248,14 @@ func run() -> void:
 	shock_replay_log = CommandLog.append(shock_replay_log, 0, "BATTLE_SHOCK", {"unit_id": "u", "passed": false})
 	var shock_replay := Replay.replay(Replay.initial_state(replay_models), shock_replay_log)
 	check(shock_replay.ok and shock_replay.state.models[0].battle_shocked and not shock_replay.state.models[0].can_control, "replay applies battle shock")
+	var valid_shock_roll_log: Array = []
+	valid_shock_roll_log = CommandLog.append(valid_shock_roll_log, 0, "BATTLE_SHOCK", {"unit_id": "u", "rolls": [3, 4], "total": 7, "passed": true})
+	var valid_shock_roll := Replay.replay(Replay.initial_state(replay_models), valid_shock_roll_log)
+	check(valid_shock_roll.ok and not valid_shock_roll.state.models[0].battle_shocked, "replay validates battle shock roll")
+	var invalid_shock_roll_log: Array = []
+	invalid_shock_roll_log = CommandLog.append(invalid_shock_roll_log, 0, "BATTLE_SHOCK", {"unit_id": "u", "rolls": [3, 4], "total": 7, "passed": false})
+	var invalid_shock_roll := Replay.replay(Replay.initial_state(replay_models), invalid_shock_roll_log)
+	check(not invalid_shock_roll.ok and invalid_shock_roll.reason == "INVALID BATTLE SHOCK RESULT", "replay rejects forged battle shock result")
 	var combat_replay_models: Array = [{"model_id": "attacker_m001", "unit_id": "attacker", "team": 0, "wounds": 3}, {"model_id": "target_m001", "unit_id": "target", "team": 1, "wounds": 4}]
 	var combat_replay_log: Array = []
 	combat_replay_log = CommandLog.append(combat_replay_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "attacker_m001", "target": 1, "target_id": "target_m001", "damage": 3})
