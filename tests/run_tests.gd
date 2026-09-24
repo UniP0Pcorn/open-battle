@@ -209,6 +209,8 @@ func run() -> void:
 	check(indirect_context.weapon.indirect and indirect_context.weapon.hit_on == 5 and indirect_context.cover_bonus == 1, "indirect fire allows blocked targets with hit and cover modifiers")
 	var one_shot_context := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["一次性"]}, 10.0)
 	check(one_shot_context.weapon.one_shot, "one-shot weapon context is explicit")
+	var compound_context := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["曲射，双联"]}, 10.0, 0, 1, [], true, false)
+	check(compound_context.weapon.indirect and compound_context.weapon.twin_linked, "compound weapon keywords are executable")
 	var replay_models: Array = [{"unit_id": "u", "team": 0, "position": Vector2(1, 1)}]
 	var replay_log: Array = []
 	replay_log = CommandLog.append(replay_log, 0, "MOVE", {"unit_id": "u", "delta": [2, 0]})

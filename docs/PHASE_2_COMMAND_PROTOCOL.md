@@ -38,7 +38,7 @@
 godot --headless --path . --script tests/run_tests.gd
 ```
 
-当前结果：**266 项检查，0 失败**。
+当前结果：**267 项检查，0 失败**。
 
 ## 下一步
 

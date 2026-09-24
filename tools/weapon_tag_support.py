@@ -70,6 +70,8 @@ def is_supported(value: object) -> bool:
 def unsupported_tags(values: list[object]) -> list[str]:
     result: list[str] = []
     for value in values:
-        if canonical_tag(value) and not is_supported(value) and str(value) not in result:
-            result.append(str(value))
+        raw = str(value)
+        parts = re.split(r"[,，、;；]", raw)
+        if any(canonical_tag(part) and not is_supported(part) for part in parts) and raw not in result:
+            result.append(raw)
     return result

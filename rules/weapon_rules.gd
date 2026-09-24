@@ -75,9 +75,11 @@ static func canonical_id(value: Variant) -> String:
 static func ids_from_weapon(weapon: Dictionary) -> Array:
 	var result: Array = []
 	for value in weapon.get("abilities", []):
-		var canonical := canonical_id(value)
-		if not canonical.is_empty():
-			result.append(canonical)
+		var text := str(value).replace("，", ",").replace("、", ",").replace("；", ",").replace(";", ",")
+		for part in text.split(","):
+			var canonical := canonical_id(part)
+			if not canonical.is_empty():
+				result.append(canonical)
 	return result
 
 static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, target_models: int = 1, target_keywords: Array = [], stationary: bool = true, line_of_sight: bool = true) -> Dictionary:
