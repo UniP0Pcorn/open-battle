@@ -27,6 +27,9 @@ static func host_command(room: Dictionary, packet: Dictionary, expected_peer_id:
 		return {"ok": false, "reason": "NOT A COMMAND", "room": room}
 	if str(packet.room_id) != str(room.get("id", "")) or str(packet.peer_id) != expected_peer_id:
 		return {"ok": false, "reason": "PEER ROOM MISMATCH", "room": room}
+	var expected_session_id := PeerProtocol.hash_snapshot({"room_id": str(room.get("id", "")), "edition": int(room.get("edition", 0)), "mission": str(room.get("mission_id", ""))})
+	if str(packet.session_id) != expected_session_id:
+		return {"ok": false, "reason": "SESSION ID MISMATCH", "room": room}
 	if str(packet.snapshot_hash) != PeerProtocol.hash_snapshot(room.get("session", {})):
 		return {"ok": false, "reason": "STALE SNAPSHOT", "room": room}
 	var command: Dictionary = packet.command.duplicate(true)

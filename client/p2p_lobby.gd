@@ -163,6 +163,9 @@ func _on_packet_received(peer_id: int, packet: Dictionary) -> void:
 			_handle_lobby(peer_id, packet)
 		"COMMAND":
 			if is_host:
+				if str(packet.session_id) != _session_id():
+					error_occurred.emit("SESSION ID MISMATCH")
+					return
 				if str(authenticated_peers.get(peer_id, "")) != str(packet.peer_id):
 					error_occurred.emit("AUTH REQUIRED")
 					return
@@ -179,6 +182,9 @@ func _on_packet_received(peer_id: int, packet: Dictionary) -> void:
 				_handle_auth(peer_id, packet)
 		"SNAPSHOT":
 			if not is_host:
+				if str(packet.session_id) != _session_id():
+					error_occurred.emit("SESSION ID MISMATCH")
+					return
 				var snapshot_result := NetworkSync.accept_snapshot(room.session, packet)
 				if bool(snapshot_result.get("ok", false)):
 					room.session = snapshot_result.state
@@ -192,6 +198,9 @@ func _on_packet_received(peer_id: int, packet: Dictionary) -> void:
 					error_occurred.emit(str(snapshot_result.get("reason", "SNAPSHOT REJECTED")))
 		"RECONNECT":
 			if is_host:
+				if str(packet.session_id) != _session_id():
+					error_occurred.emit("SESSION ID MISMATCH")
+					return
 				if str(authenticated_peers.get(peer_id, "")) != str(packet.peer_id):
 					error_occurred.emit("AUTH REQUIRED")
 					return

@@ -255,7 +255,7 @@ func run() -> void:
 	room = room_move.room
 	check(room_move.ok and room.session.models[0].position == Vector2(3, 2), "room persists authoritative command state")
 	check(not Room.public_snapshot(room).session.has("command_log"), "room public snapshot omits command log")
-	var peer_session_id := PeerProtocol.hash_snapshot({"room_id": room.id, "mission": room.mission_id})
+	var peer_session_id := PeerProtocol.hash_snapshot({"room_id": room.id, "edition": int(room.edition), "mission": room.mission_id})
 	var peer_snapshot := PeerProtocol.snapshot(room.id, "player_gold", peer_session_id, 1, room.session, joined_gold.reconnect_token)
 	check(PeerProtocol.validate(peer_snapshot).is_empty(), "peer snapshot validates its integrity hash")
 	var disconnect_result := Room.drop_connection(room, "player_gold")
@@ -263,6 +263,9 @@ func run() -> void:
 	check(disconnect_result.ok and reconnect_result.ok and reconnect_result.snapshot.state.phase == room.session.phase, "room restores a disconnected player from reconnect token")
 	var command_packet := PeerProtocol.command(room.id, "player_gold", peer_session_id, 2, 1, {"sequence": 2, "team": 0, "kind": "PHASE_ADVANCE", "payload": {"from": "MOVEMENT", "to": "SHOOTING"}}, PeerProtocol.hash_snapshot(room.session))
 	check(PeerProtocol.sequence_status(1, command_packet) == "NEXT", "peer command sequence advances without a gap")
+	var wrong_session_packet: Dictionary = command_packet.duplicate(true)
+	wrong_session_packet.session_id = "wrong-room-session"
+	check(NetworkSync.host_command(room, wrong_session_packet, "player_gold").reason == "SESSION ID MISMATCH", "host rejects commands from a different relay session")
 	var synced := NetworkSync.host_command(room, command_packet, "player_gold")
 	check(synced.ok and synced.room.session.phase == "SHOOTING", "host sync applies a verified peer command")
 	var movement_room: Dictionary = room.duplicate(true)
@@ -301,17 +304,15 @@ func run() -> void:
 	movement_room.session.models[1].position = Vector2(24, 10)
 	charge_intent.sequence = 0
 	# Pick a deterministic fixture whose 2D6 cannot cover twelve inches.
-	var failed_charge_session := ""
+	var failed_charge_session := peer_session_id
+	var failed_rng_seed := 1
 	for seed_index in range(100):
-		var fixture_rng := RandomNumberGenerator.new()
-		var candidate_session := "failed-charge-%d" % seed_index
-		fixture_rng.seed = (candidate_session + ":charge:0").hash()
+		var fixture_rng := seeded_rng(seed_index)
 		if fixture_rng.randi_range(1, 6) + fixture_rng.randi_range(1, 6) < 12:
-			failed_charge_session = candidate_session
+			failed_rng_seed = seed_index
 			break
-	charge_packet = PeerProtocol.command(room.id, "player_gold", failed_charge_session, 0, -1, charge_intent, PeerProtocol.hash_snapshot(movement_room.session))
+	charge_packet = PeerProtocol.command(room.id, "player_gold", peer_session_id, 0, -1, charge_intent, PeerProtocol.hash_snapshot(movement_room.session))
 	var seed_probe: Dictionary = charge_packet.duplicate(true)
-	seed_probe.session_id = "client-selected-session"
 	seed_probe.command.payload.seed = 99999
 	seed_probe.command.payload.rng_state = 777
 	var baseline_seed := NetworkSync.host_command(movement_room, charge_packet, "player_gold", seeded_rng(87))
@@ -319,7 +320,7 @@ func run() -> void:
 	check(baseline_seed.ok and changed_seed.ok and baseline_seed.entry.payload == changed_seed.entry.payload, "client session and injected seed cannot control host charge dice")
 	var secret_snapshot := JSON.stringify(baseline_seed.snapshot)
 	check(not secret_snapshot.contains("rng_state") and not secret_snapshot.contains("host_rng") and not secret_snapshot.contains("entropy"), "authoritative snapshots contain results without private random state")
-	var failed_charge := NetworkSync.host_command(movement_room, charge_packet, "player_gold", seeded_rng((failed_charge_session + ":charge:0").hash()))
+	var failed_charge := NetworkSync.host_command(movement_room, charge_packet, "player_gold", seeded_rng(failed_rng_seed))
 	check(failed_charge.ok and failed_charge.entry.payload.failed and failed_charge.room.session.models[0].position == Vector2(10, 10) and failed_charge.room.session.models[0].charge_attempted and not failed_charge.room.session.models[0].charged, "failed charge consumes attempt without moving")
 	check(Replay.apply_entry(movement_room.session, failed_charge.entry).state.models == failed_charge.room.session.models, "failed charge replays identically")
 	charge_intent.sequence = 1
@@ -652,7 +653,7 @@ func run() -> void:
 	attack_room.session = BattleSession.create(attack_models, 11, 0)
 	attack_room.session.phase = "SHOOTING"
 	attack_room.session.phase_index = TurnState.phase_index("SHOOTING")
-	var intent_packet := PeerProtocol.command("attack-room", "attacker", "network-test", 0, -1, {"sequence": 0, "team": 0, "kind": "SHOOT", "payload": {"attacker": 0, "attacker_id": "net_attacker", "target": 1, "target_id": "net_target", "weapon": "net gun", "intent": true, "damage": 999, "hazardous_damage": 999, "feel_no_pain_rolls": [6]}}, PeerProtocol.hash_snapshot(attack_room.session))
+	var intent_packet := PeerProtocol.command("attack-room", "attacker", PeerProtocol.hash_snapshot({"room_id": "attack-room", "edition": 11, "mission": "control_center"}), 0, -1, {"sequence": 0, "team": 0, "kind": "SHOOT", "payload": {"attacker": 0, "attacker_id": "net_attacker", "target": 1, "target_id": "net_target", "weapon": "net gun", "intent": true, "damage": 999, "hazardous_damage": 999, "feel_no_pain_rolls": [6]}}, PeerProtocol.hash_snapshot(attack_room.session))
 	var intent_result := NetworkSync.host_command(attack_room, intent_packet, "attacker")
 	var forged_result_packet: Dictionary = intent_packet.duplicate(true)
 	forged_result_packet.command.payload.intent = false
@@ -783,7 +784,7 @@ func run() -> void:
 	shock_room = Room.set_ready(shock_room, "shock_blue").room
 	var shock_started := Room.start(shock_room, [{"model_id": "shock_m001", "unit_id": "shock_unit", "team": 0, "position": Vector2(10, 10), "leadership": 7}, {"model_id": "shock_enemy_m001", "unit_id": "shock_enemy", "team": 1, "position": Vector2(30, 30)}])
 	shock_room = shock_started.room
-	var shock_session_id := PeerProtocol.hash_snapshot({"room_id": shock_room.id, "mission": shock_room.mission_id})
+	var shock_session_id := PeerProtocol.hash_snapshot({"room_id": shock_room.id, "edition": int(shock_room.edition), "mission": shock_room.mission_id})
 	var shock_packet := PeerProtocol.command(shock_room.id, "shock_gold", shock_session_id, 0, -1, {"sequence": 0, "team": 0, "kind": "BATTLE_SHOCK", "payload": {"unit_id": "shock_unit", "intent": true}}, PeerProtocol.hash_snapshot(shock_room.session))
 	var network_shock_result := NetworkSync.host_command(shock_room, shock_packet, "shock_gold")
 	var forged_shock: Dictionary = shock_packet.duplicate(true)
