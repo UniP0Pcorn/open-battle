@@ -83,6 +83,10 @@ class ReviewSheetTests(unittest.TestCase):
         self.assertEqual(match.group("range"), "36")
         self.assertEqual(_weapon_tags(match.group(0), match), ["爆炸", "连击1"])
         self.assertEqual(POINT_RE.search("单位构成 1 个模型，415 分").group("points"), "415")
+        noisy = WEAPON_RE.match("循环离子炮 18 3 4+ 7 -1 1 阵营：为了上上善道")
+        self.assertIsNotNone(noisy)
+        assert noisy is not None
+        self.assertEqual(_weapon_tags(noisy.group(0), noisy), [])
         unit = UNIT_KEYWORD_RE.match("关键词 步兵、人物")
         faction = FACTION_KEYWORD_RE.match("阵营关键词 沃坦联盟")
         combined = COMBINED_KEYWORD_RE.match("关键词：载具，飞行器 阵营关键词：钛帝国")

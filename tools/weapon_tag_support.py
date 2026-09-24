@@ -22,6 +22,8 @@ ALIASES = {
     "twin linked": "twin_linked",
     "突击": "assault",
     "assault": "assault",
+    "速射": "rapid_fire",
+    "rapid fire": "rapid_fire",
     "手枪": "pistol",
     "pistol": "pistol",
     "曲射": "indirect",

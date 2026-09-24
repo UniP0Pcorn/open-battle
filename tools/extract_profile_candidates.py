@@ -36,6 +36,11 @@ POINT_PAIR_RE = re.compile(r"(?P<base>[0-9]+)\s*分\s+(?P<count>[0-9]+)\s*\+\s*�
 POINT_COMPOSITION_RE = re.compile(r"(?:单位构成|单位组成).*?(?P<points>[0-9]+)\s*分")
 POINT_SIMPLE_RE = re.compile(r"(?P<points>[0-9]+)\s*分\s*$")
 BASE_MM_RE = re.compile(r"[⌀Ø]\s*(?P<base>[0-9]+(?:\.[0-9]+)?)\s*mm", re.I)
+WEAPON_SECTION_STARTS = ("远程武器", "射击武器", "遠程武器", "射擊武器", "武器名")
+WEAPON_SECTION_ENDS = (
+    "装备技能", "装备选项", "装备能力", "单位构成", "单位组成", "单位装备", "领袖", "运输工具",
+    "裝備技能", "裝備選項", "裝備能力", "單位構成", "單位裝備", "領袖", "運輸工具",
+)
 
 
 def _clean(line: str) -> str:
@@ -59,7 +64,23 @@ def _weapon_tags(line: str, match: re.Match[str]) -> list[str]:
     tail = (match.group("tail") or "").strip()
     if not tags and tail:
         tags = [part.strip() for part in re.split(r"[，,、;；]", tail.strip("[] ")) if part.strip()]
-    return [tag for tag in tags if tag.strip() not in {"", "无", "-", "—", "none", "N/A"}]
+    result: list[str] = []
+    for tag in tags:
+        tag = tag.strip()
+        if tag in {"", "无", "-", "—", "none", "N/A"}:
+            continue
+        # PDF text extraction can append a nearby ability/section sentence to
+        # the weapon tail. Keep bracketed/short executable tags, but never
+        # turn prose such as “核心：…” or “阵营：…” into weapon abilities.
+        if ":" in tag or "：" in tag:
+            continue
+        if re.match(r"^(?:核心|阵营|装备能力|装备技能|单位构成|单位组成|受损|领袖|使用|选择|必须|该|本|它|当|每|位使用|但|侧击|加速|防御阵列|哨戒武器)", tag):
+            continue
+        if re.match(r"^\d+\s+", tag):
+            continue
+        if tag not in result:
+            result.append(tag)
+    return result
 
 
 def extract(pdf_path: Path, edition: str = "", max_pages: int = 0) -> dict:
@@ -104,9 +125,18 @@ def extract(pdf_path: Path, edition: str = "", max_pages: int = 0) -> dict:
                 # A datasheet can place abilities and section headers between
                 # the statline and its weapon table. Stop only at the next
                 # statline, which is the reliable page-level record boundary.
+                weapon_section = False
                 for candidate_line in lines[i + 2 :]:
                     if candidate_line.startswith("M T "):
                         break
+                    if any(candidate_line.startswith(section) for section in WEAPON_SECTION_STARTS):
+                        weapon_section = True
+                        continue
+                    if any(candidate_line.startswith(section) for section in WEAPON_SECTION_ENDS):
+                        weapon_section = False
+                        continue
+                    if not weapon_section:
+                        continue
                     weapon = WEAPON_RE.match(candidate_line)
                     if weapon:
                         item = {k: weapon.group(k) for k in ["name", "range", "attacks", "skill", "strength", "ap", "damage"]}
