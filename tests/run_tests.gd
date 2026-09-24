@@ -213,6 +213,63 @@ func run() -> void:
 	check(PeerProtocol.sequence_status(1, command_packet) == "NEXT", "peer command sequence advances without a gap")
 	var synced := NetworkSync.host_command(room, command_packet, "player_gold")
 	check(synced.ok and synced.room.session.phase == "SHOOTING", "host sync applies a verified peer command")
+	var movement_room: Dictionary = room.duplicate(true)
+	movement_room.session = BattleSession.create([
+		{"model_id": "charger", "unit_id": "charge_unit", "team": 0, "position": Vector2(10, 10), "radius": 0.5, "movement_inches": 6.0, "wounds": 3},
+		{"model_id": "charge_target", "unit_id": "enemy_unit", "team": 1, "position": Vector2(13, 10), "radius": 0.5, "wounds": 3}])
+	movement_room.session.phase = "MOVEMENT"
+	movement_room.session.phase_index = 1
+	var advance_intent := {"sequence": 0, "team": 0, "kind": "ADVANCE", "payload": {"intent": true, "unit_id": "charge_unit", "roll": 999}}
+	var advance_packet := PeerProtocol.command(room.id, "player_gold", peer_session_id, 0, -1, advance_intent, PeerProtocol.hash_snapshot(movement_room.session))
+	var host_advance := NetworkSync.host_command(movement_room, advance_packet, "player_gold")
+	check(host_advance.ok and host_advance.entry.payload.roll >= 1 and host_advance.entry.payload.roll <= 6 and host_advance.room.session.models[0].advance_bonus == host_advance.entry.payload.roll, "host rolls advance and ignores uploaded die")
+	check(Replay.apply_entry(movement_room.session, host_advance.entry).state.models == host_advance.room.session.models, "advance authoritative result replays identically")
+	advance_intent.payload.erase("intent")
+	advance_intent.payload.roll = 6
+	advance_packet = PeerProtocol.command(room.id, "player_gold", peer_session_id, 0, -1, advance_intent, PeerProtocol.hash_snapshot(movement_room.session))
+	check(NetworkSync.host_command(movement_room, advance_packet, "player_gold").reason == "HOST RESOLUTION REQUIRED", "remote advance cannot upload a resolved roll")
+	movement_room.session.phase = "CHARGE"
+	movement_room.session.phase_index = 3
+	var charge_intent := {"sequence": 0, "team": 0, "kind": "CHARGE", "payload": {"intent": true, "model_id": "charger", "target_id": "charge_target", "roll": [99, 99], "to": [50, 40], "failed": true}}
+	var charge_packet := PeerProtocol.command(room.id, "player_gold", peer_session_id, 0, -1, charge_intent, PeerProtocol.hash_snapshot(movement_room.session))
+	var host_charge := NetworkSync.host_command(movement_room, charge_packet, "player_gold")
+	check(host_charge.ok and not host_charge.entry.payload.failed and host_charge.room.session.models[0].position == Vector2(11, 10), "host computes charge endpoint and ignores uploaded result")
+	check(host_charge.entry.payload.roll.size() == 2 and host_charge.entry.payload.roll[0] >= 1 and host_charge.entry.payload.roll[0] <= 6 and host_charge.entry.payload.roll[1] >= 1 and host_charge.entry.payload.roll[1] <= 6, "host charge records two valid dice")
+	check(Replay.apply_entry(movement_room.session, host_charge.entry).state.models == host_charge.room.session.models, "successful charge replays identically")
+	charge_intent.sequence = 1
+	var charge_again := PeerProtocol.command(room.id, "player_gold", peer_session_id, 1, 0, charge_intent, PeerProtocol.hash_snapshot(host_charge.room.session))
+	check(NetworkSync.host_command(host_charge.room, charge_again, "player_gold").reason == "CHARGE ALREADY ATTEMPTED", "successful charge cannot reroll by submitting again")
+	movement_room.session.models[1].position = Vector2(24, 10)
+	charge_intent.sequence = 0
+	# Pick a deterministic fixture whose 2D6 cannot cover twelve inches.
+	var failed_charge_session := ""
+	for seed_index in range(100):
+		var fixture_rng := RandomNumberGenerator.new()
+		var candidate_session := "failed-charge-%d" % seed_index
+		fixture_rng.seed = (candidate_session + ":charge:0").hash()
+		if fixture_rng.randi_range(1, 6) + fixture_rng.randi_range(1, 6) < 12:
+			failed_charge_session = candidate_session
+			break
+	charge_packet = PeerProtocol.command(room.id, "player_gold", failed_charge_session, 0, -1, charge_intent, PeerProtocol.hash_snapshot(movement_room.session))
+	var failed_charge := NetworkSync.host_command(movement_room, charge_packet, "player_gold")
+	check(failed_charge.ok and failed_charge.entry.payload.failed and failed_charge.room.session.models[0].position == Vector2(10, 10) and failed_charge.room.session.models[0].charge_attempted and not failed_charge.room.session.models[0].charged, "failed charge consumes attempt without moving")
+	check(Replay.apply_entry(movement_room.session, failed_charge.entry).state.models == failed_charge.room.session.models, "failed charge replays identically")
+	charge_intent.sequence = 1
+	charge_again = PeerProtocol.command(room.id, "player_gold", failed_charge_session, 1, 0, charge_intent, PeerProtocol.hash_snapshot(failed_charge.room.session))
+	check(NetworkSync.host_command(failed_charge.room, charge_again, "player_gold").reason == "CHARGE ALREADY ATTEMPTED", "failed charge cannot reroll by submitting again")
+	var reset_charge_state: Dictionary = failed_charge.room.session.duplicate(true)
+	reset_charge_state.phase = "COMMAND"
+	reset_charge_state.phase_index = 0
+	var reset_charge := BattleSession.submit(reset_charge_state, 0, "PHASE_ADVANCE", {"from": "COMMAND", "to": "MOVEMENT"})
+	check(reset_charge.ok and not reset_charge.state.models[0].charge_attempted, "new movement phase resets charge attempt")
+	charge_intent.sequence = 0
+	charge_intent.payload.erase("intent")
+	charge_intent.payload.model = 0
+	charge_intent.payload.target = 1
+	charge_packet = PeerProtocol.command(room.id, "player_gold", peer_session_id, 0, -1, charge_intent, PeerProtocol.hash_snapshot(movement_room.session))
+	check(NetworkSync.host_command(movement_room, charge_packet, "player_gold").reason == "HOST RESOLUTION REQUIRED", "remote charge cannot upload resolved dice")
+	var hazard_packet := PeerProtocol.command(room.id, "player_gold", peer_session_id, 0, -1, {"sequence": 0, "team": 0, "kind": "HAZARDOUS", "payload": {"attacker": 0, "damage": 3}}, PeerProtocol.hash_snapshot(movement_room.session))
+	check(NetworkSync.host_command(movement_room, hazard_packet, "player_gold").reason == "HAZARDOUS REQUIRES HOST ATTACK", "remote standalone hazardous results are rejected")
 	# Original fixture mechanics, not an official faction datasheet.
 	var grant := {"id": "fixture_mobility", "cost": 1, "phase": "MOVEMENT", "effect": "GRANT_ABILITY", "timing": "MOVEMENT", "target": "FRIENDLY_UNIT", "duration": "BATTLE", "ability": "fall_back_and_shoot"}
 	var grant_room: Dictionary = room.duplicate(true)

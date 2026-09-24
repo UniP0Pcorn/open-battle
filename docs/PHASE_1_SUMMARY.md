@@ -10,7 +10,7 @@
 godot --headless --path . --script tests/run_tests.gd
 ```
 
-阶段一基线为 308 项检查；当前主线回归已推进到 **474 项检查，0 失败**。Python 数据管线 **7 项测试通过**。
+阶段一基线为 308 项检查；当前主线回归已推进到 **487 项检查，0 失败**。Python 数据管线 **7 项测试通过**。
 
 本批完成数据定义反应射击的主机物化、伤害与回放执行、目标校验和界面选择；拒绝远端预计算攻击结果及伪造命令阵营。仍需审计前进/冲锋等其他骰子入口。AI 与兵牌审核状态未改变。
 
@@ -53,3 +53,5 @@ python tools/export_profile_review_sheet.py
 python tools/rebuild_profile_catalog.py
 godot --headless --path . --script tests/run_tests.gd
 ```
+
+联机前进与冲锋现由主机物化骰面；失败冲锋进入权威日志并消耗本阶段尝试。新增回归覆盖结果覆盖防护、成功/失败回放、重复尝试与状态重置。

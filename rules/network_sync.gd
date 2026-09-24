@@ -36,8 +36,20 @@ static func host_command(room: Dictionary, packet: Dictionary, expected_peer_id:
 			actor_team = int(player.get("team", -1))
 	if actor_team not in [0, 1] or int(command.get("team", -1)) != actor_team:
 		return {"ok": false, "reason": "PLAYER TEAM MISMATCH", "room": room}
-	if str(command.get("kind", "")) in ["SHOOT", "FIGHT", "BATTLE_SHOCK"] and not bool(command.get("payload", {}).get("intent", false)):
+	if str(command.get("kind", "")) in ["SHOOT", "FIGHT", "BATTLE_SHOCK", "ADVANCE", "CHARGE"] and not bool(command.get("payload", {}).get("intent", false)):
 		return {"ok": false, "reason": "HOST RESOLUTION REQUIRED", "room": room}
+	if str(command.kind) == "HAZARDOUS":
+		return {"ok": false, "reason": "HAZARDOUS REQUIRES HOST ATTACK", "room": room}
+	if str(command.kind) == "ADVANCE":
+		var advance_rng := RandomNumberGenerator.new()
+		advance_rng.seed = (str(packet.session_id) + ":advance:" + str(packet.sequence)).hash()
+		var advance_roll := advance_rng.randi_range(1, 6)
+		command.payload = {"unit_id": str(command.payload.get("unit_id", "")), "roll": advance_roll, "rolls": [advance_roll]}
+	if str(command.kind) == "CHARGE":
+		var charged := _materialize_charge(room.session, command, packet)
+		if not charged.ok:
+			return {"ok": false, "reason": charged.reason, "room": room}
+		command.payload = charged.payload
 	if str(command.get("kind", "")) == "STRATAGEM":
 		var definition := Replay._stratagem_for(room.session, actor_team, str(command.payload.get("id", "")))
 		if str(definition.get("effect", "")) == "REACTION_SHOOT":
@@ -69,6 +81,24 @@ static func host_command(room: Dictionary, packet: Dictionary, expected_peer_id:
 	var next_room: Dictionary = submitted.room
 	var snapshot := PeerProtocol.snapshot(str(next_room.id), expected_peer_id, str(packet.session_id), int(next_room.session.get("command_log", []).size()) - 1, next_room.session, str(packet.get("reconnect_token", "")))
 	return {"ok": true, "reason": "", "room": next_room, "entry": submitted.entry, "snapshot": snapshot}
+
+static func _materialize_charge(state: Dictionary, command: Dictionary, packet: Dictionary) -> Dictionary:
+	var models: Array = state.models
+	var charger := _model_index(models, command.payload, "model_id", "model")
+	var target := _model_index(models, command.payload, "target_id", "target")
+	if charger < 0 or target < 0 or charger == target:
+		return {"ok": false, "reason": "INVALID CHARGE"}
+	var origin := _position(models[charger])
+	var destination := _position(models[target]) - (_position(models[target]) - origin).normalized() * (float(models[charger].get("radius", 0)) + float(models[target].get("radius", 0)) + 1.0)
+	var payload := {"model": charger, "model_id": str(models[charger].model_id), "target": target, "target_id": str(models[target].model_id), "from": [origin.x, origin.y], "to": [destination.x, destination.y], "roll": [6, 6]}
+	var reason := Replay._validate_references(models, command, "CHARGE", payload, state.get("terrain", []))
+	if not reason.is_empty():
+		return {"ok": false, "reason": reason}
+	var rng := RandomNumberGenerator.new()
+	rng.seed = (str(packet.session_id) + ":charge:" + str(packet.sequence)).hash()
+	payload.roll = [rng.randi_range(1, 6), rng.randi_range(1, 6)]
+	payload.failed = origin.distance_to(destination) > float(payload.roll[0] + payload.roll[1]) + 0.00001
+	return {"ok": true, "payload": payload}
 
 static func _materialize_attack(state: Dictionary, command: Dictionary, packet: Dictionary, reaction: Dictionary = {}) -> Dictionary:
 	var payload: Dictionary = command.get("payload", {}).duplicate(true)

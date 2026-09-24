@@ -38,6 +38,8 @@ static func validate_payload(kind: String, payload: Dictionary) -> String:
 			if str(payload.get("unit_id", "")).is_empty() or not _numbers(payload.get("delta", []), 2):
 				return "INVALID MOVE"
 		"ADVANCE":
+			if bool(payload.get("intent", false)):
+				return "" if not str(payload.get("unit_id", "")).is_empty() else "INVALID ADVANCE"
 			if str(payload.get("unit_id", "")).is_empty() or not _nonnegative_int(payload.get("roll", -1)) or int(payload.get("roll", 0)) < 1 or int(payload.get("roll", 0)) > 6:
 				return "INVALID ADVANCE"
 		"DEPLOY_RESERVE":
@@ -87,6 +89,8 @@ static func validate_payload(kind: String, payload: Dictionary) -> String:
 			if payload.has("hazardous_feel_no_pain_rolls") and not _dice_rolls(payload.hazardous_feel_no_pain_rolls):
 				return "INVALID FEEL NO PAIN RESULT"
 		"CHARGE":
+			if bool(payload.get("intent", false)):
+				return "" if _model_ref(payload, "model_id", "model") and _model_ref(payload, "target_id", "target") else "INVALID CHARGE"
 			if not _nonnegative_int(payload.get("model", -1)) or not _nonnegative_int(payload.get("target", -1)) or not _numbers(payload.get("to", []), 2):
 				return "INVALID CHARGE"
 		"BATTLE_SHOCK":

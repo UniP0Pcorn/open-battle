@@ -163,11 +163,13 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			var destination: Array = payload.get("to", [])
 			if model_index < 0 or model_index >= next.models.size():
 				return {"ok": false, "reason": "INVALID CHARGE", "state": state}
-			next.models[model_index].position = Vector2(float(destination[0]), float(destination[1]))
+			if not bool(payload.get("failed", false)):
+				next.models[model_index].position = Vector2(float(destination[0]), float(destination[1]))
 			var charged_unit_id := Attachments.group_id(next.models[model_index])
 			for charged_model in next.models:
 				if Attachments.group_id(charged_model) == charged_unit_id:
-					charged_model.charged = true
+					charged_model.charge_attempted = true
+					charged_model.charged = not bool(payload.get("failed", false))
 		"END_TURN":
 			_expire_grants(next.models, ["PHASE", "TURN"])
 			var objective_data: Array = next.get("objectives", []).duplicate(true)
@@ -192,6 +194,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 					model.advance_bonus = 0
 					model.fell_back = false
 					model.charged = false
+					model.charge_attempted = false
 					model.erase("temporary_cover_bonus")
 					model.transport_moved = false
 					model.disembarked = false
@@ -218,6 +221,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 						model.advance_bonus = 0
 						model.fell_back = false
 						model.charged = false
+						model.charge_attempted = false
 						model.erase("temporary_cover_bonus")
 						model.transport_moved = false
 						model.disembarked = false
@@ -727,6 +731,9 @@ static func _stratagem_for(state: Dictionary, team: int, stratagem_id: String) -
 
 static func _charge_reference_error(models: Array, charger_index: int, target_index: int, payload: Dictionary, terrain: Array) -> String:
 	var charger: Dictionary = models[charger_index]
+	for member in models:
+		if Attachments.group_id(member) == Attachments.group_id(charger) and bool(member.get("charge_attempted", false)):
+			return "CHARGE ALREADY ATTEMPTED"
 	var target: Dictionary = models[target_index]
 	var charger_abilities := UnitAbilities.modifiers(charger.get("ability_ids", []))
 	if bool(charger.get("advanced", false)) and not bool(charger_abilities.advance_and_charge):
@@ -744,6 +751,13 @@ static func _charge_reference_error(models: Array, charger_index: int, target_in
 				return "INVALID CHARGE ROLL"
 			charge_distance += float(roll)
 	var starting_distance := _position_of(charger).distance_to(_position_of(target))
+	if bool(payload.get("failed", false)):
+		if is_inf(charge_distance) or starting_distance <= charge_distance + float(charger.get("radius", 0)) + float(target.get("radius", 0)) + 1.00001:
+			return "INVALID FAILED CHARGE"
+		var trial: Dictionary = payload.duplicate(true)
+		trial.failed = false
+		trial.roll = [6, 6]
+		return _charge_reference_error(models, charger_index, target_index, trial, terrain)
 	if not is_inf(charge_distance):
 		var target_error := Charge.target_reason(charger, target, int(charger.get("team", -1)), starting_distance, int(charge_distance), 1.0, bool(charger_abilities.advance_and_charge), bool(charger_abilities.fall_back_and_charge))
 		if not target_error.is_empty():

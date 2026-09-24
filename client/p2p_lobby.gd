@@ -133,7 +133,7 @@ func _submit_host_command(actor_id: String, kind: String, payload: Dictionary) -
 	var sequence := int(room.session.get("command_log", []).size())
 	var command := {"sequence": sequence, "team": actor_team, "kind": kind, "payload": payload}
 	var packet := PeerProtocol.command(str(room.id), actor_id, _session_id(), sequence, sequence - 1, command, PeerProtocol.hash_snapshot(room.session))
-	var result := NetworkSync.host_command(room, packet, actor_id) if kind == "STRATAGEM" else Room.submit(room, actor_id, kind, payload)
+	var result := NetworkSync.host_command(room, packet, actor_id) if kind in ["STRATAGEM", "ADVANCE", "CHARGE", "SHOOT", "FIGHT", "BATTLE_SHOCK"] else Room.submit(room, actor_id, kind, payload)
 	if not bool(result.get("ok", false)):
 		return str(result.get("reason", "COMMAND REJECTED"))
 	room = result.room

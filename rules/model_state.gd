@@ -52,6 +52,8 @@ static func validate_model(model: Variant, index: int = 0, ids: Dictionary = {})
 			return "INVALID MODEL " + field.to_upper() + " " + model_id
 	if model.has("used_weapon_names") and not (model.used_weapon_names is Array):
 		return "INVALID MODEL USED_WEAPON_NAMES " + model_id
+	if model.has("charge_attempted") and typeof(model.charge_attempted) != TYPE_BOOL:
+		return "INVALID MODEL CHARGE_ATTEMPTED " + model_id
 	if model.has("fell_back") and typeof(model.fell_back) != TYPE_BOOL:
 		return "INVALID MODEL FELL_BACK " + model_id
 	if model.has("scouted") and typeof(model.scouted) != TYPE_BOOL:

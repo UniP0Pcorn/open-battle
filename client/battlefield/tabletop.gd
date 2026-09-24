@@ -542,10 +542,10 @@ func advance_selected() -> void:
 			message = "该单位已经开始移动，不能再宣布前进。"
 			queue_redraw()
 			return
-	var roll := Dice.roll_d6(combat_rng, 1, 0)
 	var unit_id := Attachments.group_id(models[selected])
-	if _submit_network_command("ADVANCE", {"unit_id": unit_id, "roll": int(roll.total), "rolls": roll.rolls}):
+	if _submit_network_command("ADVANCE", {"unit_id": unit_id, "intent": true}):
 		return
+	var roll := Dice.roll_d6(combat_rng, 1, 0)
 	for model in unit_models:
 		model.advanced = true
 		model.advance_bonus = int(roll.total)
@@ -1115,6 +1115,8 @@ func charge_selected() -> void:
 	if target_index < 0:
 		message = "没有可冲锋的敌方目标。"
 		queue_redraw()
+		return
+	if _submit_network_command("CHARGE", {"model_id": attacker.get("model_id", ""), "target_id": models[target_index].get("model_id", ""), "intent": true}):
 		return
 	var roll := Charge.charge_distance(combat_rng)
 	var target: Dictionary = models[target_index]
