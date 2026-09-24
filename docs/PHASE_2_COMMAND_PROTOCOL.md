@@ -187,7 +187,7 @@ godot --headless --path . --script tests/run_tests.gd
 
 `tools/room_directory_server.py` 提供了一个依赖零的实验性 HTTP 目录（`POST/GET/DELETE /v1/rooms`），Godot `RoomDirectoryClient` 可调用它查询或发布广告。它只保存公开且会过期的房间广告，不在战斗路径上，不转发 ENet 或命令；生产部署仍需要 TLS、访问控制、限流和持久化策略。独立测试覆盖发布、列表、删除、所有者指纹检查和非法记录拒绝。
 
-`tools/relay_server.py` 提供可选的透明 WebSocket 中继原型：每个房间最多配对一名主机和一名客户端，转发不透明 JSON 帧，不读取或修改规则结果。独立测试覆盖握手、配对、房间/角色隔离和原样转发。Godot 已提供 `RelayTransport` / `connect_to_relay` API，但大厅默认仍是 ENet 直连；TLS、认证、限流和公网部署安全策略尚未完成，不能把该原型称为完整公网联机。
+`tools/relay_server.py` 提供可选的透明 WebSocket 中继原型：每个房间最多配对一名主机和一名客户端，转发不透明 JSON 帧，不读取或修改规则结果。独立测试覆盖握手、配对、房间/角色隔离和原样转发。Godot 已提供 `RelayTransport`、`host_relay`、`connect_to_relay` API 和大厅控件，但默认仍是 ENet 直连；TLS、认证、限流和公网部署安全策略尚未完成，不能把该原型称为完整公网联机。
 
 ### 独立进程 ENet 验收
 
