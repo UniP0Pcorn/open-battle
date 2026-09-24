@@ -20,6 +20,7 @@ var upnp_option: CheckBox
 var nat_status: Label
 var directory_url: LineEdit
 var directory_status: Label
+var room_results: VBoxContainer
 
 func _ready() -> void:
 	_build_ui()
@@ -109,6 +110,8 @@ func _build_ui() -> void:
 	directory_status = _label("目录未连接。")
 	directory_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	panel.add_child(directory_status)
+	room_results = VBoxContainer.new()
+	panel.add_child(room_results)
 	var room_row := HBoxContainer.new()
 	var host_button := Button.new()
 	host_button.text = "创建主机房间"
@@ -233,6 +236,8 @@ func _publish_public_room() -> void:
 	directory_status.text = "正在发布房间广告……" if error.is_empty() else error
 
 func _on_directory_rooms(rooms: Array) -> void:
+	for child in room_results.get_children():
+		child.queue_free()
 	if rooms.is_empty():
 		directory_status.text = "目录中没有未过期房间。"
 		return
@@ -240,7 +245,17 @@ func _on_directory_rooms(rooms: Array) -> void:
 	for room in rooms:
 		if room is Dictionary:
 			room_ids.append(str(room.get("room_id", "")))
+			var join := Button.new()
+			join.text = "加入 %s（%s:%s）" % [str(room.get("room_id", "")), str(room.get("address", "")), str(room.get("port", ""))]
+			join.pressed.connect(_join_advertised.bind(room.duplicate(true)))
+			room_results.add_child(join)
 	directory_status.text = "发现 %d 个房间：%s" % [rooms.size(), ", ".join(room_ids)]
+
+func _join_advertised(room: Dictionary) -> void:
+	if not _ensure_identity():
+		return
+	var error: String = lobby.connect_to_room(str(room.get("room_id", "")), str(room.get("address", "")), int(room.get("port", 0)))
+	status.text = "正在连接公开房间……" if error.is_empty() else error
 
 func _on_directory_request(ok: bool, payload: Variant) -> void:
 	if not ok:

@@ -1494,7 +1494,7 @@ func run() -> void:
 	await process_frame
 	check(lobby_scene.status != null and lobby_scene.lobby != null, "lobby screen builds account and P2P controls")
 	check(not lobby_scene.upnp_option.button_pressed and lobby_scene.nat_status != null, "lobby UPnP remains explicitly opt in")
-	check(lobby_scene.directory_url != null and lobby_scene.directory_status != null, "lobby exposes optional public room directory controls")
+	check(lobby_scene.directory_url != null and lobby_scene.directory_status != null and lobby_scene.room_results != null, "lobby exposes optional public room directory controls")
 	var lobby_models := BattleSetup.default_models()
 	check(lobby_models.size() == 20 and lobby_models[0].has("model_id") and lobby_models[0].has("weapons"), "lobby builds a complete shared prototype battle setup")
 	lobby_scene.queue_free()
