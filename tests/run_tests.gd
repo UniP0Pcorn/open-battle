@@ -13,6 +13,7 @@ const AccountStore = preload("res://rules/account_store.gd")
 const P2PTransport = preload("res://client/p2p_transport.gd")
 const P2PLobby = preload("res://client/p2p_lobby.gd")
 const NetworkSync = preload("res://rules/network_sync.gd")
+const LobbyScreen = preload("res://client/lobby/lobby_screen.gd")
 const Deployment = preload("res://rules/deployment.gd")
 const Engagement = preload("res://rules/engagement.gd")
 const UnitValidation = preload("res://rules/unit_validation.gd")
@@ -197,7 +198,7 @@ func run() -> void:
 	check(AccountIdentity.validate(identity).is_empty() and AccountIdentity.verify(identity, challenge, "nonce-001"), "account challenge proof validates")
 	check(not AccountIdentity.verify(identity, challenge, "nonce-002") and AccountIdentity.session_token(identity, "").is_empty(), "account proof rejects a changed nonce")
 	var auth_packet := PeerProtocol.auth("player_gold", peer_session_id, challenge)
-	check(PeerProtocol.validate(auth_packet).is_empty() and P2PTransport != null and P2PLobby != null, "P2P transport accepts authenticated envelopes")
+	check(PeerProtocol.validate(auth_packet).is_empty() and P2PTransport != null and P2PLobby != null and LobbyScreen != null, "P2P transport accepts authenticated envelopes")
 	var identity_path := "user://open_battle_identity_test.json"
 	AccountStore.remove_identity(identity_path)
 	check(AccountStore.save_identity(identity, identity_path).is_empty() and AccountStore.load_identity(identity_path).fingerprint == identity.fingerprint, "account identity persists without plaintext password")
@@ -639,6 +640,11 @@ func run() -> void:
 	invalid_ready.import_status = "ready"
 	invalid_ready.keywords = ["unsupported_keyword"]
 	check(not ProfileCatalog.is_ready(invalid_ready), "ready catalog rejects structurally invalid profile")
+	var lobby_scene = load("res://client/lobby/lobby_screen.tscn").instantiate()
+	root.add_child(lobby_scene)
+	await process_frame
+	check(lobby_scene.status != null and lobby_scene.lobby != null, "lobby screen builds account and P2P controls")
+	lobby_scene.queue_free()
 	var scene = load("res://client/battlefield/tabletop.tscn").instantiate()
 	root.add_child(scene)
 	await process_frame

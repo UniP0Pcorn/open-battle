@@ -107,6 +107,7 @@ func _ready() -> void:
 	add_button("重置棋盘  [R]", Vector2(976, 565), reset_table)
 	add_button("结束回合  [T]", Vector2(976, 605), end_turn)
 	add_button("单机 AI 回合  [J]", Vector2(976, 325), run_single_player_ai)
+	add_button("联机大厅  [M]", Vector2(976, 365), func(): get_tree().change_scene_to_file("res://client/lobby/lobby_screen.tscn"))
 	add_button("撤销移动  [U]", Vector2(976, 645), undo_last)
 	add_button("进入射击阶段  [SPACE]", Vector2(976, 685), enter_shooting)
 	add_button("射击最近目标  [F]", Vector2(976, 725), fire_selected)
@@ -973,6 +974,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				end_turn()
 			KEY_J:
 				run_single_player_ai()
+			KEY_M:
+				get_tree().change_scene_to_file("res://client/lobby/lobby_screen.tscn")
 			KEY_U:
 				undo_last()
 			KEY_SPACE:
