@@ -8,6 +8,8 @@ signal lobby_changed(room: Dictionary)
 signal battle_snapshot_received(state: Dictionary)
 signal error_occurred(reason: String)
 signal nat_status_changed(result: Dictionary)
+signal directory_rooms_received(rooms: Array)
+signal directory_request_completed(ok: bool, payload: Variant)
 
 var lobby: Node
 
@@ -18,6 +20,8 @@ func _ready() -> void:
 	lobby.battle_snapshot_received.connect(func(state: Dictionary): battle_snapshot_received.emit(state))
 	lobby.error_occurred.connect(func(reason: String): error_occurred.emit(reason))
 	lobby.nat_status_changed.connect(func(result: Dictionary): nat_status_changed.emit(result))
+	lobby.directory_rooms_received.connect(func(rooms: Array): directory_rooms_received.emit(rooms))
+	lobby.directory_request_completed.connect(func(ok: bool, payload: Variant): directory_request_completed.emit(ok, payload))
 
 func set_identity(identity: Dictionary) -> String:
 	return lobby.set_identity(identity)
@@ -48,6 +52,12 @@ func reconnect() -> String:
 
 func room_invite(address: String, expires_at: int) -> String:
 	return lobby.room_invite(address, expires_at)
+
+func list_public_rooms(base_url: String) -> String:
+	return lobby.list_public_rooms(base_url)
+
+func publish_public_room(base_url: String, address: String, expires_at: int) -> String:
+	return lobby.publish_public_room(base_url, address, expires_at)
 
 func active_room() -> Dictionary:
 	return lobby.room.duplicate(true) if lobby != null and lobby.room is Dictionary else {}

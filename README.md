@@ -154,7 +154,7 @@ Warhammer 40,000、Custodian Guard 等相关名称属于各自权利人，包括
 
 交互方向参考了 [New Recruit](https://www.newrecruit.eu/) 公开介绍的编成校验、跨设备列表同步、分享与离线使用等能力；本项目的大厅和规则数据保持独立。
 
-当前回归：Godot **585 项检查，0 失败**；Python 数据管线 **15 项测试通过**。
+当前回归：Godot **586 项检查，0 失败**；Python 数据管线 **15 项测试通过**。
 
 自定义 REACTION_SHOOT 可在敌方移动后触发，由主机生成骰子结果并写入日志；面板选择射手、武器和触发单位中的目标。旧 fire_overwatch 声明仍不代表完整官方警戒射击。远端普通射击、近战和战斗震慑现在强制通过意图命令交给主机结算。
 
@@ -196,7 +196,7 @@ Warhammer 40,000、Custodian Guard 等相关名称属于各自权利人，包括
 python -m tools.room_directory_server --host 0.0.0.0 --port 8765
 ```
 
-它只保存公开端点、任务、过期时间和主机公开指纹；不会转发命令，也不会保存密码、凭据或重连令牌。主机仍需通过 `room_invite` 生成邀请，客户端再用 `connect_invite` 加入。把它暴露到公网前应放在 TLS、访问控制和反向代理之后；它仍不是 NAT 打洞或中继服务。
+它只保存公开端点、任务、过期时间和主机公开指纹；不会转发命令，也不会保存密码、凭据或重连令牌。Godot 大厅通过 `list_public_rooms` / `publish_public_room` 查询或发布广告，主机仍需通过 `room_invite` 生成邀请，客户端再用 `connect_invite` 加入。把它暴露到公网前应放在 TLS、访问控制和反向代理之后；它仍不是 NAT 打洞或中继服务。
 
 实现参考 [Godot 4.5 UPNP 文档](https://docs.godotengine.org/en/4.5/classes/class_upnp.html)。自动回归使用模拟网关，覆盖建立、有限租期、冲突、取消、清理、迟到回调和续租失败；没有对真实路由器执行映射，也未宣称跨公网联机验收通过。
 
@@ -215,6 +215,7 @@ P2P 命令、重连和快照绑定当前房间会话哈希，转发层不能跨�
 联机主机拒绝重复或跳序命令；断线玩家必须通过身份和重连令牌恢复后才能继续。
 
 候选索引器与审核表统一阻断 points、weapons、faction keywords 和 unsupported weapon keywords。
+
 
 
 

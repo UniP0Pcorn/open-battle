@@ -9,11 +9,14 @@ const P2PTransport = preload("res://client/p2p_transport.gd")
 const Room = preload("res://rules/room.gd")
 const NetworkSync = preload("res://rules/network_sync.gd")
 const RoomDirectory = preload("res://rules/room_directory.gd")
+const RoomDirectoryClient = preload("res://client/room_directory_client.gd")
 
 signal lobby_changed(room: Dictionary)
 signal battle_snapshot_received(state: Dictionary)
 signal error_occurred(reason: String)
 signal nat_status_changed(result: Dictionary)
+signal directory_rooms_received(rooms: Array)
+signal directory_request_completed(ok: bool, payload: Variant)
 
 var transport: Node
 var room: Dictionary = {}
@@ -26,6 +29,7 @@ var server_address := ""
 var server_port := 0
 var trusted_identities: Dictionary = {}
 var authenticated_peers: Dictionary = {}
+var directory: Node
 
 func _ready() -> void:
 	transport = P2PTransport.new()
@@ -34,6 +38,10 @@ func _ready() -> void:
 	transport.peer_state_changed.connect(_on_peer_state_changed)
 	transport.transport_error.connect(_on_transport_error)
 	transport.nat_status_changed.connect(func(result: Dictionary): nat_status_changed.emit(result))
+	directory = RoomDirectoryClient.new()
+	add_child(directory)
+	directory.rooms_received.connect(func(rooms: Array): directory_rooms_received.emit(rooms))
+	directory.request_completed.connect(func(ok: bool, payload: Variant): directory_request_completed.emit(ok, payload))
 	for trusted in AccountStore.load_trusted_identities():
 		trusted_identities[str(trusted.fingerprint)] = trusted.duplicate(true)
 
@@ -101,6 +109,15 @@ func room_invite(address: String, expires_at: int) -> String:
 		return ""
 	var advertisement := RoomDirectory.advertise(str(room.id), identity, address, server_port, int(room.get("edition", 0)), str(room.get("mission_id", "")), expires_at)
 	return RoomDirectory.encode(advertisement)
+
+func list_public_rooms(base_url: String) -> String:
+	return directory.list_rooms(base_url) if directory != null else "DIRECTORY UNAVAILABLE"
+
+func publish_public_room(base_url: String, address: String, expires_at: int) -> String:
+	if directory == null:
+		return "DIRECTORY UNAVAILABLE"
+	var advertisement := RoomDirectory.decode(room_invite(address, expires_at))
+	return directory.publish(base_url, advertisement)
 
 func set_ready(ready: bool = true) -> String:
 	var result := Room.set_ready(room, player_id, ready)
