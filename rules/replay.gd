@@ -4,7 +4,9 @@ extends RefCounted
 
 const CommandSchema = preload("res://rules/command_schema.gd")
 const Charge = preload("res://rules/charge.gd")
+const Combat = preload("res://rules/combat.gd")
 const Engagement = preload("res://rules/engagement.gd")
+const Melee = preload("res://rules/melee.gd")
 const Movement = preload("res://rules/movement.gd")
 const Stratagems = preload("res://rules/stratagems.gd")
 const TurnState = preload("res://rules/turn_state.gd")
@@ -192,6 +194,9 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 				return "NOT ACTIVE TEAM"
 			if int(models[target].get("team", -1)) == actor_team:
 				return "FRIENDLY TARGET"
+			var weapon_error := _attack_reference_error(models, attacker, target, payload, kind, actor_team)
+			if not weapon_error.is_empty():
+				return weapon_error
 			if bool(payload.get("one_shot", false)):
 				if str(payload.get("weapon", "")).is_empty():
 					return "INVALID DAMAGE EVENT"
@@ -301,6 +306,40 @@ static func _charge_reference_error(models: Array, charger_index: int, target_in
 		return "CHARGE " + movement_error
 	var end_error := Charge.end_reason(destination, _position_of(target), 1.0, float(charger.get("radius", charger.get("base_radius", 0.0))), float(target.get("radius", target.get("base_radius", 0.0))))
 	return end_error
+
+static func _attack_reference_error(models: Array, attacker_index: int, target_index: int, payload: Dictionary, kind: String, actor_team: int) -> String:
+	var attacker: Dictionary = models[attacker_index]
+	var target: Dictionary = models[target_index]
+	var weapons: Variant = attacker.get("weapons", [])
+	var weapon_name := str(payload.get("weapon", ""))
+	# Older prototype logs did not carry a weapon table. They remain replayable;
+	# once a model has a table, every attack must name a resolvable weapon.
+	if not (weapons is Array) or weapons.is_empty():
+		return ""
+	if weapon_name.is_empty():
+		return "MISSING WEAPON"
+	var weapon: Dictionary = {}
+	for candidate in weapons:
+		if candidate is Dictionary and str(candidate.get("name", "")) == weapon_name:
+			weapon = candidate
+			break
+	if weapon.is_empty():
+		return "UNKNOWN WEAPON"
+	var distance := _position_of(attacker).distance_to(_position_of(target))
+	if kind == "FIGHT":
+		return Melee.target_reason(attacker, target, actor_team)
+	var attacker_engaged := _engaged_with_enemy(models, attacker_index)
+	var target_engaged := _engaged_with_enemy(models, target_index)
+	return Combat.target_reason(attacker, target, distance, weapon, actor_team, attacker_engaged, target_engaged)
+
+static func _engaged_with_enemy(models: Array, model_index: int) -> bool:
+	var model: Dictionary = models[model_index]
+	for index in range(models.size()):
+		if index == model_index or int(models[index].get("team", -1)) == int(model.get("team", -1)):
+			continue
+		if Engagement.in_engagement(model, models[index]):
+			return true
+	return false
 
 static func _position_of(model: Dictionary) -> Vector2:
 	var position: Variant = model.get("position", Vector2.ZERO)

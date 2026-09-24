@@ -288,6 +288,26 @@ func run() -> void:
 	bad_charge_log = CommandLog.append(bad_charge_log, 0, "CHARGE", {"model": 0, "model_id": "charge_m001", "target": 1, "target_id": "charge_target_m001", "roll": [6, 6], "to": [5.0, 12.0]})
 	var bad_charge := Replay.replay(Replay.initial_state(charge_replay_models, "CHARGE", 0), bad_charge_log)
 	check(not bad_charge.ok and bad_charge.reason == "NOT IN ENGAGEMENT", "replay rejects invalid charge endpoint")
+	var weapon_replay_models: Array = [{"model_id": "weapon_m001", "unit_id": "weapon", "team": 0, "position": Vector2(5, 5), "radius": 0.5, "weapons": [{"name": "Test Rifle", "range_inches": 6.0}]}, {"model_id": "weapon_target_m001", "unit_id": "weapon_target", "team": 1, "position": Vector2(8, 5), "radius": 0.5, "wounds": 3}]
+	var weapon_replay_log: Array = []
+	weapon_replay_log = CommandLog.append(weapon_replay_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "weapon_m001", "target": 1, "target_id": "weapon_target_m001", "weapon": "Test Rifle", "damage": 1})
+	var weapon_replay := Replay.replay(Replay.initial_state(weapon_replay_models, "SHOOTING", 0), weapon_replay_log)
+	check(weapon_replay.ok and weapon_replay.state.models[1].wounds == 2, "replay validates named weapon range")
+	var out_of_range_models := weapon_replay_models.duplicate(true)
+	out_of_range_models[1].position = Vector2(20, 5)
+	var out_of_range := Replay.replay(Replay.initial_state(out_of_range_models, "SHOOTING", 0), weapon_replay_log)
+	check(not out_of_range.ok and out_of_range.reason == "OUT OF RANGE", "replay rejects out of range weapon")
+	var missing_weapon_log: Array = []
+	missing_weapon_log = CommandLog.append(missing_weapon_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "weapon_m001", "target": 1, "target_id": "weapon_target_m001", "damage": 1})
+	var missing_weapon := Replay.replay(Replay.initial_state(weapon_replay_models, "SHOOTING", 0), missing_weapon_log)
+	check(not missing_weapon.ok and missing_weapon.reason == "MISSING WEAPON", "replay requires named weapon for profiled model")
+	var melee_replay_models: Array = weapon_replay_models.duplicate(true)
+	melee_replay_models[1].position = Vector2(5.9, 5)
+	melee_replay_models[0].weapons = [{"name": "Test Blade"}]
+	var melee_replay_log: Array = []
+	melee_replay_log = CommandLog.append(melee_replay_log, 0, "FIGHT", {"attacker": 0, "attacker_id": "weapon_m001", "target": 1, "target_id": "weapon_target_m001", "weapon": "Test Blade", "damage": 1})
+	var melee_replay := Replay.replay(Replay.initial_state(melee_replay_models, "FIGHT", 0), melee_replay_log)
+	check(melee_replay.ok and melee_replay.state.models[1].wounds == 2, "replay validates melee engagement")
 	var stratagem_state := Replay.initial_state(one_shot_models, "SHOOTING", 0)
 	stratagem_state.command_points = [1, 0]
 	var stratagem_log: Array = []

@@ -10,7 +10,7 @@
 godot --headless --path . --script tests/run_tests.gd
 ```
 
-最后一次验证结果：**284 项检查，0 失败**。
+最后一次验证结果：**288 项检查，0 失败**。
 
 ## 已交付能力
 
