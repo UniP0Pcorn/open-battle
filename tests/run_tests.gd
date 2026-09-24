@@ -207,6 +207,8 @@ func run() -> void:
 	check(heavy_stationary.weapon.hit_on == 3 and heavy_moved.weapon.hit_on == 4, "heavy improves stationary hit and loses the bonus after movement")
 	var indirect_context := WeaponRules.context({"range_inches": 60.0, "attacks": 1, "hit_on": 4, "abilities": ["曲射"]}, 30.0, 0, 1, [], true, false)
 	check(indirect_context.weapon.indirect and indirect_context.weapon.hit_on == 5 and indirect_context.cover_bonus == 1, "indirect fire allows blocked targets with hit and cover modifiers")
+	var one_shot_context := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["一次性"]}, 10.0)
+	check(one_shot_context.weapon.one_shot, "one-shot weapon context is explicit")
 	var replay_models: Array = [{"unit_id": "u", "team": 0, "position": Vector2(1, 1)}]
 	var replay_log: Array = []
 	replay_log = CommandLog.append(replay_log, 0, "MOVE", {"unit_id": "u", "delta": [2, 0]})
@@ -229,6 +231,12 @@ func run() -> void:
 	combat_replay_log = CommandLog.append(combat_replay_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "attacker_m001", "target": 1, "target_id": "target_m001", "damage": 3})
 	var combat_replay := Replay.replay(Replay.initial_state(combat_replay_models, "SHOOTING", 0), combat_replay_log)
 	check(combat_replay.ok and combat_replay.state.models[1].wounds == 1, "replay applies shooting damage")
+	var one_shot_models: Array = [{"model_id": "shot_m001", "unit_id": "shot", "team": 0, "wounds": 3}, {"model_id": "shot_target_m001", "unit_id": "shot_target", "team": 1, "wounds": 4}]
+	var one_shot_log: Array = []
+	one_shot_log = CommandLog.append(one_shot_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "shot_m001", "target": 1, "target_id": "shot_target_m001", "weapon": "Single-use weapon", "one_shot": true, "damage": 1})
+	one_shot_log = CommandLog.append(one_shot_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "shot_m001", "target": 1, "target_id": "shot_target_m001", "weapon": "Single-use weapon", "one_shot": true, "damage": 1})
+	var one_shot_replay := Replay.replay(Replay.initial_state(one_shot_models, "SHOOTING", 0), one_shot_log)
+	check(not one_shot_replay.ok and one_shot_replay.reason == "ONE SHOT ALREADY USED", "replay rejects repeated one-shot weapon")
 	var phase_replay_log: Array = []
 	phase_replay_log = CommandLog.append(phase_replay_log, 0, "PHASE_ADVANCE", {"from": "MOVEMENT", "to": "SHOOTING"})
 	phase_replay_log = CommandLog.append(phase_replay_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "attacker_m001", "target": 1, "target_id": "target_m001", "damage": 1})

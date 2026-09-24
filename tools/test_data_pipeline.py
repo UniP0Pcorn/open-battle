@@ -46,7 +46,7 @@ class ReviewSheetTests(unittest.TestCase):
         self.assertEqual(review_flags(draft), [])
 
     def test_unimplemented_weapon_keywords_stay_in_review(self) -> None:
-        self.assertEqual(unsupported_tags(["突击", "手枪", "精准"]), ["精准"])
+        self.assertEqual(unsupported_tags(["突击", "手枪", "曲射", "一次性", "一次性武器", "精准"]), ["精准"])
         draft = {
             "models": [{"movement": "6", "toughness": "4", "save": "4+", "wounds": "2", "leadership": "7", "objective_control": "1"}],
             "weapons": [{"range": "24", "attacks": "2", "skill": "3", "strength": "5", "damage": "2", "ap": "-1", "tags": ["精准"]}],

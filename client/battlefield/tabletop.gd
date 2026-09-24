@@ -306,7 +306,7 @@ func add_model(point: Vector2, side: int, unit_id: String = "", model_data: Dict
 	var objective_control := int(model_data.get("objective_control", 1)) + int(ability_mods.objective_control_bonus)
 	# Retain movement per model; the current catalogue selection is only a default.
 	var movement_inches := float(model_data.get("movement_inches", fixture.get("movement_inches", 6.0)))
-	models.append({"model_id": model_id, "position": point, "radius": Rules.radius_inches(base_mm), "spent": 0.0, "advanced": bool(model_data.get("advanced", false)), "advance_bonus": int(model_data.get("advance_bonus", 0)), "team": side, "wounds": int(model_data.get("wounds", fixture.get("wounds", 3))), "toughness": int(model_data.get("toughness", fixture.get("toughness", 4))), "save_on": int(model_data.get("save_on", fixture.get("save_on", 7))), "invulnerable_save": int(model_data.get("invulnerable_save", fixture.get("invulnerable_save", 0))), "leadership": int(model_data.get("leadership", fixture.get("leadership", 7))), "objective_control": objective_control, "ability_ids": ability_ids, "keywords": model_data.get("keywords", unit_profile.get("keywords", [])).duplicate(true), "faction_keywords": model_data.get("faction_keywords", unit_profile.get("faction_keywords", [])).duplicate(true), "weapons": model_data.get("weapons", unit_profile.get("weapons", [])).duplicate(true), "unit_id": unit_id, "battle_shocked": false, "can_control": true})
+	models.append({"model_id": model_id, "position": point, "radius": Rules.radius_inches(base_mm), "spent": 0.0, "advanced": bool(model_data.get("advanced", false)), "advance_bonus": int(model_data.get("advance_bonus", 0)), "used_weapon_names": model_data.get("used_weapon_names", []).duplicate(true), "team": side, "wounds": int(model_data.get("wounds", fixture.get("wounds", 3))), "toughness": int(model_data.get("toughness", fixture.get("toughness", 4))), "save_on": int(model_data.get("save_on", fixture.get("save_on", 7))), "invulnerable_save": int(model_data.get("invulnerable_save", fixture.get("invulnerable_save", 0))), "leadership": int(model_data.get("leadership", fixture.get("leadership", 7))), "objective_control": objective_control, "ability_ids": ability_ids, "keywords": model_data.get("keywords", unit_profile.get("keywords", [])).duplicate(true), "faction_keywords": model_data.get("faction_keywords", unit_profile.get("faction_keywords", [])).duplicate(true), "weapons": model_data.get("weapons", unit_profile.get("weapons", [])).duplicate(true), "unit_id": unit_id, "battle_shocked": false, "can_control": true})
 
 	models[-1].movement_inches = movement_inches
 	models[-1].coherency_inches = float(model_data.get("coherency_inches", 2.0))
@@ -673,6 +673,12 @@ func fire_selected() -> void:
 	var attacker: Dictionary = models[selected]
 	var weapon := weapon_for_model(attacker)
 	var attacker_engaged := model_is_engaged_with_enemy(attacker)
+	var weapon_ids := WeaponRules.ids_from_weapon(weapon)
+	var weapon_name := str(weapon.get("name", ""))
+	if weapon_ids.has("one_shot") and attacker.get("used_weapon_names", []).has(weapon_name):
+		message = "一次性武器已经使用过。"
+		queue_redraw()
+		return
 	var target_index := -1
 	var nearest := INF
 	var target_has_line_of_sight := true
@@ -704,7 +710,9 @@ func fire_selected() -> void:
 	var attacker_abilities := UnitAbilities.modifiers(attacker.get("ability_ids", []))
 	var result := Combat.resolve_ranged_attack(weapon_context.weapon, target_for_attack, combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls))
 	reroll_next_attack = false
-	command_log = CommandLog.append(command_log, active_team, "SHOOT", {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "weapon": weapon.get("name", ""), "hits": result.hits, "damage": result.damage})
+	if weapon_ids.has("one_shot") and not attacker.get("used_weapon_names", []).has(weapon_name):
+		attacker.used_weapon_names.append(weapon_name)
+	command_log = CommandLog.append(command_log, active_team, "SHOOT", {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "weapon": weapon_name, "one_shot": weapon_ids.has("one_shot"), "hits": result.hits, "damage": result.damage})
 	var damage_result := Damage.allocate_to_unit(models, int(result.damage), target_index)
 	var hazardous_damage := int(result.hazardous_failures) * int(weapon_context.weapon.get("hazardous_damage", 3))
 	var hazardous_result := {"destroyed": 0, "damage": 0}

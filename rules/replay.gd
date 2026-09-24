@@ -91,6 +91,14 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 				return {"ok": false, "reason": "UNKNOWN UNIT", "state": state}
 		"SHOOT", "FIGHT":
 			var target_index := _index_for(next.models, payload, "target_id", "target")
+			if bool(payload.get("one_shot", false)):
+				var one_shot_attacker := _index_for(next.models, payload, "attacker_id", "attacker")
+				var one_shot_name := str(payload.get("weapon", ""))
+				if one_shot_attacker < 0 or one_shot_name.is_empty() or next.models[one_shot_attacker].get("used_weapon_names", []).has(one_shot_name):
+					return {"ok": false, "reason": "ONE SHOT ALREADY USED", "state": state}
+				var used_names: Array = next.models[one_shot_attacker].get("used_weapon_names", []).duplicate(true)
+				used_names.append(one_shot_name)
+				next.models[one_shot_attacker].used_weapon_names = used_names
 			var damage := int(payload.get("damage", -1))
 			if target_index < 0 or target_index >= next.models.size():
 				return {"ok": false, "reason": "INVALID DAMAGE EVENT", "state": state}
@@ -153,6 +161,11 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 				return "NOT ACTIVE TEAM"
 			if int(models[target].get("team", -1)) == actor_team:
 				return "FRIENDLY TARGET"
+			if bool(payload.get("one_shot", false)):
+				if str(payload.get("weapon", "")).is_empty():
+					return "INVALID DAMAGE EVENT"
+				if models[attacker].get("used_weapon_names", []).has(str(payload.get("weapon", ""))):
+					return "ONE SHOT ALREADY USED"
 		"HAZARDOUS":
 			var hazardous_attacker := _index_for(models, payload, "attacker_id", "attacker")
 			if hazardous_attacker < 0 or hazardous_attacker >= models.size():

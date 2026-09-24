@@ -38,4 +38,6 @@ static func validate_model(model: Variant, index: int = 0, ids: Dictionary = {})
 	for field in ["radius", "wounds", "spent", "advance_bonus"]:
 		if model.has(field) and (typeof(model[field]) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(model[field])) or float(model[field]) < 0.0):
 			return "INVALID MODEL " + field.to_upper() + " " + model_id
+	if model.has("used_weapon_names") and not (model.used_weapon_names is Array):
+		return "INVALID MODEL USED_WEAPON_NAMES " + model_id
 	return ""

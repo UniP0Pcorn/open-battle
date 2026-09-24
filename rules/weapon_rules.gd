@@ -18,6 +18,9 @@ const ALIASES := {
 	"pistol": "pistol",
 	"曲射": "indirect",
 	"indirect": "indirect",
+	"一次性": "one_shot",
+	"一次性武器": "one_shot",
+	"one shot": "one_shot",
 	"危险": "hazardous",
 	"hazardous": "hazardous",
 	"毁灭伤害": "devastating_wounds",
@@ -130,6 +133,8 @@ static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, t
 		result.lethal_hits = true
 	if ids.has("twin_linked"):
 		result.twin_linked = true
+	if ids.has("one_shot"):
+		result.one_shot = true
 	for keyword in ids:
 		if str(keyword).begins_with("sustained_hits_"):
 			result.sustained_hits = maxi(0, int(str(keyword).trim_prefix("sustained_hits_")))
