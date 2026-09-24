@@ -309,6 +309,11 @@ func run() -> void:
 	check(UnitAbilities.validate(["stealth", "reroll_hit_ones"]).is_empty(), "known abilities validate")
 	check(UnitAbilities.canonical_id("隐匿") == "stealth" and UnitAbilities.canonical_id("深入打击") == "deep_strike", "localized ability aliases normalize")
 	check(UnitAbilities.validate(["隐匿", "斥候6英寸"]).is_empty(), "localized ability aliases validate")
+	var movement_exception_mods := UnitAbilities.modifiers(["撤退后可射击", "撤退后可冲锋", "前进后可射击"])
+	check(movement_exception_mods.fall_back_and_shoot and movement_exception_mods.fall_back_and_charge and movement_exception_mods.shoot_after_advance, "movement exception abilities expose executable modifiers")
+	var fallback_shooter := {"team": 0, "fell_back": true, "ability_ids": ["fall_back_and_shoot"]}
+	var fallback_target := {"team": 1}
+	check(Combat.target_reason(fallback_shooter, fallback_target, 10.0, {"range_inches": 24.0, "abilities": []}, 0).is_empty(), "fall back and shoot ability bypasses the normal shooting lock")
 	var ability_mods := UnitAbilities.modifiers(["stealth", "objective_control_plus_1", "reroll_hit_ones"])
 	check(ability_mods.cover_bonus == 1 and ability_mods.objective_control_bonus == 1 and ability_mods.hit_rerolls == 1, "ability modifiers aggregate")
 	var stealth_target_abilities := UnitAbilities.modifiers(["stealth"])
@@ -662,6 +667,8 @@ func run() -> void:
 	check(Charge.target_reason(charge_attacker, charge_target, 0, 15.0, 8) == "OUT OF CHARGE RANGE", "charge target out of range")
 	var advance_charge_attacker := {"team": 0, "base_radius": 0.8, "advanced": true}
 	check(Charge.target_reason(advance_charge_attacker, charge_target, 0, 5.0, 8) == "ADVANCED CANNOT CHARGE" and Charge.target_reason(advance_charge_attacker, charge_target, 0, 5.0, 8, 1.0, true).is_empty(), "advance and charge ability unlocks charge")
+	var fallback_charge_attacker := {"team": 0, "base_radius": 0.8, "fell_back": true}
+	check(Charge.target_reason(fallback_charge_attacker, charge_target, 0, 5.0, 8) == "FELL BACK" and Charge.target_reason(fallback_charge_attacker, charge_target, 0, 5.0, 8, 1.0, false, true).is_empty(), "fall back and charge ability unlocks charge")
 	check(Charge.end_reason(Vector2(10, 10), Vector2(10.8, 10)).is_empty(), "charge ends in engagement")
 	check(Charge.end_reason(Vector2(10, 10), Vector2(13.5, 10), 1.0, 2.0, 1.0).is_empty(), "charge engagement includes base radii")
 	var melee_attacker := {"team": 0, "distance_to_target": 0.8}

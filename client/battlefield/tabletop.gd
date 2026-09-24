@@ -1036,7 +1036,7 @@ func charge_selected() -> void:
 		return
 	var roll := Charge.charge_distance(combat_rng)
 	var target: Dictionary = models[target_index]
-	var reason := Charge.target_reason(attacker, target, active_team, nearest, int(roll.distance), 1.0, bool(attacker_abilities.advance_and_charge))
+	var reason := Charge.target_reason(attacker, target, active_team, nearest, int(roll.distance), 1.0, bool(attacker_abilities.advance_and_charge), bool(attacker_abilities.fall_back_and_charge))
 	if not reason.is_empty():
 		message = "冲锋失败：%s（2D6=%d）。" % [reason, roll.distance]
 		queue_redraw()

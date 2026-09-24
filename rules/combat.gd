@@ -9,11 +9,12 @@ const WeaponRules = preload("res://rules/weapon_rules.gd")
 static func target_reason(attacker: Dictionary, target: Dictionary, distance: float, weapon: Dictionary, active_team: int, attacker_engaged: bool = false, target_engaged: bool = false) -> String:
 	if attacker.is_empty() or target.is_empty():
 		return "INVALID MODEL"
+	var attacker_abilities := UnitAbilities.modifiers(attacker.get("ability_ids", []))
 	if int(attacker.get("team", -1)) != active_team:
 		return "NOT ACTIVE TEAM"
-	if bool(attacker.get("fell_back", false)):
+	if bool(attacker.get("fell_back", false)) and not bool(attacker_abilities.get("fall_back_and_shoot", false)):
 		return "FELL BACK"
-	if bool(attacker.get("advanced", false)) and not WeaponRules.ids_from_weapon(weapon).has("assault"):
+	if bool(attacker.get("advanced", false)) and not WeaponRules.ids_from_weapon(weapon).has("assault") and not bool(attacker_abilities.get("shoot_after_advance", false)):
 		return "ADVANCED WITHOUT ASSAULT"
 	var pistol := WeaponRules.ids_from_weapon(weapon).has("pistol")
 	if attacker_engaged and not pistol:

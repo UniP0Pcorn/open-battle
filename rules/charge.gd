@@ -7,12 +7,12 @@ static func charge_distance(rng: RandomNumberGenerator) -> Dictionary:
 	var second := rng.randi_range(1, 6)
 	return {"rolls": [first, second], "distance": first + second}
 
-static func target_reason(attacker: Dictionary, target: Dictionary, active_team: int, starting_distance: float, charge_roll: int, engagement_range: float = 1.0, can_charge_after_advance: bool = false) -> String:
+static func target_reason(attacker: Dictionary, target: Dictionary, active_team: int, starting_distance: float, charge_roll: int, engagement_range: float = 1.0, can_charge_after_advance: bool = false, can_charge_after_fall_back: bool = false) -> String:
 	if attacker.is_empty() or target.is_empty():
 		return "INVALID MODEL"
 	if int(attacker.get("team", -1)) != active_team:
 		return "NOT ACTIVE TEAM"
-	if bool(attacker.get("fell_back", false)):
+	if bool(attacker.get("fell_back", false)) and not can_charge_after_fall_back:
 		return "FELL BACK"
 	if bool(attacker.get("advanced", false)) and not can_charge_after_advance:
 		return "ADVANCED CANNOT CHARGE"

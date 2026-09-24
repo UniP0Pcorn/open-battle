@@ -621,7 +621,7 @@ static func _charge_reference_error(models: Array, charger_index: int, target_in
 	var charger_abilities := UnitAbilities.modifiers(charger.get("ability_ids", []))
 	if bool(charger.get("advanced", false)) and not bool(charger_abilities.advance_and_charge):
 		return "ADVANCED CANNOT CHARGE"
-	if bool(charger.get("fell_back", false)):
+	if bool(charger.get("fell_back", false)) and not bool(charger_abilities.get("fall_back_and_charge", false)):
 		return "FELL BACK"
 	var charge_distance := INF
 	if payload.has("roll"):
@@ -635,7 +635,7 @@ static func _charge_reference_error(models: Array, charger_index: int, target_in
 			charge_distance += float(roll)
 	var starting_distance := _position_of(charger).distance_to(_position_of(target))
 	if not is_inf(charge_distance):
-		var target_error := Charge.target_reason(charger, target, int(charger.get("team", -1)), starting_distance, int(charge_distance), 1.0, bool(charger_abilities.advance_and_charge))
+		var target_error := Charge.target_reason(charger, target, int(charger.get("team", -1)), starting_distance, int(charge_distance), 1.0, bool(charger_abilities.advance_and_charge), bool(charger_abilities.fall_back_and_charge))
 		if not target_error.is_empty():
 			return target_error
 	var destination_value: Variant = payload.get("to", [])

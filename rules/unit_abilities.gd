@@ -19,7 +19,10 @@ const DEFINITIONS := {
 	"feel_no_pain_6": {"feel_no_pain": 6},
 	"damage_reduction_1": {"damage_reduction": 1},
 	"fights_first": {"fights_first": true},
-	"advance_and_charge": {"advance_and_charge": true}
+	"advance_and_charge": {"advance_and_charge": true},
+	"fall_back_and_shoot": {"fall_back_and_shoot": true},
+	"fall_back_and_charge": {"fall_back_and_charge": true},
+	"shoot_after_advance": {"shoot_after_advance": true}
 }
 
 const ALIASES := {
@@ -43,6 +46,9 @@ const ALIASES := {
 	"首发": "fights_first",
 	"先攻": "fights_first",
 	"前进后可冲锋": "advance_and_charge",
+	"撤退后可射击": "fall_back_and_shoot",
+	"撤退后可冲锋": "fall_back_and_charge",
+	"前进后可射击": "shoot_after_advance",
 }
 
 static func canonical_id(value: Variant) -> String:
@@ -62,7 +68,7 @@ static func validate(ids: Array) -> Array[String]:
 	return errors
 
 static func modifiers(ids: Array) -> Dictionary:
-	var result := {"cover_bonus": 0, "prebattle_move_inches": 0.0, "objective_control_bonus": 0, "leadership_bonus": 0, "hit_rerolls": 0, "hit_reroll_ones": 0, "wound_rerolls": 0, "wound_reroll_ones": 0, "save_rerolls": 0, "save_reroll_ones": 0, "invulnerable_save": 0, "feel_no_pain": 0, "damage_reduction": 0, "fights_first": false, "advance_and_charge": false}
+	var result := {"cover_bonus": 0, "prebattle_move_inches": 0.0, "objective_control_bonus": 0, "leadership_bonus": 0, "hit_rerolls": 0, "hit_reroll_ones": 0, "wound_rerolls": 0, "wound_reroll_ones": 0, "save_rerolls": 0, "save_reroll_ones": 0, "invulnerable_save": 0, "feel_no_pain": 0, "damage_reduction": 0, "fights_first": false, "advance_and_charge": false, "fall_back_and_shoot": false, "fall_back_and_charge": false, "shoot_after_advance": false}
 	for ability_id in ids:
 		var definition := _definition_for(ability_id)
 		if definition.is_empty():
