@@ -8,6 +8,8 @@ ALIASES = {
     "喷射": "torrent",
     "torrent": "torrent",
     "忽略掩体": "ignores_cover",
+    "无视掩体": "ignores_cover",
+    "忽视掩体": "ignores_cover",
     "ignores cover": "ignores_cover",
     "危险": "hazardous",
     "hazardous": "hazardous",
@@ -33,9 +35,15 @@ ALIASES = {
     "blast": "blast",
 }
 
+TRADITIONAL_TAG_CHARS = str.maketrans({
+    "熱": "热", "連": "连", "擊": "击", "雙": "双", "聯": "联",
+    "槍": "枪", "險": "险", "無": "无", "視": "视", "體": "体",
+    "準": "准", "突": "突", "發": "发",
+})
+
 
 def canonical_tag(value: object) -> str:
-    text = str(value).strip().lower()
+    text = str(value).strip().translate(TRADITIONAL_TAG_CHARS).lower()
     if text in {"", "无", "-", "—", "none", "n/a"}:
         return ""
     compact = text.replace(" ", "").replace("　", "")

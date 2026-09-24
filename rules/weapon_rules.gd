@@ -9,6 +9,8 @@ const ALIASES := {
 	"喷射": "torrent",
 	"torrent": "torrent",
 	"忽略掩体": "ignores_cover",
+	"无视掩体": "ignores_cover",
+	"忽视掩体": "ignores_cover",
 	"ignores cover": "ignores_cover",
 	"速射": "rapid_fire",
 	"rapid fire": "rapid_fire",
@@ -38,7 +40,7 @@ const ALIASES := {
 }
 
 static func canonical_id(value: Variant) -> String:
-	var text := str(value).strip_edges().to_lower()
+	var text := _normalize_tag_text(value)
 	if text in ["", "无", "-", "—", "none", "n/a"]:
 		return ""
 	var compact := text.replace(" ", "").replace("　", "")
@@ -73,6 +75,13 @@ static func canonical_id(value: Variant) -> String:
 	if compact.begins_with("sustainedhits") and compact.substr(13).is_valid_int():
 		return "sustained_hits_" + compact.substr(13)
 	return str(ALIASES.get(text, text))
+
+static func _normalize_tag_text(value: Variant) -> String:
+	var text := str(value).strip_edges().to_lower()
+	var replacements := {"熱": "热", "連": "连", "擊": "击", "雙": "双", "聯": "联", "槍": "枪", "險": "险", "無": "无", "視": "视", "體": "体", "準": "准"}
+	for source in replacements:
+		text = text.replace(source, str(replacements[source]))
+	return text
 
 static func ids_from_weapon(weapon: Dictionary) -> Array:
 	var result: Array = []
