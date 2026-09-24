@@ -13,6 +13,7 @@ const Movement = preload("res://rules/movement.gd")
 const TurnState = preload("res://rules/turn_state.gd")
 const WeaponRules = preload("res://rules/weapon_rules.gd")
 const UnitAbilities = preload("res://rules/unit_abilities.gd")
+const Reserves = preload("res://rules/reserves.gd")
 
 const EPSILON := 0.0001
 
@@ -35,6 +36,13 @@ static func play_turn(state: Dictionary, team: int, seed: int = 1, max_commands:
 			commands.append(command_result.entry)
 			continue
 		if phase == "MOVEMENT":
+			var reserve := _reserve_command(next, team)
+			if not reserve.is_empty():
+				var reserve_result := _submit(next, team, "DEPLOY_RESERVE", reserve)
+				if reserve_result.ok:
+					next = reserve_result.state
+					commands.append(reserve_result.entry)
+					continue
 			var movement := _movement_command(next, team)
 			if not movement.is_empty():
 				var movement_result := _submit(next, team, "MOVE", movement)
@@ -266,4 +274,26 @@ static func _position(model: Dictionary) -> Vector2:
 	if value is Array and value.size() == 2:
 		return Vector2(float(value[0]), float(value[1]))
 	return Vector2.ZERO
+
+static func _reserve_command(state: Dictionary, team: int) -> Dictionary:
+	var unit_ids: Array = []
+	for model in state.get("models", []):
+		if int(model.get("team", -1)) == team and Reserves.in_reserve(model) and not unit_ids.has(str(model.get("unit_id", ""))):
+			unit_ids.append(str(model.get("unit_id", "")))
+	var anchors := [Vector2(10, 10), Vector2(30, 10), Vector2(50, 10), Vector2(10, 34), Vector2(30, 34), Vector2(50, 34)]
+	for unit_id in unit_ids:
+		var unit_models: Array = []
+		for model in state.models:
+			if str(model.get("unit_id", "")) == unit_id:
+				unit_models.append(model)
+		if unit_models.is_empty() or not Reserves.has_deep_strike(unit_models[0]):
+			continue
+		var radius := float(unit_models[0].get("radius", 0.5))
+		for anchor in anchors:
+			var positions: Array = []
+			for index in range(unit_models.size()):
+				positions.append([anchor.x + index * (radius * 2.0 + 0.1), anchor.y])
+			if Reserves.arrival_reason(state.models, unit_id, team, positions).is_empty():
+				return {"unit_id": unit_id, "positions": positions}
+	return {}
 

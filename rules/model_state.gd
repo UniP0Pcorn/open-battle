@@ -42,4 +42,6 @@ static func validate_model(model: Variant, index: int = 0, ids: Dictionary = {})
 		return "INVALID MODEL USED_WEAPON_NAMES " + model_id
 	if model.has("fell_back") and typeof(model.fell_back) != TYPE_BOOL:
 		return "INVALID MODEL FELL_BACK " + model_id
+	if model.has("reserve_status") and str(model.reserve_status) not in ["deployed", "reserve", "destroyed"]:
+		return "INVALID MODEL RESERVE_STATUS " + model_id
 	return ""

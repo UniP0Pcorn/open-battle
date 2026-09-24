@@ -43,6 +43,7 @@ const RulesetCatalog = preload("res://rules/ruleset_catalog.gd")
 const MissionValidation = preload("res://rules/mission_validation.gd")
 const ModelState = preload("res://rules/model_state.gd")
 const AIPlayer = preload("res://rules/ai_player.gd")
+const Reserves = preload("res://rules/reserves.gd")
 var failures := 0
 var checks := 0
 
@@ -128,6 +129,11 @@ func run() -> void:
 	check(CommandSchema.validate_for_state(advance_entry, {"active_team": 0, "phase": "MOVEMENT"}).is_empty(), "command schema accepts advance")
 	var fall_back_entry := {"sequence": 0, "team": 0, "kind": "FALL_BACK", "payload": {"unit_id": "u", "delta": [-2.0, 0.0]}}
 	check(CommandSchema.validate_for_state(fall_back_entry, {"active_team": 0, "phase": "MOVEMENT"}).is_empty(), "command schema accepts fall back")
+	var reserve_entry := {"sequence": 0, "team": 0, "kind": "DEPLOY_RESERVE", "payload": {"unit_id": "u", "positions": [[10.0, 20.0]]}}
+	check(CommandSchema.validate_for_state(reserve_entry, {"active_team": 0, "phase": "MOVEMENT"}).is_empty(), "command schema accepts reserve arrival")
+	var bad_reserve_entry := reserve_entry.duplicate(true)
+	bad_reserve_entry.payload.positions = [[10.0]]
+	check(CommandSchema.validate_entry(bad_reserve_entry) == "INVALID RESERVE ARRIVAL", "command schema rejects malformed reserve arrival")
 	var bad_advance := advance_entry.duplicate(true)
 	bad_advance.payload.roll = -1
 	check(CommandSchema.validate_entry(bad_advance) == "INVALID ADVANCE", "command schema rejects invalid advance roll")
@@ -355,6 +361,20 @@ func run() -> void:
 	advance_replay_log = CommandLog.append(advance_replay_log, 0, "ADVANCE", {"unit_id": "u", "roll": 4})
 	var advance_replay := Replay.replay(Replay.initial_state(replay_models), advance_replay_log)
 	check(advance_replay.ok and advance_replay.state.models[0].advanced and advance_replay.state.models[0].advance_bonus == 4, "replay applies advance metadata")
+	var reserve_models: Array = [{"model_id": "reserve_m001", "unit_id": "reserve_unit", "team": 0, "position": Vector2(3, 3), "radius": 0.5, "ability_ids": ["deep_strike"], "reserve_status": "reserve"}, {"model_id": "reserve_enemy_m001", "unit_id": "reserve_enemy", "team": 1, "position": Vector2(40, 30), "radius": 0.5}]
+	check(Reserves.has_deep_strike(reserve_models[0]) and Reserves.in_reserve(reserve_models[0]), "deep strike reserve metadata is recognized")
+	var reserve_arrival_log: Array = []
+	reserve_arrival_log = CommandLog.append(reserve_arrival_log, 0, "DEPLOY_RESERVE", {"unit_id": "reserve_unit", "positions": [[20, 20]]})
+	var reserve_arrival := Replay.replay(Replay.initial_state(reserve_models, "MOVEMENT", 0), reserve_arrival_log)
+	check(reserve_arrival.ok and reserve_arrival.state.models[0].reserve_status == "deployed" and reserve_arrival.state.models[0].position == Vector2(20, 20), "replay deploys deep strike reserve")
+	var reserve_too_close_log: Array = []
+	reserve_too_close_log = CommandLog.append(reserve_too_close_log, 0, "DEPLOY_RESERVE", {"unit_id": "reserve_unit", "positions": [[39, 30]]})
+	var reserve_too_close := Replay.replay(Replay.initial_state(reserve_models, "MOVEMENT", 0), reserve_too_close_log)
+	check(not reserve_too_close.ok and reserve_too_close.reason == "TOO CLOSE TO ENEMY", "deep strike enforces enemy distance")
+	var reserve_move_log: Array = []
+	reserve_move_log = CommandLog.append(reserve_move_log, 0, "MOVE", {"unit_id": "reserve_unit", "delta": [1, 0]})
+	var reserve_move := Replay.replay(Replay.initial_state(reserve_models, "MOVEMENT", 0), reserve_move_log)
+	check(not reserve_move.ok and reserve_move.reason == "UNIT IN RESERVE", "reserve unit cannot move before arrival")
 	var repeated_advance_log := advance_replay_log.duplicate(true)
 	repeated_advance_log = CommandLog.append(repeated_advance_log, 0, "ADVANCE", {"unit_id": "u", "roll": 3})
 	var repeated_advance := Replay.replay(Replay.initial_state(replay_models), repeated_advance_log)
@@ -910,6 +930,14 @@ func run() -> void:
 	scene.end_turn()
 	var scene_ai_turn: Dictionary = scene.run_single_player_ai()
 	check(scene_ai_turn.ok and scene.active_team == 0 and scene.phase == "MOVEMENT" and scene.command_log.size() > 5, "scene runs AI through authoritative single-player turn")
+	var ai_reserve_models: Array = [{"model_id": "ai_reserve_m001", "unit_id": "ai_reserve", "team": 1, "position": Vector2(3, 40), "radius": 0.5, "ability_ids": ["deep_strike"], "reserve_status": "reserve", "wounds": 3}, {"model_id": "ai_enemy_m001", "unit_id": "ai_enemy", "team": 0, "position": Vector2(30, 22), "radius": 0.5, "wounds": 3}]
+	var ai_reserve_state := Replay.initial_state(ai_reserve_models, "MOVEMENT", 1)
+	var ai_reserve_turn := AIPlayer.play_turn(BattleSession.create(ai_reserve_models, 11, 1), 1, 77)
+	var ai_reserve_deployed := false
+	for ai_entry in ai_reserve_turn.commands:
+		if str(ai_entry.get("kind", "")) == "DEPLOY_RESERVE":
+			ai_reserve_deployed = true
+	check(ai_reserve_turn.ok and ai_reserve_deployed, "single-player AI deploys deep strike reserves")
 	scene.save_state()
 	scene.queue_free()
 	await process_frame

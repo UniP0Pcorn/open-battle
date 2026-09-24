@@ -88,6 +88,7 @@ static func expand_unit(profile: Dictionary, count: int, team: int, unit_id: Str
 			"faction_stratagems": FactionRules.stratagems(profile),
 			"keywords": profile.get("keywords", []).duplicate(true),
 			"faction_keywords": profile.get("faction_keywords", []).duplicate(true),
-			"weapons": profile.get("weapons", []).duplicate(true)
+			"weapons": profile.get("weapons", []).duplicate(true),
+			"reserve_status": "deployed"
 		})
 	return {"unit_id": unit_id, "team": team, "models": models, "profile": profile.id, "abilities": ability_ids, "keywords": profile.get("keywords", []).duplicate(true), "faction_keywords": profile.get("faction_keywords", []).duplicate(true)}

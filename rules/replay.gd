@@ -12,9 +12,13 @@ const Movement = preload("res://rules/movement.gd")
 const Stratagems = preload("res://rules/stratagems.gd")
 const TurnState = preload("res://rules/turn_state.gd")
 const UnitAbilities = preload("res://rules/unit_abilities.gd")
+const Reserves = preload("res://rules/reserves.gd")
 
 static func initial_state(models: Array, phase: String = "MOVEMENT", active_team: int = 0, terrain: Array = []) -> Dictionary:
 	var initial_models: Array = models.duplicate(true)
+	for model in initial_models:
+		if not model.has("reserve_status"):
+			model.reserve_status = Reserves.DEPLOYED
 	if phase == "FIGHT":
 		for model in initial_models:
 			model.fought = false
@@ -67,6 +71,24 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 					advanced_found = true
 			if not advanced_found:
 				return {"ok": false, "reason": "UNKNOWN UNIT", "state": state}
+		"DEPLOY_RESERVE":
+			var reserve_unit_id := str(payload.get("unit_id", ""))
+			var positions: Array = payload.get("positions", [])
+			var reserve_error := Reserves.arrival_reason(next.models, reserve_unit_id, int(entry.team), positions)
+			if not reserve_error.is_empty():
+				return {"ok": false, "reason": reserve_error, "state": state}
+			var position_index := 0
+			for model in next.models:
+				if str(model.get("unit_id", "")) != reserve_unit_id:
+					continue
+				var destination: Array = positions[position_index]
+				model.position = Vector2(float(destination[0]), float(destination[1]))
+				model.reserve_status = Reserves.DEPLOYED
+				model.spent = 0.0
+				model.advanced = false
+				model.advance_bonus = 0
+				model.fell_back = false
+				position_index += 1
 		"CHARGE":
 			var model_index := _index_for(next.models, payload, "model_id", "model")
 			var destination: Array = payload.get("to", [])
@@ -224,6 +246,8 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 			var found := false
 			for model in models:
 				if str(model.get("unit_id", "")) == str(payload.get("unit_id", "")):
+					if Reserves.in_reserve(model):
+						return "UNIT IN RESERVE"
 					found = true
 					if int(model.get("team", -1)) != actor_team:
 						return "NOT ACTIVE TEAM"
@@ -234,17 +258,23 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 			var advance_found := false
 			for model in models:
 				if str(model.get("unit_id", "")) == str(payload.get("unit_id", "")):
+					if Reserves.in_reserve(model):
+						return "UNIT IN RESERVE"
 					advance_found = true
 					if int(model.get("team", -1)) != actor_team:
 						return "NOT ACTIVE TEAM"
 			if not advance_found:
 				return "UNKNOWN UNIT"
 			return _advance_reference_error(models, str(payload.get("unit_id", "")))
+		"DEPLOY_RESERVE":
+			return Reserves.arrival_reason(models, str(payload.get("unit_id", "")), actor_team, payload.get("positions", []))
 		"CHARGE":
 			var charger := _index_for(models, payload, "model_id", "model")
 			var charge_target := _index_for(models, payload, "target_id", "target")
 			if charger < 0 or charger >= models.size() or charge_target < 0 or charge_target >= models.size():
 				return "INVALID CHARGE"
+			if Reserves.in_reserve(models[charger]) or Reserves.in_reserve(models[charge_target]):
+				return "UNIT IN RESERVE"
 			if int(models[charger].get("team", -1)) != actor_team:
 				return "NOT ACTIVE TEAM"
 			if int(models[charge_target].get("team", -1)) == actor_team:
@@ -255,6 +285,8 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 			var target := _index_for(models, payload, "target_id", "target")
 			if attacker < 0 or attacker >= models.size() or target < 0 or target >= models.size() or attacker == target:
 				return "INVALID DAMAGE EVENT"
+			if Reserves.in_reserve(models[attacker]) or Reserves.in_reserve(models[target]):
+				return "UNIT IN RESERVE"
 			if int(models[attacker].get("team", -1)) != actor_team:
 				return "NOT ACTIVE TEAM"
 			if int(models[target].get("team", -1)) == actor_team:
@@ -281,6 +313,8 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 			var hazardous_attacker := _index_for(models, payload, "attacker_id", "attacker")
 			if hazardous_attacker < 0 or hazardous_attacker >= models.size():
 				return "INVALID HAZARDOUS EVENT"
+			if Reserves.in_reserve(models[hazardous_attacker]):
+				return "UNIT IN RESERVE"
 			if int(models[hazardous_attacker].get("team", -1)) != actor_team:
 				return "NOT ACTIVE TEAM"
 			var hazardous_fnp_error := _feel_no_pain_reference_error(models[hazardous_attacker], int(payload.get("damage", 0)), payload)
@@ -289,7 +323,7 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 		"BATTLE_SHOCK":
 			var found_unit := false
 			for model in models:
-				if str(model.get("unit_id", "")) == str(payload.get("unit_id", "")):
+				if str(model.get("unit_id", "")) == str(payload.get("unit_id", "")) and not Reserves.in_reserve(model):
 					found_unit = true
 					if int(model.get("team", -1)) != actor_team:
 						return "NOT ACTIVE TEAM"
@@ -314,11 +348,11 @@ static func _movement_reference_error(models: Array, unit_id: String, delta: Arr
 	var enemies: Array = []
 	var unit_team := -1
 	for model in models:
-		if str(model.get("unit_id", "")) == unit_id:
+		if str(model.get("unit_id", "")) == unit_id and not Reserves.in_reserve(model):
 			unit_models.append(model)
 			unit_team = int(model.get("team", -1))
 	for model in models:
-		if int(model.get("team", -1)) != unit_team:
+		if int(model.get("team", -1)) != unit_team and not Reserves.in_reserve(model):
 			enemies.append(model)
 	var engaged := false
 	var remains_engaged := false
@@ -326,7 +360,7 @@ static func _movement_reference_error(models: Array, unit_id: String, delta: Arr
 	var movement_distance := movement_delta.length()
 	var external_models: Array = []
 	for model in models:
-		if str(model.get("unit_id", "")) != unit_id:
+		if str(model.get("unit_id", "")) != unit_id and not Reserves.in_reserve(model):
 			external_models.append(model)
 	for model in unit_models:
 		if bool(model.get("fell_back", false)):
@@ -361,11 +395,11 @@ static func _advance_reference_error(models: Array, unit_id: String) -> String:
 	var enemies: Array = []
 	var unit_team := -1
 	for model in models:
-		if str(model.get("unit_id", "")) == unit_id:
+		if str(model.get("unit_id", "")) == unit_id and not Reserves.in_reserve(model):
 			unit_models.append(model)
 			unit_team = int(model.get("team", -1))
 	for model in models:
-		if int(model.get("team", -1)) != unit_team:
+		if int(model.get("team", -1)) != unit_team and not Reserves.in_reserve(model):
 			enemies.append(model)
 	for model in unit_models:
 		if float(model.get("spent", 0.0)) > Engagement.EPSILON:
@@ -500,8 +534,10 @@ static func _attack_reference_error(models: Array, attacker_index: int, target_i
 
 static func _engaged_with_enemy(models: Array, model_index: int) -> bool:
 	var model: Dictionary = models[model_index]
+	if Reserves.in_reserve(model):
+		return false
 	for index in range(models.size()):
-		if index == model_index or int(models[index].get("team", -1)) == int(model.get("team", -1)):
+		if index == model_index or Reserves.in_reserve(models[index]) or int(models[index].get("team", -1)) == int(model.get("team", -1)):
 			continue
 		if Engagement.in_engagement(model, models[index]):
 			return true

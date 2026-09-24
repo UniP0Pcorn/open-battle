@@ -2,12 +2,13 @@
 extends RefCounted
 ## Canonical command envelope and phase contract shared by saves, replay and servers.
 
-const KINDS := ["MOVE", "ADVANCE", "FALL_BACK", "SHOOT", "CHARGE", "FIGHT", "PHASE_ADVANCE", "END_TURN", "BATTLE_SHOCK", "HAZARDOUS", "STRATAGEM"]
+const KINDS := ["MOVE", "ADVANCE", "FALL_BACK", "DEPLOY_RESERVE", "SHOOT", "CHARGE", "FIGHT", "PHASE_ADVANCE", "END_TURN", "BATTLE_SHOCK", "HAZARDOUS", "STRATAGEM"]
 const PHASES := ["COMMAND", "MOVEMENT", "SHOOTING", "CHARGE", "FIGHT"]
 const PHASE_BY_KIND := {
 	"MOVE": "MOVEMENT",
 	"ADVANCE": "MOVEMENT",
 	"FALL_BACK": "MOVEMENT",
+	"DEPLOY_RESERVE": "MOVEMENT",
 	"SHOOT": "SHOOTING",
 	"CHARGE": "CHARGE",
 	"FIGHT": "FIGHT"
@@ -33,6 +34,12 @@ static func validate_payload(kind: String, payload: Dictionary) -> String:
 		"ADVANCE":
 			if str(payload.get("unit_id", "")).is_empty() or not _nonnegative_int(payload.get("roll", -1)) or int(payload.get("roll", 0)) < 1 or int(payload.get("roll", 0)) > 6:
 				return "INVALID ADVANCE"
+		"DEPLOY_RESERVE":
+			if str(payload.get("unit_id", "")).is_empty() or not (payload.get("positions", null) is Array) or payload.positions.is_empty():
+				return "INVALID RESERVE ARRIVAL"
+			for position in payload.positions:
+				if not _numbers(position, 2):
+					return "INVALID RESERVE ARRIVAL"
 		"SHOOT", "FIGHT":
 			if not _model_ref(payload, "attacker_id", "attacker") or not _model_ref(payload, "target_id", "target"):
 				return "INVALID DAMAGE EVENT"

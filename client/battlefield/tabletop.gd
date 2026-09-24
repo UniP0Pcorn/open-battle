@@ -26,6 +26,7 @@ const MissionValidation = preload("res://rules/mission_validation.gd")
 const Dice = preload("res://rules/dice.gd")
 const BattleSession = preload("res://rules/battle_session.gd")
 const AIPlayer = preload("res://rules/ai_player.gd")
+const Reserves = preload("res://rules/reserves.gd")
 const SCALE := 15.0
 const OFFSET := Vector2(38, 112)
 const GOLD := Color("e5ba6b")
@@ -122,6 +123,7 @@ func _ready() -> void:
 	add_button("进入战斗阶段  [V]", Vector2(976, 805), enter_fight)
 	add_button("近战攻击  [X]", Vector2(976, 845), fight_selected)
 	add_button("宣布撤退  [Z]", Vector2(976, 885), fall_back_selected)
+	add_button("深入打击 / 出预备队  [H]", Vector2(976, 925), deploy_selected_reserve)
 
 func add_button(title: String, position_px: Vector2, action: Callable) -> void:
 	var button := Button.new()
@@ -356,7 +358,7 @@ func add_model(point: Vector2, side: int, unit_id: String = "", model_data: Dict
 	var objective_control := int(model_data.get("objective_control", 1)) + int(ability_mods.objective_control_bonus)
 	# Retain movement per model; the current catalogue selection is only a default.
 	var movement_inches := float(model_data.get("movement_inches", fixture.get("movement_inches", 6.0)))
-	models.append({"model_id": model_id, "position": point, "radius": Rules.radius_inches(base_mm), "spent": 0.0, "advanced": bool(model_data.get("advanced", false)), "advance_bonus": int(model_data.get("advance_bonus", 0)), "fell_back": bool(model_data.get("fell_back", false)), "fought": bool(model_data.get("fought", false)), "used_weapon_names": model_data.get("used_weapon_names", []).duplicate(true), "team": side, "wounds": int(model_data.get("wounds", fixture.get("wounds", 3))), "toughness": int(model_data.get("toughness", fixture.get("toughness", 4))), "save_on": int(model_data.get("save_on", fixture.get("save_on", 7))), "invulnerable_save": int(model_data.get("invulnerable_save", fixture.get("invulnerable_save", 0))), "leadership": int(model_data.get("leadership", fixture.get("leadership", 7))), "objective_control": objective_control, "ability_ids": ability_ids, "keywords": model_data.get("keywords", unit_profile.get("keywords", [])).duplicate(true), "faction_keywords": model_data.get("faction_keywords", unit_profile.get("faction_keywords", [])).duplicate(true), "weapons": model_data.get("weapons", unit_profile.get("weapons", [])).duplicate(true), "unit_id": unit_id, "battle_shocked": false, "can_control": true})
+	models.append({"model_id": model_id, "position": point, "radius": Rules.radius_inches(base_mm), "spent": 0.0, "advanced": bool(model_data.get("advanced", false)), "advance_bonus": int(model_data.get("advance_bonus", 0)), "fell_back": bool(model_data.get("fell_back", false)), "fought": bool(model_data.get("fought", false)), "reserve_status": str(model_data.get("reserve_status", "deployed")), "used_weapon_names": model_data.get("used_weapon_names", []).duplicate(true), "team": side, "wounds": int(model_data.get("wounds", fixture.get("wounds", 3))), "toughness": int(model_data.get("toughness", fixture.get("toughness", 4))), "save_on": int(model_data.get("save_on", fixture.get("save_on", 7))), "invulnerable_save": int(model_data.get("invulnerable_save", fixture.get("invulnerable_save", 0))), "leadership": int(model_data.get("leadership", fixture.get("leadership", 7))), "objective_control": objective_control, "ability_ids": ability_ids, "keywords": model_data.get("keywords", unit_profile.get("keywords", [])).duplicate(true), "faction_keywords": model_data.get("faction_keywords", unit_profile.get("faction_keywords", [])).duplicate(true), "weapons": model_data.get("weapons", unit_profile.get("weapons", [])).duplicate(true), "unit_id": unit_id, "battle_shocked": false, "can_control": true})
 
 	models[-1].movement_inches = movement_inches
 	models[-1].coherency_inches = float(model_data.get("coherency_inches", 2.0))
@@ -438,6 +440,42 @@ func fall_back_selected() -> void:
 			return
 	falling_back = true
 	message = "已宣布撤退：拖动单位离开接战范围；完成后本回合不能射击或冲锋。"
+	queue_redraw()
+
+func deploy_selected_reserve() -> void:
+	if phase != "MOVEMENT":
+		message = "预备队只能在移动阶段入场。"
+		queue_redraw()
+		return
+	if selected < 0 or selected >= models.size() or models[selected].team != active_team:
+		message = "请选择当前阵营的预备队单位。"
+		queue_redraw()
+		return
+	var unit_models := selected_unit_models()
+	if unit_models.is_empty() or not Reserves.in_reserve(unit_models[0]):
+		message = "所选单位不在预备队。"
+		queue_redraw()
+		return
+	var anchor: Vector2 = models[selected].position
+	var destinations: Array = []
+	for model in unit_models:
+		var offset: Vector2 = model.position - anchor
+		destinations.append([preview.x + offset.x, preview.y + offset.y])
+	var unit_id := str(models[selected].get("unit_id", ""))
+	var reason := Reserves.arrival_reason(models, unit_id, active_team, destinations)
+	if not reason.is_empty():
+		message = "非法深入打击：" + display_reason(reason)
+		queue_redraw()
+		return
+	var payload := {"unit_id": unit_id, "positions": destinations}
+	if _submit_network_command("DEPLOY_RESERVE", payload):
+		return
+	for index in range(unit_models.size()):
+		unit_models[index].position = Vector2(float(destinations[index][0]), float(destinations[index][1]))
+		unit_models[index].reserve_status = Reserves.DEPLOYED
+		unit_models[index].spent = 0.0
+	command_log = CommandLog.append(command_log, active_team, "DEPLOY_RESERVE", payload)
+	message = "单位以深入打击入场；距离敌方至少 9 英寸。"
 	queue_redraw()
 
 func end_turn() -> void:
@@ -1072,6 +1110,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				advance_selected()
 			KEY_Z:
 				fall_back_selected()
+			KEY_H:
+				deploy_selected_reserve()
 			KEY_R:
 				reset_table()
 			KEY_T:
@@ -1139,6 +1179,9 @@ func display_reason(reason: String) -> String:
 		"PATH BLOCKED": return "移动路径被其他底座阻挡"
 		"OUTSIDE DEPLOYMENT ZONE": return "超出当前阵营部署区"
 		"INVALID DEPLOYMENT ZONE": return "任务部署区配置无效"
+		"TOO CLOSE TO ENEMY": return "距离敌方不足 9 英寸"
+		"UNIT IN RESERVE": return "单位仍在预备队"
+		"UNIT LACKS DEEP STRIKE": return "单位没有深入打击"
 	return reason
 
 func _draw() -> void:
