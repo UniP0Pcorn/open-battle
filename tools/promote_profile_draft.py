@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 from pathlib import Path
 
@@ -50,6 +51,15 @@ def inches(value: object, label: str) -> float:
 
 
 def promote(draft: dict, faction: str, base_mm: float, coherency: float) -> dict:
+    try:
+        from tools.export_profile_review_sheet import review_flags
+    except ModuleNotFoundError:
+        from export_profile_review_sheet import review_flags
+    flags = review_flags(draft)
+    if flags:
+        raise ValueError("unresolved review flags: " + ", ".join(flags))
+    if not faction.strip() or not math.isfinite(base_mm) or base_mm <= 0 or not math.isfinite(coherency) or coherency < 0:
+        raise ValueError("faction and finite positive base / nonnegative coherency required")
     model = draft["models"][0]
     result = {
         "id": draft["id"].replace("draft_", ""),
@@ -106,9 +116,21 @@ def main() -> None:
     parser.add_argument("--base-mm", type=float, required=True)
     parser.add_argument("--coherency", type=float, default=2.0)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--reviewed-by", required=True)
+    parser.add_argument("--reviewed-at", required=True)
+    parser.add_argument("--draft-sha256", required=True)
     args = parser.parse_args()
     draft = json.loads(args.draft.read_text(encoding="utf-8"))
-    result = promote(draft, args.faction, args.base_mm, args.coherency)
+    try:
+        from tools.promote_reviewed_profiles import approved_profile
+    except ModuleNotFoundError:
+        from promote_reviewed_profiles import approved_profile
+    result = approved_profile({
+        "decision": "approved", "draft_file": args.draft.name, "id": draft["id"],
+        "reviewed_by": args.reviewed_by, "reviewed_at": args.reviewed_at,
+        "draft_sha256": args.draft_sha256, "faction": args.faction,
+        "base_mm": args.base_mm, "coherency_inches": args.coherency,
+    }, args.draft.parent)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"promoted {result['display_name']} -> {args.output}")

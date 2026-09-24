@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -85,6 +86,7 @@ def rows(root: Path, sources: dict[str, dict] | None = None):
         weapon_tags = sorted({str(tag) for weapon in draft.get("weapons", []) for tag in weapon.get("tags", [])})
         yield {
             "draft_file": path.name,
+            "draft_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
             "id": draft.get("id", ""),
             "display_name": draft.get("display_name", ""),
             "edition": draft.get("edition", ""),
@@ -106,6 +108,8 @@ def rows(root: Path, sources: dict[str, dict] | None = None):
             "review_flags": "|".join(flags),
             "weapon_tags": "|".join(weapon_tags),
             "decision": "pending_manual_review",
+            "reviewed_by": "",
+            "reviewed_at": "",
         }
 
 
@@ -117,7 +121,10 @@ def main() -> None:
     args = parser.parse_args()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     source_map = source_lookup(args.manifest)
-    fields = list(next(rows(args.draft_dir, source_map)).keys())
+    first = next(rows(args.draft_dir, source_map), None)
+    if first is None:
+        parser.error("no draft JSON files found; build review drafts first")
+    fields = list(first.keys())
     with args.output.open("w", newline="", encoding="utf-8-sig") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()

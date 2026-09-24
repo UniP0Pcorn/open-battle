@@ -9,9 +9,47 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import hashlib
+import re
+from datetime import date
 from pathlib import Path
 
-from promote_profile_draft import promote
+try:
+    from tools.promote_profile_draft import promote
+except ModuleNotFoundError:
+    from promote_profile_draft import promote
+
+
+def approved_profile(row: dict, draft_dir: Path) -> dict:
+    """Bind explicit human approval to the exact reviewed draft bytes."""
+    if str(row.get("decision", "")).strip().lower() != "approved":
+        raise ValueError("explicit approval required")
+    reviewer = str(row.get("reviewed_by", "")).strip()
+    if not reviewer:
+        raise ValueError("reviewed_by is required")
+    reviewed_at = str(row.get("reviewed_at", "")).strip()
+    try:
+        date.fromisoformat(reviewed_at)
+    except ValueError as exc:
+        raise ValueError("reviewed_at must be an ISO date") from exc
+    filename = str(row.get("draft_file", ""))
+    if not filename or Path(filename).name != filename or "/" in filename or "\\" in filename:
+        raise ValueError("draft_file must name one file in draft-dir")
+    draft_path = (draft_dir / filename).resolve()
+    if draft_path.parent != draft_dir.resolve():
+        raise ValueError("draft is outside draft-dir")
+    raw = draft_path.read_bytes()
+    digest = hashlib.sha256(raw).hexdigest()
+    if str(row.get("draft_sha256", "")).strip().lower() != digest:
+        raise ValueError("draft changed or review hash missing; review again")
+    draft = json.loads(raw.decode("utf-8"))
+    if str(row.get("id", "")) != str(draft.get("id", "")):
+        raise ValueError("review row does not match draft id")
+    result = promote(draft, str(row.get("faction", "")).strip(), float(row.get("base_mm", "")), float(row.get("coherency_inches", "2.0")))
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", str(result["id"])):
+        raise ValueError("profile id is not a safe file name")
+    result["review"] = {"reviewed_by": reviewer, "reviewed_at": reviewed_at, "draft_sha256": digest}
+    return result
 
 
 def main() -> None:
@@ -27,19 +65,8 @@ def main() -> None:
         for row_number, row in enumerate(csv.DictReader(handle), start=2):
             if str(row.get("decision", "")).strip().lower() != "approved":
                 continue
-            draft_path = args.draft_dir / str(row.get("draft_file", ""))
             try:
-                if not draft_path.is_file():
-                    raise ValueError(f"missing draft: {draft_path}")
-                base_mm = float(str(row.get("base_mm", "")).strip())
-                if base_mm <= 0:
-                    raise ValueError("base_mm must be positive")
-                coherency = float(str(row.get("coherency_inches", "2.0")).strip())
-                faction = str(row.get("faction", "")).strip()
-                if not faction:
-                    raise ValueError("faction is required")
-                draft = json.loads(draft_path.read_text(encoding="utf-8"))
-                result = promote(draft, faction, base_mm, coherency)
+                result = approved_profile(row, args.draft_dir)
                 output_path = args.output_dir / f"{result['id']}.json"
                 output_path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
                 promoted += 1

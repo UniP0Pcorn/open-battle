@@ -154,7 +154,7 @@ Warhammer 40,000、Custodian Guard 等相关名称属于各自权利人，包括
 
 交互方向参考了 [New Recruit](https://www.newrecruit.eu/) 公开介绍的编成校验、跨设备列表同步、分享与离线使用等能力；本项目的大厅和规则数据保持独立。
 
-当前回归：Godot **544 项检查，0 失败**；Python 数据管线 **7 项测试通过**。
+当前回归：Godot **544 项检查，0 失败**；Python 数据管线 **12 项测试通过**。
 
 自定义 REACTION_SHOOT 可在敌方移动后触发，由主机生成骰子结果并写入日志；面板选择射手、武器和触发单位中的目标。旧 fire_overwatch 声明仍不代表完整官方警戒射击。远端普通射击、近战和战斗震慑现在强制通过意图命令交给主机结算。
 
@@ -175,3 +175,7 @@ Warhammer 40,000、Custodian Guard 等相关名称属于各自权利人，包括
 反应策略面板会随策略选择刷新合格单位、射手与武器；空候选不能执行，仍可放弃反应。
 
 自定义策略支持数据驱动的阶段、回合和整场使用次数上限；失败请求不消耗次数。
+
+审核导入现在必须填写 `decision=approved`、`reviewed_by`、`reviewed_at`（YYYY-MM-DD），并保留导出时的 `draft_sha256`。先修正草稿，再重新导出并人工复核；批准后修改草稿会使摘要不匹配，不能沿用旧批准。审核人字段用于追溯，不是身份认证或官方数据确认。缺失分数、武器、阵营关键词及未支持武器标签均会阻止导入。
+
+批量入口：`python -m tools.promote_reviewed_profiles work/profile_review.csv --draft-dir work/profile_drafts`。直接转换入口也要求 `--reviewed-by`、`--reviewed-at`、`--draft-sha256`；摘要可用 PowerShell `Get-FileHash -Algorithm SHA256 <草稿路径>` 核对。旧 CSV 需要从原草稿重新导出补充审核字段，不应自动填成已批准。
