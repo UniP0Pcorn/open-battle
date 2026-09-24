@@ -110,9 +110,11 @@ static func validate(ids: Array) -> Array[String]:
 				errors.append("INVALID AURA MODIFIERS")
 				continue
 			for key in values:
-				var supported: Array = ["cover_bonus"] if str(aura.get("event", "")) == "before_defend" else ["hit_rerolls", "hit_reroll_ones", "wound_rerolls", "wound_reroll_ones"]
+				var supported: Array = ["cover_bonus", "save_rerolls", "save_reroll_ones", "invulnerable_save"] if str(aura.get("event", "")) == "before_defend" else ["hit_rerolls", "hit_reroll_ones", "wound_rerolls", "wound_reroll_ones"]
 				if key not in supported or typeof(values[key]) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(values[key])) or float(values[key]) < 0 or float(values[key]) != float(int(values[key])):
 					errors.append("UNSUPPORTED AURA MODIFIER")
+				elif key == "invulnerable_save" and (int(values[key]) < 2 or int(values[key]) > 6):
+					errors.append("INVALID AURA SAVE THRESHOLD")
 	return errors
 
 static func modifiers(ids: Array) -> Dictionary:

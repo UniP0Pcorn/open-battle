@@ -1190,7 +1190,7 @@ func fight_selected() -> void:
 		message = "一次性武器已经使用过。"
 		queue_redraw()
 		return
-	var result := Melee.resolve_attack(weapon, models[target_index], combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls), models[target_index].get("keywords", []), attacker_abilities)
+	var result := Melee.resolve_attack(weapon, models[target_index], combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls), models[target_index].get("keywords", []), attacker_abilities, FactionRules.combat_modifiers(models, models[target_index], "before_defend", {"phase": "FIGHT", "kind": "FIGHT"}))
 	var fight_payload := {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "weapon": weapon_name, "one_shot": weapon_ids.has("one_shot"), "hits": result.hits, "damage": result.damage}
 	if network_active:
 		var fight_preview: Array = [models[target_index].duplicate(true)]
@@ -1295,7 +1295,7 @@ func fire_selected() -> void:
 		queue_redraw()
 		return
 	var target_for_attack: Dictionary = models[target_index].duplicate(true)
-	var target_abilities := FactionRules.combat_modifiers(models, target_for_attack, "before_defend")
+	var target_abilities := FactionRules.combat_modifiers(models, target_for_attack, "before_defend", {"phase": "SHOOTING", "kind": "SHOOT"})
 	var cover_bonus := Visibility.cover_bonus(attacker.position, target_for_attack.position, terrain) + int(target_abilities.cover_bonus) + int(target_for_attack.get("temporary_cover_bonus", 0))
 	var target_unit_id := str(target_for_attack.get("unit_id", ""))
 	var target_models := 0
@@ -1305,7 +1305,7 @@ func fire_selected() -> void:
 	var weapon_context := WeaponRules.context(weapon, nearest, cover_bonus, target_models, target_for_attack.get("keywords", []), is_zero_approx(float(attacker.get("spent", 0.0))), target_has_line_of_sight)
 	target_for_attack.cover_save_bonus = int(weapon_context.cover_bonus)
 	var attacker_abilities := FactionRules.combat_modifiers(models, attacker, "before_attack", {"phase": "SHOOTING", "kind": "SHOOT"})
-	var result := Combat.resolve_ranged_attack(weapon_context.weapon, target_for_attack, combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls), attacker_abilities)
+	var result := Combat.resolve_ranged_attack(weapon_context.weapon, target_for_attack, combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls), attacker_abilities, target_abilities)
 	var shoot_payload := {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "weapon": weapon_name, "one_shot": weapon_ids.has("one_shot"), "hits": result.hits, "damage": result.damage}
 	if network_active:
 		var shoot_preview: Array = [models[target_index].duplicate(true)]

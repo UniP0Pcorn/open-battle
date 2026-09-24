@@ -573,6 +573,41 @@ func run() -> void:
 	invalid_aura = aura_rule.duplicate(true)
 	invalid_aura.aura.keywords = [5]
 	check(not UnitAbilities.validate([invalid_aura]).is_empty(), "malformed aura keyword rejected")
+	var defense_weapon := {"attacks": 80, "hit_on": 2, "strength": 8, "damage": 1}
+	var defense_target := {"toughness": 4, "save_on": 5, "ability_ids": []}
+	var plain_defense := Combat.resolve_ranged_attack(defense_weapon, defense_target, seeded_rng(87))
+	var attacking_save := Combat.resolve_ranged_attack(defense_weapon, defense_target, seeded_rng(87), 0, {"save_rerolls": 100})
+	check(attacking_save == plain_defense, "attacker save rerolls cannot improve defender saves")
+	var defending_save := Combat.resolve_ranged_attack(defense_weapon, defense_target, seeded_rng(87), 0, {}, {"save_rerolls": 100})
+	check(defending_save.damage < plain_defense.damage, "defender save rerolls reduce actual resolved damage")
+	defense_target.ability_ids = [{"id": "fixture_defense", "modifiers": {"save_rerolls": 100}}]
+	check(Combat.resolve_ranged_attack(defense_weapon, defense_target, seeded_rng(87)) == defending_save, "native defender passive uses same save resolver")
+	defense_target.ability_ids = []
+	defense_target.invulnerable_save = 3
+	var threshold_defense := Combat.resolve_ranged_attack(defense_weapon, defense_target, seeded_rng(87), 0, {}, {"invulnerable_save": 5})
+	check(threshold_defense.save_on == 3, "weaker defensive aura preserves native invulnerable save")
+	threshold_defense = Combat.resolve_ranged_attack(defense_weapon, defense_target, seeded_rng(87), 0, {}, {"invulnerable_save": 2})
+	check(threshold_defense.save_on == 2, "stronger defensive aura improves invulnerable save")
+	var save_aura := {"id": "fixture_save_aura", "aura": {"radius_inches": 6, "event": "before_defend", "modifiers": {"save_rerolls": 20, "invulnerable_save": 4}}}
+	check(UnitAbilities.validate([save_aura]).is_empty(), "defensive aura accepts implemented save modifiers")
+	var invalid_save_aura: Dictionary = save_aura.duplicate(true)
+	invalid_save_aura.aura.modifiers.invulnerable_save = 1
+	check(not UnitAbilities.validate([invalid_save_aura]).is_empty(), "defensive aura rejects invalid invulnerable threshold")
+	invalid_save_aura = save_aura.duplicate(true)
+	invalid_save_aura.aura.event = "before_attack"
+	check(not UnitAbilities.validate([invalid_save_aura]).is_empty(), "save aura cannot be declared as attack modifier")
+	var save_room: Dictionary = attack_room.duplicate(true)
+	save_room.session.models[1].ability_ids = [save_aura]
+	save_room.session.models[1].wounds = 100
+	save_room.session.models[0].weapons[0].attacks = 30
+	var save_packet: Dictionary = intent_packet.duplicate(true)
+	save_packet.snapshot_hash = PeerProtocol.hash_snapshot(save_room.session)
+	var save_host := NetworkSync.host_command(save_room, save_packet, "attacker", seeded_rng(87))
+	var save_expected := Combat.resolve_ranged_attack(save_room.session.models[0].weapons[0], save_room.session.models[1], seeded_rng(87), 0, {}, FactionRules.combat_modifiers(save_room.session.models, save_room.session.models[1], "before_defend"))
+	check(save_host.ok and save_host.entry.payload.damage == save_expected.damage, "authoritative shooting applies current defensive aura")
+	check(Replay.apply_entry(save_room.session, save_host.entry).state.models == save_host.room.session.models, "defensive aura attack result replays identically")
+	var save_melee := Melee.resolve_attack(defense_weapon, defense_target, seeded_rng(87), 0, [], {}, {"save_rerolls": 100, "invulnerable_save": 2})
+	check(save_melee == Combat.resolve_ranged_attack(defense_weapon, defense_target, seeded_rng(87), 0, {}, {"save_rerolls": 100, "invulnerable_save": 2}), "melee shares defensive save resolution")
 	var cover_rng := RandomNumberGenerator.new()
 	cover_rng.seed = 87
 	var cover_weapon := {"attacks": 200, "hit_on": 2, "strength": 8, "damage": 1}

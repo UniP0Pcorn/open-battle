@@ -126,6 +126,7 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, rng: Ran
 	if not reaction.is_empty():
 		weapon.hit_on = int(reaction.hit_on)
 	var result: Dictionary
+	var defense := FactionRules.combat_modifiers(models, target, "before_defend", {"phase": str(state.phase), "kind": str(command.kind)})
 	var resolved_weapon: Dictionary = weapon.duplicate(true)
 	var ability_modifiers := FactionRules.combat_modifiers(models, attacker, "before_attack", {"phase": str(state.phase), "kind": str(command.kind)})
 	var hit_rerolls := 0
@@ -139,11 +140,11 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, rng: Ran
 		resolved_weapon = melee_context.weapon
 		if bool(attacker.get("charged", false)) and WeaponRules.ids_from_weapon(resolved_weapon).has("lance"):
 			resolved_weapon.wound_bonus = 1
-		result = Melee.resolve_attack(resolved_weapon, target, rng, hit_rerolls, target.get("keywords", []), FactionRules.combat_modifiers(models, attacker, "before_attack", {"phase": "FIGHT", "kind": "FIGHT"}))
+		result = Melee.resolve_attack(resolved_weapon, target, rng, hit_rerolls, target.get("keywords", []), FactionRules.combat_modifiers(models, attacker, "before_attack", {"phase": "FIGHT", "kind": "FIGHT"}), defense)
 	else:
 		hit_rerolls += int(ability_modifiers.get("hit_rerolls", 0))
 		var distance := _position(attacker).distance_to(_position(target))
-		var target_abilities := FactionRules.combat_modifiers(models, target, "before_defend")
+		var target_abilities := defense
 		var cover := Visibility.cover_bonus(_position(attacker), _position(target), state.get("terrain", [])) + int(target_abilities.get("cover_bonus", 0)) + int(target.get("temporary_cover_bonus", 0))
 		var target_count := 0
 		for model in models:
@@ -154,7 +155,7 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, rng: Ran
 		resolved_weapon = context.weapon
 		target = target.duplicate(true)
 		target.cover_save_bonus = int(context.cover_bonus)
-		result = Combat.resolve_ranged_attack(resolved_weapon, target, rng, hit_rerolls, FactionRules.combat_modifiers(models, attacker, "before_attack", {"phase": "SHOOTING", "kind": "SHOOT"}))
+		result = Combat.resolve_ranged_attack(resolved_weapon, target, rng, hit_rerolls, FactionRules.combat_modifiers(models, attacker, "before_attack", {"phase": "SHOOTING", "kind": "SHOOT"}), defense)
 	payload.intent = false
 	payload.attacker = attacker_index
 	payload.target = target_index

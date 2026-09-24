@@ -50,7 +50,9 @@ static func save_target(armor_save: int, armor_penetration: int = 0, invulnerabl
 static func save_passes(roll: int, target: int) -> bool:
 	return target <= 6 and roll >= target
 
-static func resolve_ranged_attack(weapon: Dictionary, target: Dictionary, rng: RandomNumberGenerator, hit_rerolls: int = 0, modifiers: Dictionary = {}) -> Dictionary:
+static func resolve_ranged_attack(weapon: Dictionary, target: Dictionary, rng: RandomNumberGenerator, hit_rerolls: int = 0, modifiers: Dictionary = {}, defense_modifiers: Dictionary = {}) -> Dictionary:
+	var defense := defense_modifiers if not defense_modifiers.is_empty() else UnitAbilities.event_modifiers(target.get("ability_ids", []), "before_defend")
+	var invulnerable := UnitAbilities._best_threshold(int(target.get("invulnerable_save", 0)), int(defense.get("invulnerable_save", 0)))
 	var attacks_roll := Dice.roll_expression(rng, weapon.get("attacks", 1))
 	var attacks := int(attacks_roll.total) if attacks_roll.valid else 0
 	var hit_on := int(weapon.get("hit_on", 4))
@@ -60,7 +62,7 @@ static func resolve_ranged_attack(weapon: Dictionary, target: Dictionary, rng: R
 		wounds_needed = maxi(2, wounds_needed - int(weapon.get("wound_bonus", 0)))
 	if int(weapon.get("anti_wound_on", 0)) > 0:
 		wounds_needed = int(weapon.get("anti_wound_on", 0))
-	var save_needed := save_target(int(target.get("save_on", 7)) - int(target.get("cover_save_bonus", 0)), int(weapon.get("ap", 0)), int(target.get("invulnerable_save", 0)))
+	var save_needed := save_target(int(target.get("save_on", 7)) - int(target.get("cover_save_bonus", 0)), int(weapon.get("ap", 0)), invulnerable)
 	var hits := 0
 	var wounds := 0
 	var failed_saves := 0
@@ -73,8 +75,8 @@ static func resolve_ranged_attack(weapon: Dictionary, target: Dictionary, rng: R
 	var hit_ones_left := maxi(0, int(modifiers.get("hit_reroll_ones", 0)))
 	var wound_rerolls_left := maxi(0, int(modifiers.get("wound_rerolls", 0)))
 	var wound_ones_left := maxi(0, int(modifiers.get("wound_reroll_ones", 0)))
-	var save_rerolls_left := maxi(0, int(modifiers.get("save_rerolls", 0)))
-	var save_ones_left := maxi(0, int(modifiers.get("save_reroll_ones", 0)))
+	var save_rerolls_left := maxi(0, int(defense.get("save_rerolls", 0)))
+	var save_ones_left := maxi(0, int(defense.get("save_reroll_ones", 0)))
 	var twin_linked := bool(weapon.get("twin_linked", false))
 	var lethal_hits := bool(weapon.get("lethal_hits", false))
 	var sustained_bonus := maxi(0, int(weapon.get("sustained_hits", 0)))

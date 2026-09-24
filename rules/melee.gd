@@ -20,6 +20,6 @@ static func target_reason(attacker: Dictionary, target: Dictionary, active_team:
 		return "NOT IN ENGAGEMENT"
 	return ""
 
-static func resolve_attack(weapon: Dictionary, target: Dictionary, rng: RandomNumberGenerator, hit_rerolls: int = 0, target_keywords: Array = [], modifiers: Dictionary = {}) -> Dictionary:
+static func resolve_attack(weapon: Dictionary, target: Dictionary, rng: RandomNumberGenerator, hit_rerolls: int = 0, target_keywords: Array = [], modifiers: Dictionary = {}, defense_modifiers: Dictionary = {}) -> Dictionary:
 	var context := WeaponRules.context(weapon, INF, 0, 1, target_keywords, false)
-	return Combat.resolve_ranged_attack(context.weapon, target, rng, hit_rerolls, modifiers)
+	return Combat.resolve_ranged_attack(context.weapon, target, rng, hit_rerolls, modifiers, defense_modifiers)
