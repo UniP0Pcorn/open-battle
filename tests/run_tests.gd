@@ -241,6 +241,8 @@ func run() -> void:
 	check(inline_event.cover_bonus == 2 and inline_event.hit_rerolls == 1 and UnitAbilities.event_effects([inline_ability], "before_attack", {"phase": "SHOOTING"}).has("MARKED_TARGET"), "inline faction ability event resolves")
 	var reduced_damage := Damage.apply_to_model({"wounds": 5, "damage_reduction": 1}, 3)
 	check(reduced_damage.damage == 2 and reduced_damage.wounds_after == 3, "ability damage reduction modifies applied damage")
+	var fnp_damage := Damage.apply_to_model({"wounds": 5, "feel_no_pain": 5}, 3, [5, 2, 6])
+	check(fnp_damage.damage == 1 and fnp_damage.feel_no_pain_ignored == 2, "feel no pain reduces applied damage from verified rolls")
 	check(UnitAbilities.validate(["not_real"]).size() == 1, "unknown ability is reported")
 	check(UnitKeywords.canonical_id("飞行") == "fly" and UnitKeywords.canonical_id("史诗英雄") == "epic_hero", "localized unit keywords normalize")
 	check(UnitKeywords.validate(["步兵", "fly"]).is_empty(), "known unit keywords validate")
@@ -290,6 +292,11 @@ func run() -> void:
 	replay_log = CommandLog.append(replay_log, 0, "MOVE", {"unit_id": "u", "delta": [2, 0]})
 	var replay_result := Replay.replay(Replay.initial_state(replay_models), replay_log)
 	check(replay_result.ok and replay_result.state.models[0].position == Vector2(3, 1), "replay reconstructs movement")
+	var fnp_models: Array = [{"model_id": "fnp_attacker", "unit_id": "fnp_a", "team": 0, "position": Vector2(1, 1)}, {"model_id": "fnp_target", "unit_id": "fnp_t", "team": 1, "position": Vector2(2, 1), "wounds": 5, "feel_no_pain": 5}]
+	var fnp_log: Array = []
+	fnp_log = CommandLog.append(fnp_log, 0, "SHOOT", {"attacker_id": "fnp_attacker", "target_id": "fnp_target", "damage": 3, "feel_no_pain_rolls": [5, 2, 6]})
+	var fnp_replay := Replay.replay(Replay.initial_state(fnp_models, "SHOOTING", 0), fnp_log)
+	check(fnp_replay.ok and fnp_replay.state.models[1].wounds == 4, "replay verifies feel no pain rolls")
 	var advance_replay_log: Array = []
 	advance_replay_log = CommandLog.append(advance_replay_log, 0, "ADVANCE", {"unit_id": "u", "roll": 4})
 	var advance_replay := Replay.replay(Replay.initial_state(replay_models), advance_replay_log)

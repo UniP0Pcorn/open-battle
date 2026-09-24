@@ -2,12 +2,19 @@
 extends RefCounted
 ## Damage allocation helpers shared by shooting and melee.
 
-static func apply_to_model(model: Dictionary, damage: int) -> Dictionary:
+static func apply_to_model(model: Dictionary, damage: int, feel_no_pain_rolls: Array = []) -> Dictionary:
 	var before := int(model.get("wounds", 0))
 	var reduction := maxi(0, int(model.get("damage_reduction", 0)))
-	var applied := maxi(0, damage - reduction)
+	var incoming := maxi(0, damage - reduction)
+	var ignored := 0
+	var fnp_target := int(model.get("feel_no_pain", 0))
+	if fnp_target > 0 and feel_no_pain_rolls.size() >= incoming:
+		for index in range(incoming):
+			if int(feel_no_pain_rolls[index]) >= fnp_target:
+				ignored += 1
+	var applied := maxi(0, incoming - ignored)
 	var after := maxi(0, before - applied)
-	return {"wounds_before": before, "damage": applied, "wounds_after": after, "destroyed": after <= 0}
+	return {"wounds_before": before, "damage": applied, "incoming_damage": incoming, "feel_no_pain_ignored": ignored, "wounds_after": after, "destroyed": after <= 0}
 
 static func allocate_to_unit(unit: Array, damage: int, model_index: int = -1) -> Dictionary:
 	if unit.is_empty():

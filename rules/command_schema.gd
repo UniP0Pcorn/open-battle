@@ -36,6 +36,8 @@ static func validate_payload(kind: String, payload: Dictionary) -> String:
 		"SHOOT", "FIGHT":
 			if not _model_ref(payload, "attacker_id", "attacker") or not _model_ref(payload, "target_id", "target") or not _nonnegative_int(payload.get("damage", -1)):
 				return "INVALID DAMAGE EVENT"
+			if payload.has("feel_no_pain_rolls") and not _dice_rolls(payload.feel_no_pain_rolls):
+				return "INVALID FEEL NO PAIN RESULT"
 		"CHARGE":
 			if not _nonnegative_int(payload.get("model", -1)) or not _nonnegative_int(payload.get("target", -1)) or not _numbers(payload.get("to", []), 2):
 				return "INVALID CHARGE"
@@ -45,6 +47,8 @@ static func validate_payload(kind: String, payload: Dictionary) -> String:
 		"HAZARDOUS":
 			if not _nonnegative_int(payload.get("attacker", -1)) or not _nonnegative_int(payload.get("damage", -1)):
 				return "INVALID HAZARDOUS EVENT"
+			if payload.has("feel_no_pain_rolls") and not _dice_rolls(payload.feel_no_pain_rolls):
+				return "INVALID FEEL NO PAIN RESULT"
 		"STRATAGEM":
 			if str(payload.get("id", "")).is_empty() or str(payload.get("phase", "")).is_empty():
 				return "INVALID STRATAGEM"
@@ -87,6 +91,14 @@ static func _numbers(value: Variant, expected_size: int) -> bool:
 		return false
 	for item in value:
 		if typeof(item) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(item)):
+			return false
+	return true
+
+static func _dice_rolls(value: Variant) -> bool:
+	if not (value is Array):
+		return false
+	for roll in value:
+		if typeof(roll) not in [TYPE_INT, TYPE_FLOAT] or float(roll) != float(int(roll)) or int(roll) < 1 or int(roll) > 6:
 			return false
 	return true
 

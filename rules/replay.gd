@@ -5,6 +5,7 @@ extends RefCounted
 const CommandSchema = preload("res://rules/command_schema.gd")
 const Charge = preload("res://rules/charge.gd")
 const Combat = preload("res://rules/combat.gd")
+const Damage = preload("res://rules/damage.gd")
 const Engagement = preload("res://rules/engagement.gd")
 const Melee = preload("res://rules/melee.gd")
 const Movement = preload("res://rules/movement.gd")
@@ -125,7 +126,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			var damage := int(payload.get("damage", -1))
 			if target_index < 0 or target_index >= next.models.size():
 				return {"ok": false, "reason": "INVALID DAMAGE EVENT", "state": state}
-			var damage_result := _apply_damage(next.models[target_index], damage)
+			var damage_result := _apply_damage(next.models[target_index], damage, payload.get("feel_no_pain_rolls", []))
 			if bool(damage_result.get("destroyed", false)):
 				next.models.remove_at(target_index)
 			else:
@@ -135,7 +136,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			var hazardous_damage := int(payload.get("damage", -1))
 			if attacker_index < 0 or attacker_index >= next.models.size():
 				return {"ok": false, "reason": "INVALID HAZARDOUS EVENT", "state": state}
-			var hazardous_result := _apply_damage(next.models[attacker_index], hazardous_damage)
+			var hazardous_result := _apply_damage(next.models[attacker_index], hazardous_damage, payload.get("feel_no_pain_rolls", []))
 			if bool(hazardous_result.get("destroyed", false)):
 				next.models.remove_at(attacker_index)
 			else:
@@ -211,6 +212,9 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 			var weapon_error := _attack_reference_error(models, attacker, target, payload, kind, actor_team)
 			if not weapon_error.is_empty():
 				return weapon_error
+			var fnp_error := _feel_no_pain_reference_error(models[target], int(payload.get("damage", 0)), payload)
+			if not fnp_error.is_empty():
+				return fnp_error
 			if bool(payload.get("one_shot", false)):
 				if str(payload.get("weapon", "")).is_empty():
 					return "INVALID DAMAGE EVENT"
@@ -222,6 +226,9 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 				return "INVALID HAZARDOUS EVENT"
 			if int(models[hazardous_attacker].get("team", -1)) != actor_team:
 				return "NOT ACTIVE TEAM"
+			var hazardous_fnp_error := _feel_no_pain_reference_error(models[hazardous_attacker], int(payload.get("damage", 0)), payload)
+			if not hazardous_fnp_error.is_empty():
+				return hazardous_fnp_error
 		"BATTLE_SHOCK":
 			var found_unit := false
 			for model in models:
@@ -234,10 +241,12 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 			return _battle_shock_reference_error(models, str(payload.get("unit_id", "")), payload)
 	return ""
 
-static func _apply_damage(model: Dictionary, damage: int) -> Dictionary:
+static func _apply_damage(model: Dictionary, damage: int, feel_no_pain_rolls: Array = []) -> Dictionary:
 	var next := model.duplicate(true)
-	var reduction := maxi(0, int(next.get("damage_reduction", 0)))
-	next.wounds = maxi(0, int(next.get("wounds", 0)) - maxi(0, damage - reduction))
+	var result := Damage.apply_to_model(next, damage, feel_no_pain_rolls)
+	next.wounds = int(result.wounds_after)
+	next.last_damage = int(result.damage)
+	next.feel_no_pain_ignored = int(result.feel_no_pain_ignored)
 	if int(next.wounds) <= 0:
 		next.destroyed = true
 		next.can_control = false
@@ -335,6 +344,19 @@ static func _battle_shock_reference_error(models: Array, unit_id: String, payloa
 	var leadership := int(unit_models[0].get("leadership", 7))
 	var expected_passed := expected_total <= leadership
 	return "" if bool(payload.get("passed", false)) == expected_passed else "INVALID BATTLE SHOCK RESULT"
+
+static func _feel_no_pain_reference_error(model: Dictionary, damage: int, payload: Dictionary) -> String:
+	var target := int(model.get("feel_no_pain", 0))
+	if target <= 0:
+		return ""
+	var incoming := maxi(0, damage - maxi(0, int(model.get("damage_reduction", 0))))
+	var rolls: Variant = payload.get("feel_no_pain_rolls", [])
+	if not (rolls is Array) or rolls.size() != incoming:
+		return "INVALID FEEL NO PAIN RESULT"
+	for roll in rolls:
+		if typeof(roll) not in [TYPE_INT, TYPE_FLOAT] or int(roll) < 1 or int(roll) > 6 or float(roll) != float(int(roll)):
+			return "INVALID FEEL NO PAIN RESULT"
+	return ""
 
 static func _charge_reference_error(models: Array, charger_index: int, target_index: int, payload: Dictionary, terrain: Array) -> String:
 	var charger: Dictionary = models[charger_index]
