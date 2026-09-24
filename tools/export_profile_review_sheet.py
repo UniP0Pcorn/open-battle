@@ -84,7 +84,7 @@ def rows(root: Path, sources: dict[str, dict] | None = None):
             "toughness": model.get("toughness", ""),
             "save": model.get("save", ""),
             "wounds": model.get("wounds", ""),
-            "base_mm": "",
+            "base_mm": draft.get("base_diameter_mm", ""),
             "coherency_inches": "2.0",
             "review_bucket": "needs_field_review" if flags else "ready_for_base_faction_review",
             "review_flags": "|".join(flags),

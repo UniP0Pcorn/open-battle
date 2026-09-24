@@ -25,6 +25,7 @@ def draft(candidate: dict) -> dict:
         "import_status": "pending_manual_review",
         "keywords": candidate.get("keywords", []),
         "faction_keywords": candidate.get("faction_keywords", []),
+        "base_diameter_mm": candidate.get("base_diameter_mm", ""),
         "abilities": candidate.get("abilities", []),
         "models": [{
             "name": candidate.get("name", "Unnamed datasheet"),

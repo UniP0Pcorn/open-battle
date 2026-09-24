@@ -29,6 +29,7 @@ POINT_SHORT_RE = re.compile(r"(?P<count>[0-9]+)\s*\+\s*个(?:\s*模型)?\s*(?P<p
 POINT_PAIR_RE = re.compile(r"(?P<base>[0-9]+)\s*分\s+(?P<count>[0-9]+)\s*\+\s*个(?:\s*模型)?\s*(?P<points>[0-9]+)\s*分")
 POINT_COMPOSITION_RE = re.compile(r"(?:单位构成|单位组成).*?(?P<points>[0-9]+)\s*分")
 POINT_SIMPLE_RE = re.compile(r"(?P<points>[0-9]+)\s*分\s*$")
+BASE_MM_RE = re.compile(r"[⌀Ø]\s*(?P<base>[0-9]+(?:\.[0-9]+)?)\s*mm", re.I)
 
 
 def _clean(line: str) -> str:
@@ -84,6 +85,12 @@ def extract(pdf_path: Path, edition: str = "", max_pages: int = 0) -> dict:
                         unit_keywords = [x.strip() for x in re.split(r"[，,、]", keyword_match.group("unit")) if x.strip()]
                         faction_text = keyword_match.group("faction") or ""
                         faction_keywords = [x.strip() for x in re.split(r"[，,、]", faction_text) if x.strip()]
+                        break
+                base_diameter_mm = ""
+                for source_line in lines[: max(i + 1, 8)]:
+                    base_match = BASE_MM_RE.search(source_line)
+                    if base_match:
+                        base_diameter_mm = float(base_match.group("base"))
                         break
                 # A datasheet can place abilities and section headers between
                 # the statline and its weapon table. Stop only at the next
@@ -150,6 +157,7 @@ def extract(pdf_path: Path, edition: str = "", max_pages: int = 0) -> dict:
                         "points": points,
                         "keywords": unit_keywords,
                         "faction_keywords": faction_keywords,
+                        "base_diameter_mm": base_diameter_mm,
                         "review_status": "candidate_needs_manual_review",
                     }
                 )

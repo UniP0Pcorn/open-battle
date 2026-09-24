@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 from tools.export_profile_review_sheet import review_flags, rows, source_lookup
-from tools.extract_profile_candidates import POINT_COMPOSITION_RE, POINT_PAIR_RE, POINT_RE, POINT_SHORT_RE, WEAPON_RE, _weapon_tags
+from tools.extract_profile_candidates import BASE_MM_RE, POINT_COMPOSITION_RE, POINT_PAIR_RE, POINT_RE, POINT_SHORT_RE, WEAPON_RE, _weapon_tags
 from tools.index_promotable_candidates import weapon_range_fixed
 from tools.promote_profile_draft import inches
 from tools.weapon_tag_support import unsupported_tags
@@ -93,6 +93,10 @@ class ReviewSheetTests(unittest.TestCase):
         self.assertIsNotNone(composition)
         assert composition is not None
         self.assertEqual(composition.group("points"), "250")
+        base = BASE_MM_RE.search("ARKANYST EVALUATOR [⌀32mm]")
+        self.assertIsNotNone(base)
+        assert base is not None
+        self.assertEqual(base.group("base"), "32")
 
 
 if __name__ == "__main__":
