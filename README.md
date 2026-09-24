@@ -198,6 +198,16 @@ python -m tools.room_directory_server --host 0.0.0.0 --port 8765
 
 它只保存公开端点、任务、过期时间和主机公开指纹；不会转发命令，也不会保存密码、凭据或重连令牌。Godot 大厅通过 `list_public_rooms` / `publish_public_room` 查询或发布广告，主机仍需通过 `room_invite` 生成邀请，客户端再用 `connect_invite` 加入。把它暴露到公网前应放在 TLS、访问控制和反向代理之后；它仍不是 NAT 打洞或中继服务。
 
+### 可选中继原型
+
+仓库还提供依赖零的透明 WebSocket 中继原型：
+
+```powershell
+python -m tools.relay_server --host 0.0.0.0 --port 8766
+```
+
+它按房间配对一个 `host` 和一个 `client`，只转发不透明的 UTF-8 JSON 帧，不解析规则、不生成骰子，也不能替代主机权威。当前 Godot 大厅仍使用 ENet 直连；中继服务已完成协议和独立测试，客户端 WebSocket 传输接入仍待完成。公网部署前必须加入 TLS、认证、限流和来源策略。
+
 实现参考 [Godot 4.5 UPNP 文档](https://docs.godotengine.org/en/4.5/classes/class_upnp.html)。自动回归使用模拟网关，覆盖建立、有限租期、冲突、取消、清理、迟到回调和续租失败；没有对真实路由器执行映射，也未宣称跨公网联机验收通过。
 
 ### ENet 回环验收
