@@ -189,6 +189,9 @@ func run() -> void:
 	check(not anti_miss.weapon.has("anti_wound_on"), "anti keyword does not affect a non-matching target")
 	var anti_attack := Combat.resolve_ranged_attack({"attacks": 0, "hit_on": 4, "strength": 10, "anti_wound_on": 4, "damage": 1}, {"toughness": 4, "save_on": 7}, dice_rng)
 	check(anti_attack.wound_on == 4, "anti wound threshold is used by combat resolver")
+	var heavy_stationary := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["重型"]}, 10.0, 0, 1, [], true)
+	var heavy_moved := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["重型"]}, 10.0, 0, 1, [], false)
+	check(heavy_stationary.weapon.hit_on == 3 and heavy_moved.weapon.hit_on == 4, "heavy improves stationary hit and loses the bonus after movement")
 	var replay_models: Array = [{"unit_id": "u", "team": 0, "position": Vector2(1, 1)}]
 	var replay_log: Array = []
 	replay_log = CommandLog.append(replay_log, 0, "MOVE", {"unit_id": "u", "delta": [2, 0]})

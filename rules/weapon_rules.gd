@@ -23,6 +23,8 @@ const ALIASES := {
 	"双联": "twin_linked",
 	"twin-linked": "twin_linked",
 	"twin linked": "twin_linked",
+	"重型": "heavy",
+	"heavy": "heavy",
 	"持续命中": "sustained_hits",
 	"爆炸": "blast",
 	"blast": "blast"
@@ -65,7 +67,7 @@ static func ids_from_weapon(weapon: Dictionary) -> Array:
 		result.append(canonical_id(value))
 	return result
 
-static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, target_models: int = 1, target_keywords: Array = []) -> Dictionary:
+static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, target_models: int = 1, target_keywords: Array = [], stationary: bool = true) -> Dictionary:
 	var result := weapon.duplicate(true)
 	var ids := ids_from_weapon(result)
 	var normalized_target_keywords: Array = []
@@ -83,6 +85,8 @@ static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, t
 					result.anti_wound_on = int(keyword_text.substr(split_at + 1))
 	if ids.has("torrent"):
 		result.hit_on = 1
+	if ids.has("heavy") and stationary:
+		result.hit_on = maxi(1, int(result.get("hit_on", 4)) - 1)
 	if ids.has("ignores_cover"):
 		cover_bonus = 0
 	if distance <= float(result.get("range_inches", 0.0)) / 2.0:

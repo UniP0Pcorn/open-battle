@@ -646,7 +646,7 @@ func fire_selected() -> void:
 	for model in models:
 		if str(model.get("unit_id", "")) == target_unit_id:
 			target_models += 1
-	var weapon_context := WeaponRules.context(weapon, nearest, cover_bonus, target_models, target_for_attack.get("keywords", []))
+	var weapon_context := WeaponRules.context(weapon, nearest, cover_bonus, target_models, target_for_attack.get("keywords", []), is_zero_approx(float(attacker.get("spent", 0.0))))
 	target_for_attack.cover_save_bonus = int(weapon_context.cover_bonus)
 	var attacker_abilities := UnitAbilities.modifiers(attacker.get("ability_ids", []))
 	var result := Combat.resolve_ranged_attack(weapon_context.weapon, target_for_attack, combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls))
