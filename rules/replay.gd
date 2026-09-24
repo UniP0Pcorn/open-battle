@@ -322,6 +322,13 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 				var shooter_index := _index_for(next.models, attack, "attacker_id", "attacker")
 				if shooter_index < 0:
 					return {"ok": false, "reason": "INVALID REACTION SHOOTER", "state": state}
+				var shooter_members: Array = []
+				for model in next.models:
+					if Attachments.group_id(model) == Attachments.group_id(next.models[shooter_index]):
+						shooter_members.append(model)
+				var shooter_filter := Stratagems.target_keywords_reason(stratagem, shooter_members)
+				if not shooter_filter.is_empty():
+					return {"ok": false, "reason": shooter_filter, "state": state}
 				var indirect := false
 				for weapon in next.models[shooter_index].get("weapons", []):
 					if str(weapon.get("name", "")) == str(attack.get("weapon", "")):
@@ -355,6 +362,9 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 					recipients.append(model)
 				if recipients.is_empty():
 					return {"ok": false, "reason": "UNKNOWN UNIT", "state": state}
+				var target_filter := Stratagems.target_keywords_reason(stratagem, recipients)
+				if not target_filter.is_empty():
+					return {"ok": false, "reason": target_filter, "state": state}
 				for model in recipients:
 					var abilities: Array = model.get("ability_ids", []).duplicate(true)
 					var grants: Dictionary = model.get("ability_grants", {}).duplicate(true)
@@ -430,10 +440,26 @@ static func _open_move_reaction(state: Dictionary, entry: Dictionary) -> void:
 				continue
 			if str(definition.timing) != "AFTER_ENEMY_MOVE" or int(definition.cost) > int(state.get("command_points", [0, 0])[responder]):
 				continue
+			if not _has_strategy_recipient(state.models, responder, definition):
+				continue
 			if not available.has(str(definition.id)):
 				available.append(str(definition.id))
 	if not available.is_empty():
 		state.reaction_window = {"id": "move:%d" % int(entry.sequence), "team": responder, "timing": "AFTER_ENEMY_MOVE", "trigger_unit_id": str(entry.payload.unit_id), "stratagem_ids": available}
+
+static func _has_strategy_recipient(models: Array, team: int, definition: Dictionary) -> bool:
+	var groups: Dictionary = {}
+	for model in models:
+		if int(model.get("team", -1)) != team or not Reserves.active(model) or Transports.is_embarked(model) or float(model.get("wounds", 1)) <= 0:
+			continue
+		var group := Attachments.group_id(model)
+		if not groups.has(group):
+			groups[group] = []
+		groups[group].append(model)
+	for members in groups.values():
+		if Stratagems.target_keywords_reason(definition, members).is_empty():
+			return true
+	return false
 
 static func _validate_references(models: Array, entry: Dictionary, kind: String, payload: Dictionary, terrain: Array = [], effects: Array = []) -> String:
 	var actor_team := int(entry.get("team", -1))

@@ -54,6 +54,14 @@ static func validate(stratagem: Dictionary) -> String:
 		return "INVALID STRATAGEM"
 	if str(stratagem.effect) not in SUPPORTED_EFFECTS:
 		return "UNSUPPORTED EFFECT"
+	for field in ["target_keywords", "excluded_target_keywords"]:
+		if not stratagem.has(field):
+			continue
+		if str(stratagem.effect) not in ["GRANT_ABILITY", "REACTION_SHOOT"] or not (stratagem[field] is Array):
+			return "INVALID STRATAGEM TARGET FILTER"
+		for keyword in stratagem[field]:
+			if not (keyword is String) or keyword.strip_edges().is_empty():
+				return "INVALID STRATAGEM TARGET KEYWORD"
 	if str(stratagem.effect) == "REACTION_SHOOT" and str(stratagem.timing) == "AFTER_ENEMY_MOVE":
 		if str(stratagem.phase) != "MOVEMENT" or typeof(stratagem.get("hit_on")) not in [TYPE_INT, TYPE_FLOAT] or float(stratagem.hit_on) != float(int(stratagem.hit_on)) or int(stratagem.hit_on) not in range(1, 7):
 			return "INVALID REACTION SHOOTING"
@@ -86,3 +94,18 @@ static func use(stratagem: Dictionary, phase: String, team: int, points: Array) 
 		"timing": str(stratagem.get("timing", "")),
 		"stratagem_id": str(stratagem.get("id", ""))
 	}
+
+## Filters apply to the friendly recipient unit (the shooter for reaction shots).
+## Attached units use the union of member keywords; excluded keywords take priority.
+static func target_keywords_reason(stratagem: Dictionary, members: Array) -> String:
+	var keywords: Array = []
+	for model in members:
+		keywords.append_array(model.get("keywords", []))
+		keywords.append_array(model.get("faction_keywords", []))
+	for keyword in stratagem.get("excluded_target_keywords", []):
+		if keyword in keywords:
+			return "STRATAGEM TARGET EXCLUDED KEYWORD " + str(keyword)
+	for keyword in stratagem.get("target_keywords", []):
+		if keyword not in keywords:
+			return "STRATAGEM TARGET MISSING KEYWORD " + str(keyword)
+	return ""

@@ -306,6 +306,31 @@ func run() -> void:
 	var grant_attacker: Dictionary = grant_network.room.session.models[0].duplicate(true)
 	grant_attacker.fell_back = true
 	check(Combat.target_reason(grant_attacker, {"team": 1}, 5.0, {"range_inches": 24}, 0).is_empty(), "granted fallback ability changes actual shooting eligibility")
+	var filtered_grant_room: Dictionary = grant_room.duplicate(true)
+	filtered_grant_room.session.models[0].faction_stratagems[0].target_keywords = ["INFANTRY", "FIXTURE_FACTION"]
+	filtered_grant_room.session.models[0].keywords = ["INFANTRY"]
+	filtered_grant_room.session.models[0].faction_keywords = ["FIXTURE_FACTION"]
+	var filtered_grant_packet: Dictionary = grant_packet.duplicate(true)
+	filtered_grant_packet.snapshot_hash = PeerProtocol.hash_snapshot(filtered_grant_room.session)
+	var filtered_grant := NetworkSync.host_command(filtered_grant_room, filtered_grant_packet, "player_gold")
+	check(filtered_grant.ok and filtered_grant.room.session.models[0].ability_ids.has("fall_back_and_shoot"), "strategy target filters accept unit and faction keywords")
+	check(Replay.apply_entry(filtered_grant_room.session, filtered_grant.entry).state.models == filtered_grant.room.session.models, "keyword restricted strategy executes identically in replay")
+	filtered_grant_room.session.models[0].faction_keywords = []
+	filtered_grant_packet.command.payload.target_keywords = []
+	filtered_grant_packet.snapshot_hash = PeerProtocol.hash_snapshot(filtered_grant_room.session)
+	filtered_grant = NetworkSync.host_command(filtered_grant_room, filtered_grant_packet, "player_gold")
+	check(not filtered_grant.ok and filtered_grant.reason == "STRATAGEM TARGET MISSING KEYWORD FIXTURE_FACTION" and filtered_grant.room == filtered_grant_room, "client cannot override required keywords or spend CP on rejected target")
+	var filter_definition: Dictionary = filtered_grant_room.session.models[0].faction_stratagems[0].duplicate(true)
+	check(Stratagems.target_keywords_reason(filter_definition, [{"keywords": ["INFANTRY"]}, {"faction_keywords": ["FIXTURE_FACTION"]}]).is_empty(), "attached recipient keyword filter uses member union")
+	filter_definition.excluded_target_keywords = ["VEHICLE"]
+	check(Stratagems.target_keywords_reason(filter_definition, [{"keywords": ["INFANTRY", "VEHICLE"], "faction_keywords": ["FIXTURE_FACTION"]}]) == "STRATAGEM TARGET EXCLUDED KEYWORD VEHICLE", "excluded recipient keyword takes priority")
+	filter_definition.target_keywords = "INFANTRY"
+	check(Stratagems.validate(filter_definition) == "INVALID STRATAGEM TARGET FILTER", "strategy rejects malformed keyword array")
+	filter_definition.target_keywords = [5]
+	check(Stratagems.validate(filter_definition) == "INVALID STRATAGEM TARGET KEYWORD", "strategy rejects non string target keyword")
+	filter_definition.target_keywords = []
+	filter_definition.effect = "REROLL_HIT"
+	check(Stratagems.validate(filter_definition) == "INVALID STRATAGEM TARGET FILTER", "unsupported strategy effect cannot silently ignore target filter")
 	var grant_replay := Replay.apply_entry(grant_room.session, grant_entry)
 	check(grant_replay.ok and grant_replay.state.models == grant_network.room.session.models, "grant replay matches host model state")
 	var grant_snapshot := NetworkSync.accept_snapshot(grant_room.session, grant_network.snapshot)
@@ -383,6 +408,22 @@ func run() -> void:
 	conditional_shot = NetworkSync.host_command(conditional_shot_room, conditional_shot_packet, "player_blue", seeded_rng(87))
 	conditional_expected = Combat.resolve_ranged_attack({"attacks": 30, "hit_on": 6, "strength": 5, "damage": 1}, {"toughness": 4, "save_on": 7}, seeded_rng(87))
 	check(conditional_shot.ok and conditional_shot.entry.payload.attack.damage == conditional_expected.damage, "shooting phase only passive cannot leak into movement reaction")
+	var filtered_shot_room: Dictionary = shot_waiting.room.duplicate(true)
+	filtered_shot_room.session.models[1].faction_stratagems[0].target_keywords = ["INFANTRY"]
+	var filtered_shot_packet: Dictionary = shot_packet.duplicate(true)
+	filtered_shot_packet.snapshot_hash = PeerProtocol.hash_snapshot(filtered_shot_room.session)
+	var filtered_shot := NetworkSync.host_command(filtered_shot_room, filtered_shot_packet, "player_blue")
+	check(not filtered_shot.ok and filtered_shot.reason == "STRATAGEM TARGET MISSING KEYWORD INFANTRY" and filtered_shot.room == filtered_shot_room, "reaction shooter restriction rejects without damage CP spend or closing window")
+	filtered_shot_room.session.models[1].keywords = ["INFANTRY"]
+	filtered_shot_packet.snapshot_hash = PeerProtocol.hash_snapshot(filtered_shot_room.session)
+	filtered_shot = NetworkSync.host_command(filtered_shot_room, filtered_shot_packet, "player_blue")
+	check(filtered_shot.ok and not filtered_shot.room.session.has("reaction_window"), "eligible reaction shooter applies strategy and closes window")
+	var no_recipient_room: Dictionary = shooting_room.duplicate(true)
+	no_recipient_room.session.models[1].faction_stratagems[0].target_keywords = ["UNAVAILABLE_KEYWORD"]
+	var no_recipient_packet: Dictionary = shot_trigger.duplicate(true)
+	no_recipient_packet.snapshot_hash = PeerProtocol.hash_snapshot(no_recipient_room.session)
+	var no_recipient_move := NetworkSync.host_command(no_recipient_room, no_recipient_packet, "player_gold")
+	check(no_recipient_move.ok and not no_recipient_move.room.session.has("reaction_window"), "reaction with no keyword eligible recipient does not stall movement")
 	var unknown_weapon_packet: Dictionary = shot_packet.duplicate(true)
 	unknown_weapon_packet.command.payload.weapon = "fake"
 	var bad_weapon := NetworkSync.host_command(shot_waiting.room, unknown_weapon_packet, "player_blue")
