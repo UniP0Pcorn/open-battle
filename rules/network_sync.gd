@@ -14,6 +14,7 @@ const Melee = preload("res://rules/melee.gd")
 const UnitAbilities = preload("res://rules/unit_abilities.gd")
 const Visibility = preload("res://rules/visibility.gd")
 const WeaponRules = preload("res://rules/weapon_rules.gd")
+const Attachments = preload("res://rules/attachments.gd")
 
 static func host_command(room: Dictionary, packet: Dictionary, expected_peer_id: String) -> Dictionary:
 	var packet_error := PeerProtocol.validate(packet)
@@ -74,7 +75,7 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, packet: 
 		var cover := Visibility.cover_bonus(_position(attacker), _position(target), state.get("terrain", [])) + int(target_abilities.get("cover_bonus", 0)) + int(target.get("temporary_cover_bonus", 0))
 		var target_count := 0
 		for model in models:
-			if str(model.get("unit_id", "")) == str(target.get("unit_id", "")):
+			if Attachments.group_id(model) == Attachments.group_id(target):
 				target_count += 1
 		var line_of_sight := not Visibility.blocked(_position(attacker), _position(target), state.get("terrain", []))
 		var context := WeaponRules.context(weapon, distance, cover, target_count, target.get("keywords", []), float(attacker.get("spent", 0.0)) <= 0.0001, line_of_sight)

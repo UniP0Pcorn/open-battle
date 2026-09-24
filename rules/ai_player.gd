@@ -31,6 +31,13 @@ static func play_turn(state: Dictionary, team: int, seed: int = 1, max_commands:
 		guard += 1
 		var phase := str(next.get("phase", ""))
 		if phase == "COMMAND":
+			var battle_shock_action := _battle_shock_action(next, team)
+			if not battle_shock_action.is_empty():
+				var battle_shock_result := _submit(next, team, str(battle_shock_action.kind), battle_shock_action.payload)
+				if battle_shock_result.ok:
+					next = battle_shock_result.state
+					commands.append(battle_shock_result.entry)
+					continue
 			var attachment := _attachment_command(next, team)
 			if not attachment.is_empty():
 				var attachment_result := _submit(next, team, str(attachment.kind), attachment.payload)
@@ -155,6 +162,24 @@ static func _attachment_command(state: Dictionary, team: int) -> Dictionary:
 			var reason := Attachments.attach_reason(state.models, str(leader.get("unit_id", "")), str(bodyguard.get("unit_id", "")), team)
 			if reason.is_empty():
 				return {"kind": "ATTACH", "payload": {"leader_unit_id": str(leader.get("unit_id", "")), "bodyguard_unit_id": str(bodyguard.get("unit_id", ""))}}
+	return {}
+
+static func _battle_shock_action(state: Dictionary, team: int) -> Dictionary:
+	for model in state.get("models", []):
+		if int(model.get("team", -1)) != team or not bool(model.get("battle_shocked", false)):
+			continue
+		var unit_id := Attachments.group_id(model)
+		var has_pass_effect := false
+		for effect in state.get("stratagem_effects", []):
+			if effect is Dictionary and str(effect.get("effect", "")) == "PASS_BATTLE_SHOCK" and int(effect.get("team", -1)) == team and not bool(effect.get("consumed", false)) and str(effect.get("payload", {}).get("unit_id", "")) == unit_id:
+				has_pass_effect = true
+				break
+		if has_pass_effect:
+			return {"kind": "BATTLE_SHOCK", "payload": {"unit_id": unit_id, "passed": true}}
+		var points: Array = state.get("command_points", [0, 0])
+		if int(points[team]) > 0:
+			return {"kind": "STRATAGEM", "payload": {"id": "insane_bravery", "phase": "COMMAND", "unit_id": unit_id}}
+		return {}
 	return {}
 
 static func _movement_command(state: Dictionary, team: int) -> Dictionary:

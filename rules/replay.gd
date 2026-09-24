@@ -98,7 +98,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			var scout_delta: Array = payload.get("delta", [])
 			var scout_vector := Vector2(float(scout_delta[0]), float(scout_delta[1]))
 			for model in next.models:
-				if str(model.get("unit_id", "")) == scout_unit_id:
+				if Attachments.group_id(model) == scout_unit_id:
 					model.position += scout_vector
 					model.scouted = true
 		"ATTACH":
@@ -217,7 +217,8 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			if not found:
 				return {"ok": false, "reason": "UNKNOWN UNIT", "state": state}
 			for effect in next.get("stratagem_effects", []):
-				if effect is Dictionary and str(effect.get("effect", "")) == "PASS_BATTLE_SHOCK" and int(effect.get("team", -1)) == int(entry.team) and str(effect.get("payload", {}).get("unit_id", "")) == unit_id:
+				var effect_payload: Variant = effect.get("payload", {}) if effect is Dictionary else {}
+				if effect is Dictionary and str(effect.get("effect", "")) == "PASS_BATTLE_SHOCK" and int(effect.get("team", -1)) == int(entry.team) and effect_payload is Dictionary and str(effect_payload.get("unit_id", "")) == unit_id:
 					effect.consumed = true
 		"SHOOT", "FIGHT":
 			var target_index := _index_for(next.models, payload, "target_id", "target")
@@ -282,7 +283,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 					return {"ok": false, "reason": "UNIT REQUIRED", "state": state}
 				var effect_unit_found := false
 				for model in next.models:
-					if str(model.get("unit_id", "")) != effect_unit_id:
+					if Attachments.group_id(model) != effect_unit_id:
 						continue
 					if int(model.get("team", -1)) != int(entry.team):
 						return {"ok": false, "reason": "NOT ACTIVE TEAM", "state": state}

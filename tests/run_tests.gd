@@ -1031,6 +1031,18 @@ func run() -> void:
 		if str(ai_entry.get("kind", "")) == "ATTACH":
 			ai_attached = true
 	check(ai_attachment_turn.ok and ai_attached, "single-player AI attaches eligible leader")
+	var ai_shock_models: Array = [{"model_id": "ai_shock_m001", "unit_id": "ai_shock", "team": 1, "position": Vector2(30, 38), "radius": 0.5, "movement_inches": 6.0, "battle_shocked": true, "can_control": false, "wounds": 3}, {"model_id": "ai_shock_enemy_m001", "unit_id": "ai_shock_enemy", "team": 0, "position": Vector2(30, 5), "radius": 0.5, "wounds": 3}]
+	var ai_shock_state := BattleSession.create(ai_shock_models, 11, 1)
+	ai_shock_state.command_points = [0, 1]
+	var ai_shock_turn := AIPlayer.play_turn(ai_shock_state, 1, 89)
+	var ai_used_bravery := false
+	var ai_passed_shock := false
+	for ai_entry in ai_shock_turn.commands:
+		if str(ai_entry.get("kind", "")) == "STRATAGEM" and str(ai_entry.get("payload", {}).get("id", "")) == "insane_bravery":
+			ai_used_bravery = true
+		if str(ai_entry.get("kind", "")) == "BATTLE_SHOCK" and bool(ai_entry.get("payload", {}).get("passed", false)):
+			ai_passed_shock = true
+	check(ai_shock_turn.ok and ai_used_bravery and ai_passed_shock, "single-player AI clears battle shock with a stratagem")
 	scene.save_state()
 	scene.queue_free()
 	await process_frame
