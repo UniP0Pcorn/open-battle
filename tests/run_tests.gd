@@ -263,6 +263,11 @@ func run() -> void:
 	check(reduced_damage.damage == 2 and reduced_damage.wounds_after == 3, "ability damage reduction modifies applied damage")
 	var fnp_damage := Damage.apply_to_model({"wounds": 5, "feel_no_pain": 5}, 3, [5, 2, 6])
 	check(fnp_damage.damage == 1 and fnp_damage.feel_no_pain_ignored == 2, "feel no pain reduces applied damage from verified rolls")
+	var fnp_rng := RandomNumberGenerator.new()
+	fnp_rng.seed = 18
+	var fnp_unit: Array = [{"wounds": 5, "feel_no_pain": 5}]
+	var fnp_allocation := Damage.allocate_to_unit(fnp_unit, 2, 0, fnp_rng)
+	check(fnp_allocation.feel_no_pain_rolls.size() == 2 and fnp_unit[0].wounds <= 5, "scene damage allocation rolls feel no pain")
 	check(UnitAbilities.validate(["not_real"]).size() == 1, "unknown ability is reported")
 	check(UnitKeywords.canonical_id("飞行") == "fly" and UnitKeywords.canonical_id("史诗英雄") == "epic_hero", "localized unit keywords normalize")
 	check(UnitKeywords.validate(["步兵", "fly"]).is_empty(), "known unit keywords validate")

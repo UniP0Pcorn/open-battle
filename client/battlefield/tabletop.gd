@@ -724,8 +724,11 @@ func fight_selected() -> void:
 	reroll_next_attack = false
 	if weapon_ids.has("one_shot") and not attacker.get("used_weapon_names", []).has(weapon_name):
 		attacker.used_weapon_names.append(weapon_name)
-	command_log = CommandLog.append(command_log, active_team, "FIGHT", {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "weapon": weapon_name, "one_shot": weapon_ids.has("one_shot"), "hits": result.hits, "damage": result.damage})
-	var damage_result := Damage.allocate_to_unit(models, int(result.damage), target_index)
+	var damage_result := Damage.allocate_to_unit(models, int(result.damage), target_index, combat_rng)
+	var fight_payload := {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "weapon": weapon_name, "one_shot": weapon_ids.has("one_shot"), "hits": result.hits, "damage": result.damage}
+	if not damage_result.feel_no_pain_rolls.is_empty():
+		fight_payload.feel_no_pain_rolls = damage_result.feel_no_pain_rolls
+	command_log = CommandLog.append(command_log, active_team, "FIGHT", fight_payload)
 	if int(damage_result.destroyed) > 0:
 		selected = -1 if selected == target_index else selected
 		message = "近战命中 %d，造成 %d 点伤害，目标被淘汰。" % [result.hits, result.damage]
@@ -817,13 +820,19 @@ func fire_selected() -> void:
 	reroll_next_attack = false
 	if weapon_ids.has("one_shot") and not attacker.get("used_weapon_names", []).has(weapon_name):
 		attacker.used_weapon_names.append(weapon_name)
-	command_log = CommandLog.append(command_log, active_team, "SHOOT", {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "weapon": weapon_name, "one_shot": weapon_ids.has("one_shot"), "hits": result.hits, "damage": result.damage})
-	var damage_result := Damage.allocate_to_unit(models, int(result.damage), target_index)
+	var damage_result := Damage.allocate_to_unit(models, int(result.damage), target_index, combat_rng)
+	var shoot_payload := {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "weapon": weapon_name, "one_shot": weapon_ids.has("one_shot"), "hits": result.hits, "damage": result.damage}
+	if not damage_result.feel_no_pain_rolls.is_empty():
+		shoot_payload.feel_no_pain_rolls = damage_result.feel_no_pain_rolls
+	command_log = CommandLog.append(command_log, active_team, "SHOOT", shoot_payload)
 	var hazardous_damage := int(result.hazardous_failures) * int(weapon_context.weapon.get("hazardous_damage", 3))
 	var hazardous_result := {"destroyed": 0, "damage": 0}
 	if hazardous_damage > 0 and selected >= 0 and selected < models.size():
-		hazardous_result = Damage.allocate_to_unit(models, hazardous_damage, selected)
-		command_log = CommandLog.append(command_log, active_team, "HAZARDOUS", {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "damage": hazardous_damage})
+		hazardous_result = Damage.allocate_to_unit(models, hazardous_damage, selected, combat_rng)
+		var hazardous_payload := {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "damage": hazardous_damage}
+		if not hazardous_result.feel_no_pain_rolls.is_empty():
+			hazardous_payload.feel_no_pain_rolls = hazardous_result.feel_no_pain_rolls
+		command_log = CommandLog.append(command_log, active_team, "HAZARDOUS", hazardous_payload)
 	var target_name := "底座 %02d" % (target_index + 1)
 	if int(hazardous_result.destroyed) > 0:
 		selected = -1
