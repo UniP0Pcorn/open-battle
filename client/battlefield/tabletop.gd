@@ -793,8 +793,12 @@ func fight_selected() -> void:
 		var fight_damage_preview := Damage.allocate_to_unit(fight_preview, int(result.damage), 0, combat_rng)
 		if not fight_damage_preview.feel_no_pain_rolls.is_empty():
 			fight_payload.feel_no_pain_rolls = fight_damage_preview.feel_no_pain_rolls
-	if _submit_network_command("FIGHT", fight_payload):
-		return
+		var fight_intent := fight_payload.duplicate(true)
+		fight_intent.intent = true
+		fight_intent.erase("damage")
+		fight_intent.erase("hits")
+		if _submit_network_command("FIGHT", fight_intent):
+			return
 	reroll_next_attack = false
 	if weapon_ids.has("one_shot") and not attacker.get("used_weapon_names", []).has(weapon_name):
 		attacker.used_weapon_names.append(weapon_name)
@@ -896,8 +900,12 @@ func fire_selected() -> void:
 		var shoot_damage_preview := Damage.allocate_to_unit(shoot_preview, int(result.damage), 0, combat_rng)
 		if not shoot_damage_preview.feel_no_pain_rolls.is_empty():
 			shoot_payload.feel_no_pain_rolls = shoot_damage_preview.feel_no_pain_rolls
-	if _submit_network_command("SHOOT", shoot_payload):
-		return
+		var shoot_intent := shoot_payload.duplicate(true)
+		shoot_intent.intent = true
+		shoot_intent.erase("damage")
+		shoot_intent.erase("hits")
+		if _submit_network_command("SHOOT", shoot_intent):
+			return
 	reroll_next_attack = false
 	if weapon_ids.has("one_shot") and not attacker.get("used_weapon_names", []).has(weapon_name):
 		attacker.used_weapon_names.append(weapon_name)

@@ -193,6 +193,19 @@ func run() -> void:
 	var stale_packet := command_packet.duplicate(true)
 	stale_packet.snapshot_hash = "stale"
 	check(not NetworkSync.host_command(room, stale_packet, "player_gold").ok, "host sync rejects a stale peer snapshot")
+	var attack_models: Array = [
+		{"model_id": "net_attacker", "unit_id": "net_unit_a", "team": 0, "position": Vector2(5, 5), "radius": 0.5, "spent": 0.0, "wounds": 3, "toughness": 4, "save_on": 4, "weapons": [{"name": "net gun", "range_inches": 24.0, "attacks": 1, "hit_on": 4, "strength": 4, "damage": 1}]},
+		{"model_id": "net_target", "unit_id": "net_unit_b", "team": 1, "position": Vector2(10, 5), "radius": 0.5, "spent": 0.0, "wounds": 3, "toughness": 4, "save_on": 7, "weapons": []}
+	]
+	var attack_room: Dictionary = Room.create("attack-room")
+	attack_room.players = [{"id": "attacker", "team": 0, "ready": true}, {"id": "target", "team": 1, "ready": true}]
+	attack_room.status = Room.ACTIVE
+	attack_room.session = BattleSession.create(attack_models, 11, 0)
+	attack_room.session.phase = "SHOOTING"
+	attack_room.session.phase_index = TurnState.phase_index("SHOOTING")
+	var intent_packet := PeerProtocol.command("attack-room", "attacker", "network-test", 0, -1, {"sequence": 0, "team": 0, "kind": "SHOOT", "payload": {"attacker": 0, "attacker_id": "net_attacker", "target": 1, "target_id": "net_target", "weapon": "net gun", "intent": true}}, PeerProtocol.hash_snapshot(attack_room.session))
+	var intent_result := NetworkSync.host_command(attack_room, intent_packet, "attacker")
+	check(intent_result.ok and intent_result.entry.payload.damage >= 0 and not bool(intent_result.entry.payload.get("intent", false)), "host materializes network attack intent deterministically")
 	var lobby_probe = P2PLobby.new()
 	root.add_child(lobby_probe)
 	await process_frame

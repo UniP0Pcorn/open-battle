@@ -34,7 +34,13 @@ static func validate_payload(kind: String, payload: Dictionary) -> String:
 			if str(payload.get("unit_id", "")).is_empty() or not _nonnegative_int(payload.get("roll", -1)) or int(payload.get("roll", 0)) < 1 or int(payload.get("roll", 0)) > 6:
 				return "INVALID ADVANCE"
 		"SHOOT", "FIGHT":
-			if not _model_ref(payload, "attacker_id", "attacker") or not _model_ref(payload, "target_id", "target") or not _nonnegative_int(payload.get("damage", -1)):
+			if not _model_ref(payload, "attacker_id", "attacker") or not _model_ref(payload, "target_id", "target"):
+				return "INVALID DAMAGE EVENT"
+			if bool(payload.get("intent", false)):
+				if str(payload.get("weapon", "")).is_empty():
+					return "MISSING WEAPON"
+				return ""
+			if not _nonnegative_int(payload.get("damage", -1)):
 				return "INVALID DAMAGE EVENT"
 			if payload.has("feel_no_pain_rolls") and not _dice_rolls(payload.feel_no_pain_rolls):
 				return "INVALID FEEL NO PAIN RESULT"

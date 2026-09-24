@@ -19,4 +19,5 @@
 `rules/account_store.gd` 将经过校验的身份记录写入 Godot `user://`，只保存派生 credential hash，不保存密码明文；大厅启动后可直接加载该身份参与挑战认证。
 `client/lobby/lobby_screen.tscn` 是大厅的最小可用界面，桌面按 `M` 打开；它提供账号保存、主机/加入房间和准备操作，所有网络动作仍通过 `P2PLobby`。
 `client/network_bridge.gd` 作为 Autoload 跨场景保留大厅连接，桌面进入时会订阅权威快照并调用 `apply_network_snapshot`；网络输入命令的逐项替换仍按动作类型推进。
+射击和近战的网络命令可以只携带攻击意图；`rules/network_sync.gd` 在主机按会话序列派生确定性骰子、解析武器能力和 FNP 骰面，再交给 `Room`/`Replay` 记录，客户端不能直接指定伤害结果。
 部署阶段使用 `rules/deployment.gd`，将底座几何检查与阵营部署区分开：部署时限制在任务给出的纵深内，进入移动阶段后仍可在整张桌面移动。
