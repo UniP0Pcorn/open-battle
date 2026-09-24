@@ -15,11 +15,11 @@ const GRANTABLE_ABILITIES := ["fall_back_and_shoot", "fall_back_and_charge", "ad
 
 const DEFINITIONS := {
 	"command_reroll": {"id": "command_reroll", "cost": 1, "phase": "ANY", "effect": "REROLL_HIT", "timing": "AFTER_ROLL"},
-	"insane_bravery": {"id": "insane_bravery", "cost": 1, "phase": "COMMAND", "effect": "PASS_BATTLE_SHOCK", "timing": "BATTLE_SHOCK"},
-	"counter_offensive": {"id": "counter_offensive", "cost": 2, "phase": "FIGHT", "effect": "FIGHT_NEXT", "timing": "FIGHT"},
-	"fire_overwatch": {"id": "fire_overwatch", "cost": 1, "phase": "ANY", "effect": "REACTION_SHOOT", "timing": "REACTION"},
-	"go_to_ground": {"id": "go_to_ground", "cost": 1, "phase": "SHOOTING", "effect": "TEMPORARY_COVER", "timing": "SHOOTING"},
-	"smokescreen": {"id": "smokescreen", "cost": 1, "phase": "SHOOTING", "effect": "TEMPORARY_COVER", "timing": "SHOOTING"}
+	"insane_bravery": {"id": "insane_bravery", "cost": 1, "phase": "COMMAND", "effect": "PASS_BATTLE_SHOCK", "timing": "BATTLE_SHOCK", "target": "FRIENDLY_UNIT"},
+	"counter_offensive": {"id": "counter_offensive", "cost": 2, "phase": "FIGHT", "effect": "FIGHT_NEXT", "timing": "FIGHT", "target": "FRIENDLY_UNIT"},
+	"fire_overwatch": {"id": "fire_overwatch", "cost": 1, "phase": "ANY", "effect": "REACTION_SHOOT", "timing": "REACTION", "target": "FRIENDLY_UNIT"},
+	"go_to_ground": {"id": "go_to_ground", "cost": 1, "phase": "SHOOTING", "effect": "TEMPORARY_COVER", "timing": "SHOOTING", "target": "FRIENDLY_UNIT"},
+	"smokescreen": {"id": "smokescreen", "cost": 1, "phase": "SHOOTING", "effect": "TEMPORARY_COVER", "timing": "SHOOTING", "target": "FRIENDLY_UNIT"}
 }
 
 const ALIASES := {
@@ -54,6 +54,9 @@ static func validate(stratagem: Dictionary) -> String:
 		return "INVALID STRATAGEM"
 	if str(stratagem.effect) not in SUPPORTED_EFFECTS:
 		return "UNSUPPORTED EFFECT"
+	var target := str(stratagem.get("target", ""))
+	if str(stratagem.effect) in ["PASS_BATTLE_SHOCK", "FIGHT_NEXT", "REACTION_SHOOT", "TEMPORARY_COVER", "GRANT_ABILITY"] and target != "FRIENDLY_UNIT":
+		return "INVALID STRATAGEM TARGET"
 	if stratagem.has("usage_limit"):
 		var limit: Variant = stratagem.usage_limit
 		if not (limit is Dictionary) or str(limit.get("scope", "")) not in ["PHASE", "TURN", "BATTLE"]:

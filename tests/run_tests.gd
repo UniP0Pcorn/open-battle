@@ -473,7 +473,7 @@ func run() -> void:
 	var no_budget_move := Replay.apply_entry(no_budget, trigger_entry)
 	check(no_budget_move.ok and not no_budget_move.state.has("reaction_window"), "unaffordable reactions do not stall movement")
 	var unimplemented_reaction := Stratagems.use(Stratagems.definition("fire_overwatch"), "MOVEMENT", 0, [1, 0])
-	var shooting_rule := {"id": "fixture_reaction_shot", "cost": 1, "phase": "MOVEMENT", "timing": "AFTER_ENEMY_MOVE", "effect": "REACTION_SHOOT", "hit_on": 6}
+	var shooting_rule := {"id": "fixture_reaction_shot", "cost": 1, "phase": "MOVEMENT", "timing": "AFTER_ENEMY_MOVE", "effect": "REACTION_SHOOT", "target": "FRIENDLY_UNIT", "hit_on": 6}
 	var shooting_room: Dictionary = reaction_room.duplicate(true)
 	shooting_room.session.models[0].wounds = 100
 	shooting_room.session.models[0].save_on = 7
@@ -646,6 +646,9 @@ func run() -> void:
 	unsupported_grant = grant.duplicate(true)
 	unsupported_grant.ability = "invented_ability"
 	check(Stratagems.validate(unsupported_grant) == "UNKNOWN GRANTED ABILITY", "grant validates executable ability identifier")
+	var malformed_target_strategy: Dictionary = grant.duplicate(true)
+	malformed_target_strategy.target = "OBJECTIVE"
+	check(Stratagems.validate(malformed_target_strategy) == "INVALID STRATAGEM TARGET", "strategy target contract rejects unsupported target kind")
 	var objective_grant: Dictionary = grant.duplicate(true)
 	objective_grant.ability = "objective_control_plus_1"
 	check(Stratagems.validate(objective_grant).is_empty(), "strategy can declare an executable objective control grant")
@@ -1203,7 +1206,7 @@ func run() -> void:
 	var bravery_replay := Replay.replay(bravery_state, bravery_log)
 	check(bravery_replay.ok and not bool(bravery_replay.state.models[0].get("battle_shocked", false)), "replay applies automatic battle shock pass stratagem")
 	var faction_stratagem_models: Array = one_shot_models.duplicate(true)
-	faction_stratagem_models[0].faction_stratagems = [{"id": "faction_cover", "cost": 1, "phase": "SHOOTING", "effect": "TEMPORARY_COVER", "timing": "SHOOTING"}]
+	faction_stratagem_models[0].faction_stratagems = [{"id": "faction_cover", "cost": 1, "phase": "SHOOTING", "effect": "TEMPORARY_COVER", "timing": "SHOOTING", "target": "FRIENDLY_UNIT"}]
 	var faction_stratagem_state := Replay.initial_state(faction_stratagem_models, "SHOOTING", 0)
 	faction_stratagem_state.command_points = [1, 0]
 	var faction_stratagem_log: Array = []
