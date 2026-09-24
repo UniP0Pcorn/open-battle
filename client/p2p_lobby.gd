@@ -138,6 +138,9 @@ func _on_packet_received(peer_id: int, packet: Dictionary) -> void:
 			_handle_lobby(peer_id, packet)
 		"COMMAND":
 			if is_host:
+				if str(authenticated_peers.get(peer_id, "")) != str(packet.peer_id):
+					error_occurred.emit("AUTH REQUIRED")
+					return
 				var sync_result := NetworkSync.host_command(room, packet, str(packet.peer_id))
 				if bool(sync_result.get("ok", false)):
 					room = sync_result.room
@@ -158,6 +161,9 @@ func _on_packet_received(peer_id: int, packet: Dictionary) -> void:
 					error_occurred.emit(str(snapshot_result.get("reason", "SNAPSHOT REJECTED")))
 		"RECONNECT":
 			if is_host:
+				if str(authenticated_peers.get(peer_id, "")) != str(packet.peer_id):
+					error_occurred.emit("AUTH REQUIRED")
+					return
 				var result := Room.reconnect(room, str(packet.peer_id), str(packet.get("reconnect_token", "")), int(packet.sequence))
 				if bool(result.get("ok", false)):
 					room = result.room
@@ -166,7 +172,11 @@ func _on_packet_received(peer_id: int, packet: Dictionary) -> void:
 func _handle_lobby(peer_id: int, packet: Dictionary) -> void:
 		if not is_host:
 			if str(packet.action) == "AUTH_OK":
-				_send_lobby("JOIN", {"preferred_team": -1})
+				if str(room.get("status", Room.WAITING)) == Room.ACTIVE and not reconnect_token.is_empty():
+					var reconnect_packet := PeerProtocol.reconnect(str(room.id), player_id, _session_id(), _last_sequence(), PeerProtocol.hash_snapshot(room.session), reconnect_token)
+					transport.send(reconnect_packet, 1)
+				else:
+					_send_lobby("JOIN", {"preferred_team": -1})
 			elif str(packet.action) == "JOINED":
 				room = packet.payload.room.duplicate(true)
 				reconnect_token = str(packet.payload.get("reconnect_token", ""))
@@ -195,7 +205,7 @@ func _handle_auth(peer_id: int, packet: Dictionary) -> void:
 	var public_record: Dictionary = response.get("public_record", {})
 	var fingerprint := str(public_record.get("fingerprint", ""))
 	var trusted: Dictionary = trusted_identities.get(fingerprint, {})
-	if trusted.is_empty() or not AccountIdentity.verify(trusted, response, _session_id()):
+	if trusted.is_empty() or str(packet.get("peer_id", "")) != str(response.get("account_id", "")) or not AccountIdentity.verify(trusted, response, _auth_nonce()):
 		transport.send(PeerProtocol.lobby(str(room.id), player_id, _session_id(), "ERROR", {"reason": "AUTH REJECTED"}), peer_id)
 		return
 	authenticated_peers[peer_id] = str(trusted.account_id)
@@ -205,6 +215,7 @@ func _on_peer_state_changed(peer_id: int, connected: bool) -> void:
 	if not connected:
 		if is_host:
 			var disconnected_id := str(authenticated_peers.get(peer_id, ""))
+			authenticated_peers.erase(peer_id)
 			if not disconnected_id.is_empty():
 				var dropped := Room.drop_connection(room, disconnected_id)
 				if bool(dropped.get("ok", false)):
@@ -215,7 +226,7 @@ func _on_peer_state_changed(peer_id: int, connected: bool) -> void:
 		return
 	if connected and not is_host and pending_join:
 		pending_join = false
-		var response := AccountIdentity.challenge(identity, _session_id())
+		var response := AccountIdentity.challenge(identity, _auth_nonce())
 		response["public_record"] = AccountIdentity.public_record(identity)
 		transport.send(PeerProtocol.auth(player_id, _session_id(), response), 1)
 
@@ -227,6 +238,9 @@ func _on_transport_error(reason: String) -> void:
 
 func _session_id() -> String:
 	return PeerProtocol.hash_snapshot({"room_id": str(room.get("id", "")), "edition": int(room.get("edition", 0)), "mission": str(room.get("mission_id", ""))})
+
+func _auth_nonce() -> String:
+	return PeerProtocol.hash_snapshot({"room_id": str(room.get("id", "")), "auth": "open-battle-p2p"})
 
 func _last_sequence() -> int:
 	return maxi(0, int(room.get("session", {}).get("command_log", []).size()) - 1)
