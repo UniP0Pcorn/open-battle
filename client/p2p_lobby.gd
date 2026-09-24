@@ -160,6 +160,9 @@ func _on_packet_received(peer_id: int, packet: Dictionary) -> void:
 				var snapshot_result := NetworkSync.accept_snapshot(room.session, packet)
 				if bool(snapshot_result.get("ok", false)):
 					room.session = snapshot_result.state
+					if int(room.session.get("winner", -1)) >= 0:
+						room.status = Room.FINISHED
+						room.winner = int(room.session.winner)
 					battle_snapshot_received.emit(room.session)
 					lobby_changed.emit(Room.public_snapshot(room))
 				else:
