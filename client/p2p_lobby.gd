@@ -3,6 +3,7 @@ extends Node
 ## Thin lobby/session controller over P2PTransport and the authoritative Room.
 
 const AccountIdentity = preload("res://rules/account_identity.gd")
+const AccountStore = preload("res://rules/account_store.gd")
 const PeerProtocol = preload("res://rules/peer_protocol.gd")
 const P2PTransport = preload("res://client/p2p_transport.gd")
 const Room = preload("res://rules/room.gd")
@@ -28,6 +29,8 @@ func _ready() -> void:
 	transport.packet_received.connect(_on_packet_received)
 	transport.peer_state_changed.connect(_on_peer_state_changed)
 	transport.transport_error.connect(_on_transport_error)
+	for trusted in AccountStore.load_trusted_identities():
+		trusted_identities[str(trusted.fingerprint)] = trusted.duplicate(true)
 
 func set_identity(value: Dictionary) -> String:
 	var error := AccountIdentity.validate(value)
@@ -43,7 +46,7 @@ func trust_identity(value: Dictionary) -> String:
 	if not error.is_empty():
 		return error
 	trusted_identities[str(value.fingerprint)] = value.duplicate(true)
-	return ""
+	return AccountStore.save_trusted_identity(value)
 
 func host_room(room_id: String, port: int, edition: int = 11, points_limit: int = 1000, mission_id: String = "control_center", terrain: Array = []) -> String:
 	if identity.is_empty():

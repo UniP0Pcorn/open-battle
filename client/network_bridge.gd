@@ -20,6 +20,9 @@ func _ready() -> void:
 func set_identity(identity: Dictionary) -> String:
 	return lobby.set_identity(identity)
 
+func trust_identity(identity: Dictionary) -> String:
+	return lobby.trust_identity(identity)
+
 func host_room(room_id: String, port: int, edition: int = 11, points_limit: int = 1000, mission_id: String = "control_center", terrain: Array = []) -> String:
 	return lobby.host_room(room_id, port, edition, points_limit, mission_id, terrain)
 

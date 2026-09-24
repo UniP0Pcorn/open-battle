@@ -9,6 +9,7 @@ const BattleSetup = preload("res://rules/battle_setup.gd")
 var lobby: Node
 var account_id: LineEdit
 var password: LineEdit
+var peer_identity_path: LineEdit
 var room_id: LineEdit
 var address: LineEdit
 var port: SpinBox
@@ -54,7 +55,18 @@ func _build_ui() -> void:
 	create_account.text = "创建/保存本机账号"
 	create_account.pressed.connect(_create_account)
 	account_row.add_child(create_account)
+	var export_account := Button.new()
+	export_account.text = "导出配对凭据"
+	export_account.pressed.connect(_export_account)
+	account_row.add_child(export_account)
 	panel.add_child(account_row)
+	panel.add_child(_label("主机信任的对端身份文件（可填 user:// 或绝对路径）"))
+	peer_identity_path = _line("user://open_battle_peer.json")
+	panel.add_child(peer_identity_path)
+	var trust_button := Button.new()
+	trust_button.text = "导入并信任对端账号"
+	trust_button.pressed.connect(_trust_peer)
+	panel.add_child(trust_button)
 	panel.add_child(_label("房间 ID"))
 	room_id = _line("room-001")
 	panel.add_child(room_id)
@@ -87,7 +99,7 @@ func _build_ui() -> void:
 	room_row.add_child(start_button)
 	panel.add_child(room_row)
 	status = Label.new()
-	status.text = "先创建或加载账号。P2P 主机需要把对端身份加入信任目录。"
+	status.text = "先创建或加载账号；主机请先导入对端配对凭据。"
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	panel.add_child(status)
 	var back := Button.new()
@@ -106,6 +118,26 @@ func _create_account() -> void:
 		return
 	var set_error: String = lobby.set_identity(identity)
 	status.text = "账号已保存。" if set_error.is_empty() else set_error
+
+func _export_account() -> void:
+	var identity := AccountStore.load_identity()
+	if identity.is_empty():
+		if not _ensure_identity():
+			return
+		identity = AccountStore.load_identity()
+	var export_path := "user://open_battle_identity_share.json"
+	var error := AccountStore.save_identity(identity, export_path)
+	status.text = "配对凭据已导出：" + export_path if error.is_empty() else error
+
+func _trust_peer() -> void:
+	if lobby == null:
+		return
+	var peer := AccountStore.load_identity(peer_identity_path.text.strip_edges())
+	if peer.is_empty():
+		status.text = "对端身份文件无效或无法读取。"
+		return
+	var error: String = lobby.trust_identity(peer)
+	status.text = "已信任对端：" + str(peer.get("account_id", "")) if error.is_empty() else error
 
 func _ensure_identity() -> bool:
 	var identity := AccountStore.load_identity()

@@ -247,6 +247,10 @@ func run() -> void:
 	AccountStore.remove_identity(identity_path)
 	check(AccountStore.save_identity(identity, identity_path).is_empty() and AccountStore.load_identity(identity_path).fingerprint == identity.fingerprint, "account identity persists without plaintext password")
 	AccountStore.remove_identity(identity_path)
+	var trust_path := "user://open_battle_trusted_test.json"
+	AccountStore.remove_trusted_identities(trust_path)
+	check(AccountStore.save_trusted_identity(identity, trust_path).is_empty() and AccountStore.load_trusted_identities(trust_path).size() == 1 and AccountStore.load_trusted_identities(trust_path)[0].fingerprint == identity.fingerprint, "trusted peer identity persists for P2P pairing")
+	AccountStore.remove_trusted_identities(trust_path)
 	var abandoned_room := Room.leave(room, "player_gold")
 	check(abandoned_room.ok and abandoned_room.room.status == Room.ABANDONED, "room marks active player leave")
 	var ai_models: Array = [
