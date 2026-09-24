@@ -973,6 +973,13 @@ func run() -> void:
 		if str(ai_entry.get("kind", "")) == "DEPLOY_RESERVE":
 			ai_reserve_deployed = true
 	check(ai_reserve_turn.ok and ai_reserve_deployed, "single-player AI deploys deep strike reserves")
+	var ai_transport_models: Array = [{"model_id": "ai_transport_m001", "unit_id": "ai_transport", "team": 1, "position": Vector2(30, 38), "radius": 1.0, "movement_inches": 8.0, "transport_capacity": 5, "wounds": 8}, {"model_id": "ai_passenger_m001", "unit_id": "ai_passenger", "team": 1, "position": Vector2(31, 38), "radius": 0.5, "wounds": 3}, {"model_id": "ai_transport_enemy_m001", "unit_id": "ai_transport_enemy", "team": 0, "position": Vector2(30, 5), "radius": 0.5, "wounds": 3}]
+	var ai_transport_turn := AIPlayer.play_turn(BattleSession.create(ai_transport_models, 11, 1), 1, 81)
+	var ai_embarked := false
+	for ai_entry in ai_transport_turn.commands:
+		if str(ai_entry.get("kind", "")) == "EMBARK":
+			ai_embarked = true
+	check(ai_transport_turn.ok and ai_embarked, "single-player AI embarks a nearby unit")
 	var ai_scout_models: Array = [{"model_id": "ai_scout_m001", "unit_id": "ai_scout", "team": 1, "position": Vector2(30, 38), "radius": 0.5, "ability_ids": ["scout_6"], "wounds": 3}, {"model_id": "ai_scout_enemy_m001", "unit_id": "ai_scout_enemy", "team": 0, "position": Vector2(30, 5), "radius": 0.5, "wounds": 3}]
 	var ai_scout_turn := AIPlayer.play_turn(BattleSession.create(ai_scout_models, 11, 1), 1, 79)
 	var ai_scout_used := false

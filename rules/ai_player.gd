@@ -14,6 +14,7 @@ const TurnState = preload("res://rules/turn_state.gd")
 const WeaponRules = preload("res://rules/weapon_rules.gd")
 const UnitAbilities = preload("res://rules/unit_abilities.gd")
 const Reserves = preload("res://rules/reserves.gd")
+const Transports = preload("res://rules/transports.gd")
 
 const EPSILON := 0.0001
 
@@ -49,6 +50,13 @@ static func play_turn(state: Dictionary, team: int, seed: int = 1, max_commands:
 				if reserve_result.ok:
 					next = reserve_result.state
 					commands.append(reserve_result.entry)
+					continue
+			var transport_action := _transport_command(next, team)
+			if not transport_action.is_empty():
+				var transport_result := _submit(next, team, str(transport_action.kind), transport_action.payload)
+				if transport_result.ok:
+					next = transport_result.state
+					commands.append(transport_result.entry)
 					continue
 			var movement := _movement_command(next, team)
 			if not movement.is_empty():
@@ -132,12 +140,12 @@ static func _submit(state: Dictionary, team: int, kind: String, payload: Diction
 static func _movement_command(state: Dictionary, team: int) -> Dictionary:
 	var unit_ids: Array = []
 	for model in state.get("models", []):
-		if int(model.get("team", -1)) == team and not unit_ids.has(str(model.get("unit_id", ""))):
+		if int(model.get("team", -1)) == team and not Transports.is_embarked(model) and not unit_ids.has(str(model.get("unit_id", ""))):
 			unit_ids.append(str(model.get("unit_id", "")))
 	for unit_id in unit_ids:
 		var unit_models: Array = []
 		for model in state.models:
-			if str(model.get("unit_id", "")) == unit_id:
+			if str(model.get("unit_id", "")) == unit_id and not Transports.is_embarked(model):
 				unit_models.append(model)
 		if unit_models.is_empty() or _unit_engaged(unit_models, state.models):
 			continue
@@ -177,13 +185,13 @@ static func _unit_move_is_legal(unit_models: Array, delta: Vector2, all_models: 
 static func _shooting_command(state: Dictionary, team: int, rng: RandomNumberGenerator) -> Dictionary:
 	for attacker_index in range(state.models.size()):
 		var attacker: Dictionary = state.models[attacker_index]
-		if int(attacker.get("team", -1)) != team:
+		if int(attacker.get("team", -1)) != team or Transports.is_embarked(attacker):
 			continue
 		for weapon in attacker.get("weapons", []):
 			var distance_limit := float(weapon.get("range_inches", weapon.get("range", 0.0)))
 			for target_index in range(state.models.size()):
 				var target: Dictionary = state.models[target_index]
-				if int(target.get("team", -1)) == team:
+				if int(target.get("team", -1)) == team or Transports.is_embarked(target):
 					continue
 				var distance := _position(attacker).distance_to(_position(target))
 				if distance > distance_limit + EPSILON:
@@ -200,12 +208,12 @@ static func _shooting_command(state: Dictionary, team: int, rng: RandomNumberGen
 static func _charge_command(state: Dictionary, team: int, rng: RandomNumberGenerator) -> Dictionary:
 	for attacker_index in range(state.models.size()):
 		var attacker: Dictionary = state.models[attacker_index]
-		if int(attacker.get("team", -1)) != team or bool(attacker.get("fell_back", false)):
+		if int(attacker.get("team", -1)) != team or Transports.is_embarked(attacker) or bool(attacker.get("fell_back", false)):
 			continue
 		var attacker_abilities := UnitAbilities.modifiers(attacker.get("ability_ids", []))
 		for target_index in range(state.models.size()):
 			var target: Dictionary = state.models[target_index]
-			if int(target.get("team", -1)) == team:
+			if int(target.get("team", -1)) == team or Transports.is_embarked(target):
 				continue
 			var roll := Charge.charge_distance(rng)
 			var starting := _position(attacker).distance_to(_position(target))
@@ -220,13 +228,13 @@ static func _fight_command(state: Dictionary, team: int, rng: RandomNumberGenera
 	for priority in [true, false]:
 		for attacker_index in range(state.models.size()):
 			var attacker: Dictionary = state.models[attacker_index]
-			if int(attacker.get("team", -1)) != team or not Reserves.active(attacker):
+			if int(attacker.get("team", -1)) != team or not Reserves.active(attacker) or Transports.is_embarked(attacker):
 				continue
 			if bool(attacker.get("fought", false)) or bool(UnitAbilities.modifiers(attacker.get("ability_ids", [])).get("fights_first", false)) != priority:
 				continue
 			for target_index in range(state.models.size()):
 				var target: Dictionary = state.models[target_index]
-				if not Reserves.active(target) or not Melee.target_reason(attacker, target, team).is_empty():
+				if not Reserves.active(target) or Transports.is_embarked(target) or not Melee.target_reason(attacker, target, team).is_empty():
 					continue
 				for weapon in attacker.get("weapons", []):
 					if float(weapon.get("range_inches", weapon.get("range", 0.0))) > 0.0:
@@ -328,5 +336,36 @@ static func _scout_command(state: Dictionary, team: int) -> Dictionary:
 		if direction.is_zero_approx():
 			continue
 		return {"unit_id": unit_id, "delta": [direction.x * allowance, direction.y * allowance]}
+	return {}
+
+static func _transport_command(state: Dictionary, team: int) -> Dictionary:
+	for transport in state.get("models", []):
+		if int(transport.get("team", -1)) != team or not Transports.is_transport(transport) or not Transports.active(transport) or bool(transport.get("transport_moved", false)):
+			continue
+		for model in state.get("models", []):
+			if int(model.get("team", -1)) != team or Transports.is_transport(model) or Transports.is_embarked(model):
+				continue
+			var embark_reason := Transports.embark_reason(state.models, str(model.get("unit_id", "")), str(transport.get("model_id", "")), team)
+			if embark_reason.is_empty():
+				return {"kind": "EMBARK", "payload": {"unit_id": str(model.get("unit_id", "")), "transport_id": str(transport.get("model_id", ""))}}
+	for transport in state.get("models", []):
+		if int(transport.get("team", -1)) != team or not Transports.is_transport(transport) or not Transports.active(transport) or bool(transport.get("transport_moved", false)):
+			continue
+		var has_passengers := false
+		for model in state.get("models", []):
+			if str(model.get("embarked_in", "")) == str(transport.get("model_id", "")):
+				has_passengers = true
+				break
+		if not has_passengers:
+			continue
+		var target := _nearest_enemy(transport, state.models, team)
+		if target.is_empty():
+			continue
+		var direction := (_position(target) - _position(transport)).normalized()
+		var allowance := float(transport.get("movement_inches", 0.0)) - float(transport.get("spent", 0.0))
+		var distance := minf(maxf(0.0, allowance), 6.0)
+		var delta := direction * distance
+		if not delta.is_zero_approx() and Transports.move_reason(state.models, str(transport.get("model_id", "")), [delta.x, delta.y], team, state.get("terrain", [])).is_empty():
+			return {"kind": "TRANSPORT_MOVE", "payload": {"transport_id": str(transport.get("model_id", "")), "delta": [delta.x, delta.y]}}
 	return {}
 
