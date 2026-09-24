@@ -789,6 +789,14 @@ func run() -> void:
 	check(FactionRules.combat_modifiers([conditional_source], conditional_source, "before_defend", {"phase": "MOVEMENT", "kind": "SHOOT"}).invulnerable_save == 0, "conditional aura does not treat reaction as shooting phase")
 	check(FactionRules.combat_modifiers([conditional_source], conditional_source, "before_defend", {"phase": "SHOOTING", "kind": "FIGHT"}).invulnerable_save == 0, "conditional aura excludes other attack kinds")
 	check(FactionRules.combat_modifiers([conditional_source], conditional_source, "before_defend").invulnerable_save == 0, "missing context cannot activate conditional aura")
+	var morale_aura := {"id": "fixture_morale_aura", "aura": {"radius_inches": 6.0, "event": "battle_shock", "include_self": false, "keywords": ["INFANTRY"], "when": {"phase": "COMMAND", "kind": "BATTLE_SHOCK"}, "modifiers": {"leadership_bonus": 1}}}
+	var morale_source := {"model_id": "morale_source", "unit_id": "morale_source_unit", "team": 0, "position": Vector2(5, 5), "radius": 0.5, "wounds": 3, "ability_ids": [morale_aura]}
+	var morale_recipient := {"model_id": "morale_recipient", "unit_id": "morale_unit", "team": 0, "position": Vector2(8, 5), "radius": 0.5, "wounds": 1, "leadership": 7, "keywords": ["INFANTRY"], "ability_ids": []}
+	check(UnitAbilities.validate([morale_aura]).is_empty() and FactionRules.combat_modifiers([morale_source, morale_recipient], morale_recipient, "battle_shock", {"phase": "COMMAND", "kind": "BATTLE_SHOCK"}).leadership_bonus == 1, "leadership aura resolves from current snapshot")
+	var morale_state := BattleSession.create([morale_source, morale_recipient], 11, 0)
+	var morale_entry := {"sequence": 0, "team": 0, "kind": "BATTLE_SHOCK", "payload": {"unit_id": "morale_unit", "rolls": [4, 4], "total": 8, "passed": true}}
+	var morale_replay := Replay.apply_entry(morale_state, morale_entry)
+	check(morale_replay.ok and not morale_replay.state.models[1].battle_shocked, "leadership aura changes authoritative battle shock replay")
 	conditional_aura.aura.when = {"unsupported": true}
 	check(not UnitAbilities.validate([conditional_aura]).is_empty(), "unknown aura condition rejected instead of silently ignored")
 	conditional_aura.aura.when = "SHOOTING"

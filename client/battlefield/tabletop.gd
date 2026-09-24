@@ -860,7 +860,8 @@ func resolve_network_battle_shock() -> void:
 		for candidate in models:
 			if Attachments.group_id(candidate) == unit_id:
 				unit_models.append(candidate)
-		var result := BattleShock.test(int(unit_models[0].get("leadership", 7)), combat_rng)
+		var leadership_modifiers := FactionRules.combat_modifiers(models, unit_models[0], "battle_shock", {"phase": "COMMAND", "kind": "BATTLE_SHOCK"})
+		var result := BattleShock.test(int(unit_models[0].get("leadership", 7)) + int(leadership_modifiers.get("leadership_bonus", 0)), combat_rng)
 		var payload := {"unit_id": unit_id, "rolls": result.rolls, "total": result.total, "passed": result.passed, "round": current_round}
 		models = BattleShock.apply_to_models(models, unit_id, result)
 		command_log = CommandLog.append(command_log, active_team, "BATTLE_SHOCK", payload)
@@ -933,7 +934,8 @@ func resolve_battle_shock(team_id: int) -> String:
 			starting = int(starting_unit_sizes.get(unit_id, unit_models.size()))
 		var result := {"passed": true, "rolls": [], "total": 0}
 		if BattleShock.required(unit_models.size(), starting):
-			result = BattleShock.test(int(unit_models[0].get("leadership", 7)), combat_rng)
+			var leadership_modifiers := FactionRules.combat_modifiers(models, unit_models[0], "battle_shock", {"phase": "COMMAND", "kind": "BATTLE_SHOCK"})
+			result = BattleShock.test(int(unit_models[0].get("leadership", 7)) + int(leadership_modifiers.get("leadership_bonus", 0)), combat_rng)
 		models = BattleShock.apply_to_models(models, unit_id, result)
 		command_log = CommandLog.append(command_log, team_id, "BATTLE_SHOCK", {"unit_id": unit_id, "rolls": result.rolls, "total": result.total, "passed": result.passed})
 		if not result.passed:

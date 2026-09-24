@@ -716,7 +716,8 @@ static func _battle_shock_reference_error(models: Array, unit_id: String, payloa
 	var expected_total := total + modifier
 	if payload.has("total") and int(payload.get("total", expected_total)) != expected_total:
 		return "INVALID BATTLE SHOCK RESULT"
-	var leadership := int(unit_models[0].get("leadership", 7))
+	var leadership_modifiers := FactionRules.combat_modifiers(models, unit_models[0], "battle_shock", {"phase": "COMMAND", "kind": "BATTLE_SHOCK"})
+	var leadership := int(unit_models[0].get("leadership", 7)) + int(leadership_modifiers.get("leadership_bonus", 0))
 	var expected_passed := expected_total <= leadership
 	return "" if bool(payload.get("passed", false)) == expected_passed else "INVALID BATTLE SHOCK RESULT"
 

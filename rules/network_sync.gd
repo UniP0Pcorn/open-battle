@@ -191,10 +191,11 @@ static func _materialize_battle_shock(state: Dictionary, command: Dictionary, rn
 		return {"ok": false, "reason": "UNKNOWN UNIT"}
 	var rolls: Array = [rng.randi_range(1, 6), rng.randi_range(1, 6)]
 	var total := int(rolls[0]) + int(rolls[1])
+	var leadership_modifiers := FactionRules.combat_modifiers(state.get("models", []), unit_models[0], "battle_shock", {"phase": "COMMAND", "kind": "BATTLE_SHOCK"})
 	payload.erase("intent")
 	payload.rolls = rolls
 	payload.total = total
-	payload.passed = total <= int(unit_models[0].get("leadership", 7))
+	payload.passed = total <= int(unit_models[0].get("leadership", 7)) + int(leadership_modifiers.get("leadership_bonus", 0))
 	return {"ok": true, "reason": "", "payload": payload}
 
 static func _model_index(models: Array, payload: Dictionary, id_key: String, index_key: String) -> int:

@@ -97,7 +97,7 @@ static func validate(ids: Array) -> Array[String]:
 			var radius: Variant = aura.get("radius_inches", -1)
 			if typeof(radius) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(radius)) or float(radius) < 0:
 				errors.append("INVALID AURA RADIUS")
-			if str(aura.get("event", "")) not in ["before_attack", "before_defend", "objective_control"]:
+			if str(aura.get("event", "")) not in ["before_attack", "before_defend", "objective_control", "battle_shock"]:
 				errors.append("INVALID AURA EVENT")
 			if not (aura.get("keywords", []) is Array) or typeof(aura.get("include_self", true)) != TYPE_BOOL:
 				errors.append("INVALID AURA TARGET")
@@ -110,7 +110,7 @@ static func validate(ids: Array) -> Array[String]:
 				errors.append("INVALID AURA CONDITIONS")
 			else:
 				for field in conditions:
-					var allowed := ["COMMAND", "MOVEMENT", "SHOOTING", "CHARGE", "FIGHT"] if field == "phase" else ["SHOOT", "FIGHT", "OBJECTIVE_CONTROL"]
+					var allowed := ["COMMAND", "MOVEMENT", "SHOOTING", "CHARGE", "FIGHT"] if field == "phase" else ["SHOOT", "FIGHT", "OBJECTIVE_CONTROL", "BATTLE_SHOCK"]
 					if field not in ["phase", "kind"] or conditions[field] not in allowed:
 						errors.append("UNSUPPORTED AURA CONDITION")
 			var values: Variant = aura.get("modifiers", null)
@@ -119,7 +119,7 @@ static func validate(ids: Array) -> Array[String]:
 				continue
 			for key in values:
 				var aura_event := str(aura.get("event", ""))
-				var supported: Array = ["cover_bonus", "save_rerolls", "save_reroll_ones", "invulnerable_save"] if aura_event == "before_defend" else (["objective_control_bonus"] if aura_event == "objective_control" else ["hit_rerolls", "hit_reroll_ones", "wound_reroll_ones", "wound_rerolls"])
+				var supported: Array = ["cover_bonus", "save_rerolls", "save_reroll_ones", "invulnerable_save"] if aura_event == "before_defend" else (["objective_control_bonus"] if aura_event == "objective_control" else (["leadership_bonus"] if aura_event == "battle_shock" else ["hit_rerolls", "hit_reroll_ones", "wound_reroll_ones", "wound_rerolls"]))
 				if key not in supported or typeof(values[key]) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(values[key])) or float(values[key]) < 0 or float(values[key]) != float(int(values[key])):
 					errors.append("UNSUPPORTED AURA MODIFIER")
 				elif key == "invulnerable_save" and (int(values[key]) < 2 or int(values[key]) > 6):
