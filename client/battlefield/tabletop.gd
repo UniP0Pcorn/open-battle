@@ -348,8 +348,12 @@ func advance_selected() -> void:
 		message = "没有找到所选单位。"
 		queue_redraw()
 		return
+	if unit_is_engaged(unit_models):
+		message = "接战单位不能前进，必须先撤退。"
+		queue_redraw()
+		return
 	for model in unit_models:
-		if float(model.get("spent", 0.0)) > Rules.EPSILON or bool(model.get("advanced", false)):
+		if float(model.get("spent", 0.0)) > Rules.EPSILON or bool(model.get("advanced", false)) or bool(model.get("fell_back", false)):
 			message = "该单位已经开始移动，不能再宣布前进。"
 			queue_redraw()
 			return

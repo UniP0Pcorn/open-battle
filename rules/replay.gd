@@ -167,14 +167,16 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 			if not found:
 				return "UNKNOWN UNIT"
 			return _movement_reference_error(models, str(payload.get("unit_id", "")), payload.delta, str(kind) == "FALL_BACK", terrain)
-		"ADVANCE", "FALL_BACK":
+		"ADVANCE":
 			var advance_found := false
 			for model in models:
 				if str(model.get("unit_id", "")) == str(payload.get("unit_id", "")):
 					advance_found = true
 					if int(model.get("team", -1)) != actor_team:
 						return "NOT ACTIVE TEAM"
-			return "" if advance_found else "UNKNOWN UNIT"
+			if not advance_found:
+				return "UNKNOWN UNIT"
+			return _advance_reference_error(models, str(payload.get("unit_id", "")))
 		"CHARGE":
 			var charger := _index_for(models, payload, "model_id", "model")
 			var charge_target := _index_for(models, payload, "target_id", "target")
@@ -272,6 +274,29 @@ static func _movement_reference_error(models: Array, unit_id: String, delta: Arr
 	if engaged:
 		return "ENGAGED UNIT MUST FALL BACK"
 	return "CANNOT END IN ENGAGEMENT" if remains_engaged else ""
+
+static func _advance_reference_error(models: Array, unit_id: String) -> String:
+	var unit_models: Array = []
+	var enemies: Array = []
+	var unit_team := -1
+	for model in models:
+		if str(model.get("unit_id", "")) == unit_id:
+			unit_models.append(model)
+			unit_team = int(model.get("team", -1))
+	for model in models:
+		if int(model.get("team", -1)) != unit_team:
+			enemies.append(model)
+	for model in unit_models:
+		if float(model.get("spent", 0.0)) > Engagement.EPSILON:
+			return "UNIT ALREADY MOVED"
+		if bool(model.get("advanced", false)):
+			return "UNIT ALREADY ADVANCED"
+		if bool(model.get("fell_back", false)):
+			return "FELL BACK"
+		for enemy in enemies:
+			if Engagement.in_engagement(model, enemy):
+				return "ENGAGED UNIT MUST FALL BACK"
+	return ""
 
 static func _charge_reference_error(models: Array, charger_index: int, target_index: int, payload: Dictionary, terrain: Array) -> String:
 	var charger: Dictionary = models[charger_index]

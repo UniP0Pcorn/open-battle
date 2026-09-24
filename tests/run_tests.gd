@@ -231,6 +231,15 @@ func run() -> void:
 	advance_replay_log = CommandLog.append(advance_replay_log, 0, "ADVANCE", {"unit_id": "u", "roll": 4})
 	var advance_replay := Replay.replay(Replay.initial_state(replay_models), advance_replay_log)
 	check(advance_replay.ok and advance_replay.state.models[0].advanced and advance_replay.state.models[0].advance_bonus == 4, "replay applies advance metadata")
+	var repeated_advance_log := advance_replay_log.duplicate(true)
+	repeated_advance_log = CommandLog.append(repeated_advance_log, 0, "ADVANCE", {"unit_id": "u", "roll": 3})
+	var repeated_advance := Replay.replay(Replay.initial_state(replay_models), repeated_advance_log)
+	check(not repeated_advance.ok and repeated_advance.reason == "UNIT ALREADY ADVANCED", "replay blocks repeated advance")
+	var engaged_advance_models: Array = [{"model_id": "advance_engaged_m001", "unit_id": "advance_engaged", "team": 0, "position": Vector2(8, 8), "radius": 0.5}, {"model_id": "advance_enemy_m001", "unit_id": "advance_enemy", "team": 1, "position": Vector2(9, 8), "radius": 0.5}]
+	var engaged_advance_log: Array = []
+	engaged_advance_log = CommandLog.append(engaged_advance_log, 0, "ADVANCE", {"unit_id": "advance_engaged", "roll": 4})
+	var engaged_advance := Replay.replay(Replay.initial_state(engaged_advance_models, "MOVEMENT", 0), engaged_advance_log)
+	check(not engaged_advance.ok and engaged_advance.reason == "ENGAGED UNIT MUST FALL BACK", "replay blocks advance while engaged")
 	var foreign_advance := Replay.replay(Replay.initial_state(replay_models), [{"sequence": 0, "team": 1, "kind": "ADVANCE", "payload": {"unit_id": "u", "roll": 4}}])
 	check(not foreign_advance.ok and foreign_advance.reason == "NOT ACTIVE TEAM", "replay rejects foreign advance")
 	var bad_replay := Replay.replay(Replay.initial_state(replay_models), [{"sequence": 1, "team": 0, "kind": "MOVE", "payload": {}}])
