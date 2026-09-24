@@ -95,6 +95,8 @@ static func submit(room: Dictionary, player_id: String, kind: String, payload: D
 	var player := _player(room.players, player_id)
 	if player.is_empty():
 		return _failure("PLAYER NOT FOUND", room)
+	if not bool(player.get("connected", false)):
+		return _failure("PLAYER DISCONNECTED", room)
 	var result := BattleSession.submit(room.session, int(player.team), kind, payload)
 	if not bool(result.get("ok", false)):
 		return {"ok": false, "reason": str(result.get("reason", "COMMAND REJECTED")), "room": room, "state": result.get("state", room.session)}

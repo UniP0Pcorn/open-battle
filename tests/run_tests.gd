@@ -263,6 +263,20 @@ func run() -> void:
 	check(disconnect_result.ok and reconnect_result.ok and reconnect_result.snapshot.state.phase == room.session.phase, "room restores a disconnected player from reconnect token")
 	var command_packet := PeerProtocol.command(room.id, "player_gold", peer_session_id, 2, 1, {"sequence": 2, "team": 0, "kind": "PHASE_ADVANCE", "payload": {"from": "MOVEMENT", "to": "SHOOTING"}}, PeerProtocol.hash_snapshot(room.session))
 	check(PeerProtocol.sequence_status(1, command_packet) == "NEXT", "peer command sequence advances without a gap")
+	var duplicate_packet: Dictionary = command_packet.duplicate(true)
+	duplicate_packet.sequence = 1
+	duplicate_packet.ack = 0
+	check(NetworkSync.host_command(room, duplicate_packet, "player_gold").reason == "COMMAND SEQUENCE GAP", "host rejects retransmitted command sequence")
+	var future_packet: Dictionary = command_packet.duplicate(true)
+	future_packet.sequence = 99
+	future_packet.ack = 98
+	check(NetworkSync.host_command(room, future_packet, "player_gold").reason == "COMMAND SEQUENCE GAP", "host rejects command sequence gaps")
+	var bad_token := Room.reconnect(disconnect_result.room, "player_gold", "forged-reconnect-token", 1)
+	check(not bad_token.ok and bad_token.reason == "INVALID RECONNECT TOKEN", "room rejects forged reconnect token")
+	var dropped_command_room: Dictionary = disconnect_result.room.duplicate(true)
+	var dropped_command := Room.submit(dropped_command_room, "player_gold", "PHASE_ADVANCE", {"from": "MOVEMENT", "to": "SHOOTING"})
+	check(not dropped_command.ok and dropped_command.reason == "PLAYER DISCONNECTED", "disconnected player cannot submit through room API")
+
 	var wrong_session_packet: Dictionary = command_packet.duplicate(true)
 	wrong_session_packet.session_id = "wrong-room-session"
 	check(NetworkSync.host_command(room, wrong_session_packet, "player_gold").reason == "SESSION ID MISMATCH", "host rejects commands from a different relay session")
@@ -648,7 +662,7 @@ func run() -> void:
 		{"model_id": "net_target", "unit_id": "net_unit_b", "team": 1, "position": Vector2(10, 5), "radius": 0.5, "spent": 0.0, "wounds": 3, "toughness": 4, "save_on": 7, "weapons": []}
 	]
 	var attack_room: Dictionary = Room.create("attack-room")
-	attack_room.players = [{"id": "attacker", "team": 0, "ready": true}, {"id": "target", "team": 1, "ready": true}]
+	attack_room.players = [{"id": "attacker", "team": 0, "ready": true, "connected": true}, {"id": "target", "team": 1, "ready": true, "connected": true}]
 	attack_room.status = Room.ACTIVE
 	attack_room.session = BattleSession.create(attack_models, 11, 0)
 	attack_room.session.phase = "SHOOTING"
