@@ -24,20 +24,24 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 		"MOVE":
 			var delta: Array = payload.delta
 			var unit_id := str(payload.get("unit_id", ""))
+			var move_distance := Vector2(float(delta[0]), float(delta[1])).length()
 			var found := false
 			for model in next.models:
 				if str(model.get("unit_id", "")) == unit_id:
 					model.position += Vector2(float(delta[0]), float(delta[1]))
+					model.spent = float(model.get("spent", 0.0)) + move_distance
 					found = true
 			if not found:
 				return {"ok": false, "reason": "UNKNOWN UNIT", "state": state}
 		"FALL_BACK":
 			var fall_back_delta: Array = payload.delta
 			var fall_back_unit_id := str(payload.get("unit_id", ""))
+			var fall_back_distance := Vector2(float(fall_back_delta[0]), float(fall_back_delta[1])).length()
 			var fall_back_found := false
 			for model in next.models:
 				if str(model.get("unit_id", "")) == fall_back_unit_id:
 					model.position += Vector2(float(fall_back_delta[0]), float(fall_back_delta[1]))
+					model.spent = float(model.get("spent", 0.0)) + fall_back_distance
 					model.fell_back = true
 					fall_back_found = true
 			if not fall_back_found:
@@ -228,7 +232,13 @@ static func _movement_reference_error(models: Array, unit_id: String, delta: Arr
 	var engaged := false
 	var remains_engaged := false
 	var movement_delta := Vector2(float(delta[0]), float(delta[1]))
+	var movement_distance := movement_delta.length()
 	for model in unit_models:
+		var allowance := float(model.get("movement_inches", INF))
+		if bool(model.get("advanced", false)):
+			allowance += float(model.get("advance_bonus", 0))
+		if not is_inf(allowance) and float(model.get("spent", 0.0)) + movement_distance > allowance + Engagement.EPSILON:
+			return "MOVE LIMIT EXCEEDED"
 		for enemy in enemies:
 			if Engagement.in_engagement(model, enemy):
 				engaged = true

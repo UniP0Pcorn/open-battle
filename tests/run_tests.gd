@@ -259,7 +259,12 @@ func run() -> void:
 	var fall_back_log: Array = []
 	fall_back_log = CommandLog.append(fall_back_log, 0, "FALL_BACK", {"unit_id": "fall", "delta": [-2, 0]})
 	var fall_back_replay := Replay.replay(Replay.initial_state(fall_back_models, "MOVEMENT", 0), fall_back_log)
-	check(fall_back_replay.ok and fall_back_replay.state.models[0].position == Vector2(6, 8) and fall_back_replay.state.models[0].fell_back, "replay applies fall back metadata")
+	check(fall_back_replay.ok and fall_back_replay.state.models[0].position == Vector2(6, 8) and fall_back_replay.state.models[0].fell_back and is_equal_approx(fall_back_replay.state.models[0].spent, 2.0), "replay applies fall back metadata")
+	var limited_move_models: Array = [{"model_id": "limited_m001", "unit_id": "limited", "team": 0, "position": Vector2(8, 8), "movement_inches": 2.0, "spent": 0.0}]
+	var limited_move_log: Array = []
+	limited_move_log = CommandLog.append(limited_move_log, 0, "MOVE", {"unit_id": "limited", "delta": [3, 0]})
+	var limited_move_replay := Replay.replay(Replay.initial_state(limited_move_models, "MOVEMENT", 0), limited_move_log)
+	check(not limited_move_replay.ok and limited_move_replay.reason == "MOVE LIMIT EXCEEDED", "replay enforces movement allowance")
 	var stratagem_state := Replay.initial_state(one_shot_models, "SHOOTING", 0)
 	stratagem_state.command_points = [1, 0]
 	var stratagem_log: Array = []
