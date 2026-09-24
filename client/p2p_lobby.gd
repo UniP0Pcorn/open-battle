@@ -88,6 +88,12 @@ func connect_to_room(room_id: String, address: String, port: int) -> String:
 		pending_join = false
 	return error
 
+func connect_invite(invite: String, now: int = 0) -> String:
+	var record := RoomDirectory.decode(invite, now if now > 0 else int(Time.get_unix_time_from_system()))
+	if record.is_empty():
+		return "INVALID ROOM INVITE"
+	return connect_to_room(str(record.room_id), str(record.address), int(record.port))
+
 ## Build a shareable public advertisement. The caller supplies the mapped or
 ## relay endpoint; the lobby never guesses a public address from local state.
 func room_invite(address: String, expires_at: int) -> String:

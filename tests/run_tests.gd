@@ -835,6 +835,8 @@ func run() -> void:
 	lobby_probe.is_host = true
 	lobby_probe.server_port = 24567
 	check(RoomDirectory.decode(lobby_probe.room_invite("203.0.113.20", 4102444800), 4102444700).get("room_id", "") == str(room.id), "lobby exposes an expiring public room invite")
+	check(lobby_probe.connect_invite("not-an-invite", 4102444700) == "INVALID ROOM INVITE", "lobby validates an invite before connecting")
+	check(lobby_probe.connect_invite(invite, 4102444801) == "INVALID ROOM INVITE", "lobby rejects an expired invite before connecting")
 	AccountStore.remove_identity(identity_path)
 	var trust_path := "user://open_battle_trusted_test.json"
 	AccountStore.remove_trusted_identities(trust_path)

@@ -31,6 +31,9 @@ func host_room(room_id: String, port: int, edition: int = 11, points_limit: int 
 func connect_to_room(room_id: String, address: String, port: int) -> String:
 	return lobby.connect_to_room(room_id, address, port)
 
+func connect_invite(invite: String, now: int = 0) -> String:
+	return lobby.connect_invite(invite, now)
+
 func set_ready(ready: bool = true) -> String:
 	return lobby.set_ready(ready)
 
