@@ -251,7 +251,11 @@ func run() -> void:
 	one_shot_fight_log = CommandLog.append(one_shot_fight_log, 0, "FIGHT", {"attacker": 0, "attacker_id": "shot_m001", "target": 1, "target_id": "shot_target_m001", "weapon": "Single-use melee", "one_shot": true, "damage": 1})
 	var one_shot_fight_replay := Replay.replay(Replay.initial_state(one_shot_models, "FIGHT", 0), one_shot_fight_log)
 	check(not one_shot_fight_replay.ok and one_shot_fight_replay.reason == "ONE SHOT ALREADY USED", "replay rejects repeated one-shot melee weapon")
-	var fall_back_models: Array = [{"model_id": "fall_m001", "unit_id": "fall", "team": 0, "position": Vector2(8, 8)}]
+	var fall_back_models: Array = [{"model_id": "fall_m001", "unit_id": "fall", "team": 0, "position": Vector2(8, 8), "radius": 0.5}, {"model_id": "fall_enemy_m001", "unit_id": "fall_enemy", "team": 1, "position": Vector2(9, 8), "radius": 0.5}]
+	var blocked_move_log: Array = []
+	blocked_move_log = CommandLog.append(blocked_move_log, 0, "MOVE", {"unit_id": "fall", "delta": [-2, 0]})
+	var blocked_move_replay := Replay.replay(Replay.initial_state(fall_back_models, "MOVEMENT", 0), blocked_move_log)
+	check(not blocked_move_replay.ok and blocked_move_replay.reason == "ENGAGED UNIT MUST FALL BACK", "replay blocks normal movement while engaged")
 	var fall_back_log: Array = []
 	fall_back_log = CommandLog.append(fall_back_log, 0, "FALL_BACK", {"unit_id": "fall", "delta": [-2, 0]})
 	var fall_back_replay := Replay.replay(Replay.initial_state(fall_back_models, "MOVEMENT", 0), fall_back_log)

@@ -3,6 +3,7 @@ extends RefCounted
 ## Deterministic command-log replay for local verification and future servers.
 
 const CommandSchema = preload("res://rules/command_schema.gd")
+const Engagement = preload("res://rules/engagement.gd")
 const Stratagems = preload("res://rules/stratagems.gd")
 const TurnState = preload("res://rules/turn_state.gd")
 
@@ -148,14 +149,16 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 static func _validate_references(models: Array, entry: Dictionary, kind: String, payload: Dictionary) -> String:
 	var actor_team := int(entry.get("team", -1))
 	match kind:
-		"MOVE":
+		"MOVE", "FALL_BACK":
 			var found := false
 			for model in models:
 				if str(model.get("unit_id", "")) == str(payload.get("unit_id", "")):
 					found = true
 					if int(model.get("team", -1)) != actor_team:
 						return "NOT ACTIVE TEAM"
-			return "" if found else "UNKNOWN UNIT"
+			if not found:
+				return "UNKNOWN UNIT"
+			return _movement_reference_error(models, str(payload.get("unit_id", "")), payload.delta, str(kind) == "FALL_BACK")
 		"ADVANCE", "FALL_BACK":
 			var advance_found := false
 			for model in models:
@@ -210,6 +213,36 @@ static func _apply_damage(model: Dictionary, damage: int) -> Dictionary:
 		next.destroyed = true
 		next.can_control = false
 	return next
+
+static func _movement_reference_error(models: Array, unit_id: String, delta: Array, falling_back: bool) -> String:
+	var unit_models: Array = []
+	var enemies: Array = []
+	var unit_team := -1
+	for model in models:
+		if str(model.get("unit_id", "")) == unit_id:
+			unit_models.append(model)
+			unit_team = int(model.get("team", -1))
+	for model in models:
+		if int(model.get("team", -1)) != unit_team:
+			enemies.append(model)
+	var engaged := false
+	var remains_engaged := false
+	var movement_delta := Vector2(float(delta[0]), float(delta[1]))
+	for model in unit_models:
+		for enemy in enemies:
+			if Engagement.in_engagement(model, enemy):
+				engaged = true
+			var moved: Dictionary = model.duplicate(true)
+			moved.position = model.position + movement_delta
+			if Engagement.in_engagement(moved, enemy):
+				remains_engaged = true
+	if falling_back:
+		if not engaged:
+			return "UNIT NOT ENGAGED"
+		return "FALL BACK MUST END OUT OF ENGAGEMENT" if remains_engaged else ""
+	if engaged:
+		return "ENGAGED UNIT MUST FALL BACK"
+	return "CANNOT END IN ENGAGEMENT" if remains_engaged else ""
 
 static func _index_for(models: Array, payload: Dictionary, id_key: String, index_key: String) -> int:
 	var model_id := str(payload.get(id_key, ""))
