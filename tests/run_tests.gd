@@ -203,9 +203,9 @@ func run() -> void:
 	attack_room.session = BattleSession.create(attack_models, 11, 0)
 	attack_room.session.phase = "SHOOTING"
 	attack_room.session.phase_index = TurnState.phase_index("SHOOTING")
-	var intent_packet := PeerProtocol.command("attack-room", "attacker", "network-test", 0, -1, {"sequence": 0, "team": 0, "kind": "SHOOT", "payload": {"attacker": 0, "attacker_id": "net_attacker", "target": 1, "target_id": "net_target", "weapon": "net gun", "intent": true}}, PeerProtocol.hash_snapshot(attack_room.session))
+	var intent_packet := PeerProtocol.command("attack-room", "attacker", "network-test", 0, -1, {"sequence": 0, "team": 0, "kind": "SHOOT", "payload": {"attacker": 0, "attacker_id": "net_attacker", "target": 1, "target_id": "net_target", "weapon": "net gun", "intent": true, "damage": 999, "hazardous_damage": 999, "feel_no_pain_rolls": [6]}}, PeerProtocol.hash_snapshot(attack_room.session))
 	var intent_result := NetworkSync.host_command(attack_room, intent_packet, "attacker")
-	check(intent_result.ok and intent_result.entry.payload.damage >= 0 and intent_result.entry.payload.has("hazardous_damage") and not bool(intent_result.entry.payload.get("intent", false)), "host materializes network attack intent deterministically")
+	check(intent_result.ok and intent_result.entry.payload.damage >= 0 and int(intent_result.entry.payload.damage) != 999 and int(intent_result.entry.payload.hazardous_damage) != 999 and intent_result.entry.payload.has("hazardous_damage") and not bool(intent_result.entry.payload.get("intent", false)), "host materializes network attack intent deterministically")
 	var lobby_probe = P2PLobby.new()
 	root.add_child(lobby_probe)
 	await process_frame

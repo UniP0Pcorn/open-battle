@@ -43,6 +43,8 @@ static func host_command(room: Dictionary, packet: Dictionary, expected_peer_id:
 
 static func _materialize_attack(state: Dictionary, command: Dictionary, packet: Dictionary) -> Dictionary:
 	var payload: Dictionary = command.get("payload", {}).duplicate(true)
+	for derived_field in ["attacker", "target", "hits", "damage", "one_shot", "feel_no_pain_rolls", "hazardous_damage", "hazardous_feel_no_pain_rolls"]:
+		payload.erase(derived_field)
 	var models: Array = state.get("models", [])
 	var attacker_index := _model_index(models, payload, "attacker_id", "attacker")
 	var target_index := _model_index(models, payload, "target_id", "target")
