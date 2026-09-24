@@ -451,9 +451,15 @@ func run_single_player_ai() -> Dictionary:
 	phase = str(next.phase)
 	command_points = next.command_points.duplicate(true)
 	turn_state = {"round": int(next.round), "active_team": active_team, "phase": phase, "phase_index": int(next.phase_index), "command_points": command_points.duplicate(true)}
+	var ai_score := score_objectives(1)
+	score[1] += ai_score
+	var shock_summary := resolve_battle_shock(active_team)
 	selected = -1
 	history.clear()
-	message = "蓝方 AI 已完成回合，命令 %d 条。现在轮到金方。" % ai_result.commands.size()
+	message = "蓝方 AI 已完成回合，得分 +%d，命令 %d 条。现在轮到金方。%s" % [ai_score, ai_result.commands.size(), shock_summary]
+	var winning_team := MissionRules.winner(score, score_to_win)
+	if winning_team >= 0:
+		message = "%s方达到 %d 分，任务完成！" % ["金" if winning_team == 0 else "蓝", score_to_win]
 	queue_redraw()
 	return ai_result
 
