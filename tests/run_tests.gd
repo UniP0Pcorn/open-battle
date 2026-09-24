@@ -116,6 +116,8 @@ func run() -> void:
 	check(CommandSchema.validate_entry(incomplete_damage) == "INVALID DAMAGE EVENT", "command schema requires damage attacker")
 	var advance_entry := {"sequence": 0, "team": 0, "kind": "ADVANCE", "payload": {"unit_id": "u", "roll": 4}}
 	check(CommandSchema.validate_for_state(advance_entry, {"active_team": 0, "phase": "MOVEMENT"}).is_empty(), "command schema accepts advance")
+	var fall_back_entry := {"sequence": 0, "team": 0, "kind": "FALL_BACK", "payload": {"unit_id": "u", "delta": [-2.0, 0.0]}}
+	check(CommandSchema.validate_for_state(fall_back_entry, {"active_team": 0, "phase": "MOVEMENT"}).is_empty(), "command schema accepts fall back")
 	var bad_advance := advance_entry.duplicate(true)
 	bad_advance.payload.roll = -1
 	check(CommandSchema.validate_entry(bad_advance) == "INVALID ADVANCE", "command schema rejects invalid advance roll")
@@ -141,6 +143,7 @@ func run() -> void:
 	var invalid_model := {"model_id": "bad_m001", "unit_id": "bad", "team": 0, "position": Vector2(INF, 2)}
 	check(ModelState.validate_models([invalid_model]).has("INVALID MODEL POSITION bad_m001"), "model state rejects non-finite position")
 	check(ModelState.validate_models([{ "model_id": "advance_m001", "unit_id": "advance", "team": 0, "position": Vector2.ZERO, "advance_bonus": 4 }]).is_empty(), "model state accepts advance metadata")
+	check(ModelState.validate_models([{ "model_id": "fall_m001", "unit_id": "fall", "team": 0, "position": Vector2.ZERO, "fell_back": true }]).is_empty(), "model state accepts fall back metadata")
 	check(Deployment.zone_reason(Vector2(10, 6), 1.0, 0, Rules.BOARD_SIZE, 12.0).is_empty(), "gold deployment zone accepts legal base")
 	check(Deployment.zone_reason(Vector2(10, 20), 1.0, 0, Rules.BOARD_SIZE, 12.0) == "OUTSIDE DEPLOYMENT ZONE", "gold deployment zone rejects midfield base")
 	check(Deployment.zone_reason(Vector2(10, 38), 1.0, 1, Rules.BOARD_SIZE, 12.0).is_empty(), "blue deployment zone accepts legal base")
@@ -248,6 +251,11 @@ func run() -> void:
 	one_shot_fight_log = CommandLog.append(one_shot_fight_log, 0, "FIGHT", {"attacker": 0, "attacker_id": "shot_m001", "target": 1, "target_id": "shot_target_m001", "weapon": "Single-use melee", "one_shot": true, "damage": 1})
 	var one_shot_fight_replay := Replay.replay(Replay.initial_state(one_shot_models, "FIGHT", 0), one_shot_fight_log)
 	check(not one_shot_fight_replay.ok and one_shot_fight_replay.reason == "ONE SHOT ALREADY USED", "replay rejects repeated one-shot melee weapon")
+	var fall_back_models: Array = [{"model_id": "fall_m001", "unit_id": "fall", "team": 0, "position": Vector2(8, 8)}]
+	var fall_back_log: Array = []
+	fall_back_log = CommandLog.append(fall_back_log, 0, "FALL_BACK", {"unit_id": "fall", "delta": [-2, 0]})
+	var fall_back_replay := Replay.replay(Replay.initial_state(fall_back_models, "MOVEMENT", 0), fall_back_log)
+	check(fall_back_replay.ok and fall_back_replay.state.models[0].position == Vector2(6, 8) and fall_back_replay.state.models[0].fell_back, "replay applies fall back metadata")
 	var stratagem_state := Replay.initial_state(one_shot_models, "SHOOTING", 0)
 	stratagem_state.command_points = [1, 0]
 	var stratagem_log: Array = []

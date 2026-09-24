@@ -36,6 +36,7 @@ var roster: Dictionary = {}
 var models: Array = []
 var selected := -1
 var dragging := false
+var falling_back := false
 var placing := false
 var team := 0
 var active_team := 0
@@ -109,6 +110,7 @@ func _ready() -> void:
 	add_button("进入冲锋阶段  [C]", Vector2(976, 765), enter_charge)
 	add_button("进入战斗阶段  [V]", Vector2(976, 805), enter_fight)
 	add_button("近战攻击  [X]", Vector2(976, 845), fight_selected)
+	add_button("宣布撤退  [Z]", Vector2(976, 885), fall_back_selected)
 
 func add_button(title: String, position_px: Vector2, action: Callable) -> void:
 	var button := Button.new()
@@ -122,6 +124,7 @@ func reset_table() -> void:
 	models.clear()
 	selected = -1
 	dragging = false
+	falling_back = false
 	placing = false
 	active_team = 0
 	history.clear()
@@ -306,7 +309,7 @@ func add_model(point: Vector2, side: int, unit_id: String = "", model_data: Dict
 	var objective_control := int(model_data.get("objective_control", 1)) + int(ability_mods.objective_control_bonus)
 	# Retain movement per model; the current catalogue selection is only a default.
 	var movement_inches := float(model_data.get("movement_inches", fixture.get("movement_inches", 6.0)))
-	models.append({"model_id": model_id, "position": point, "radius": Rules.radius_inches(base_mm), "spent": 0.0, "advanced": bool(model_data.get("advanced", false)), "advance_bonus": int(model_data.get("advance_bonus", 0)), "used_weapon_names": model_data.get("used_weapon_names", []).duplicate(true), "team": side, "wounds": int(model_data.get("wounds", fixture.get("wounds", 3))), "toughness": int(model_data.get("toughness", fixture.get("toughness", 4))), "save_on": int(model_data.get("save_on", fixture.get("save_on", 7))), "invulnerable_save": int(model_data.get("invulnerable_save", fixture.get("invulnerable_save", 0))), "leadership": int(model_data.get("leadership", fixture.get("leadership", 7))), "objective_control": objective_control, "ability_ids": ability_ids, "keywords": model_data.get("keywords", unit_profile.get("keywords", [])).duplicate(true), "faction_keywords": model_data.get("faction_keywords", unit_profile.get("faction_keywords", [])).duplicate(true), "weapons": model_data.get("weapons", unit_profile.get("weapons", [])).duplicate(true), "unit_id": unit_id, "battle_shocked": false, "can_control": true})
+	models.append({"model_id": model_id, "position": point, "radius": Rules.radius_inches(base_mm), "spent": 0.0, "advanced": bool(model_data.get("advanced", false)), "advance_bonus": int(model_data.get("advance_bonus", 0)), "fell_back": bool(model_data.get("fell_back", false)), "used_weapon_names": model_data.get("used_weapon_names", []).duplicate(true), "team": side, "wounds": int(model_data.get("wounds", fixture.get("wounds", 3))), "toughness": int(model_data.get("toughness", fixture.get("toughness", 4))), "save_on": int(model_data.get("save_on", fixture.get("save_on", 7))), "invulnerable_save": int(model_data.get("invulnerable_save", fixture.get("invulnerable_save", 0))), "leadership": int(model_data.get("leadership", fixture.get("leadership", 7))), "objective_control": objective_control, "ability_ids": ability_ids, "keywords": model_data.get("keywords", unit_profile.get("keywords", [])).duplicate(true), "faction_keywords": model_data.get("faction_keywords", unit_profile.get("faction_keywords", [])).duplicate(true), "weapons": model_data.get("weapons", unit_profile.get("weapons", [])).duplicate(true), "unit_id": unit_id, "battle_shocked": false, "can_control": true})
 
 	models[-1].movement_inches = movement_inches
 	models[-1].coherency_inches = float(model_data.get("coherency_inches", 2.0))
@@ -322,10 +325,12 @@ func selected_unit_remaining_movement() -> float:
 
 func new_phase() -> void:
 	dragging = false
+	falling_back = false
 	for model in models:
 		model.spent = 0.0
 		model.advanced = false
 		model.advance_bonus = 0
+		model.fell_back = false
 	message = "双方底座的移动额度已重置。"
 	queue_redraw()
 
@@ -357,8 +362,32 @@ func advance_selected() -> void:
 	message = "单位宣布前进：D6=%d，移动额度增加 %d 英寸；只能使用突击武器射击且不能冲锋。" % [roll.total, roll.total]
 	queue_redraw()
 
+func fall_back_selected() -> void:
+	if phase != "MOVEMENT":
+		message = "请在移动阶段宣布撤退。"
+		queue_redraw()
+		return
+	if selected < 0 or selected >= models.size() or models[selected].team != active_team:
+		message = "请选择当前阵营的底座。"
+		queue_redraw()
+		return
+	var unit_models := selected_unit_models()
+	if unit_models.is_empty() or not unit_is_engaged(unit_models):
+		message = "只有处于接战范围的单位可以撤退。"
+		queue_redraw()
+		return
+	for model in unit_models:
+		if float(model.get("spent", 0.0)) > Rules.EPSILON or bool(model.get("advanced", false)) or bool(model.get("fell_back", false)):
+			message = "该单位已经开始移动，不能再宣布撤退。"
+			queue_redraw()
+			return
+	falling_back = true
+	message = "已宣布撤退：拖动单位离开接战范围；完成后本回合不能射击或冲锋。"
+	queue_redraw()
+
 func end_turn() -> void:
 	dragging = false
+	falling_back = false
 	placing = false
 	selected = -1
 	var scoring_team := active_team
@@ -370,6 +399,7 @@ func end_turn() -> void:
 			model.spent = 0.0
 			model.advanced = false
 			model.advance_bonus = 0
+			model.fell_back = false
 	command_points = CommandPoints.gain(command_points, active_team)
 	phase = "MOVEMENT"
 	if active_team == 0:
@@ -520,6 +550,7 @@ func enter_shooting() -> void:
 	if phase != "MOVEMENT":
 		return
 	dragging = false
+	falling_back = false
 	placing = false
 	var previous_phase := phase
 	phase = "SHOOTING"
@@ -669,6 +700,31 @@ func model_is_engaged_with_enemy(model: Dictionary) -> bool:
 			return true
 	return false
 
+func unit_is_engaged(unit_models: Array) -> bool:
+	for model in unit_models:
+		if model_is_engaged_with_enemy(model):
+			return true
+	return false
+
+func engagement_reason_for_delta(unit_models: Array, delta: Vector2, reason: String) -> String:
+	for model in unit_models:
+		var moved_model: Dictionary = model.duplicate(true)
+		moved_model.position = model.position + delta
+		for enemy in models:
+			if int(enemy.get("team", -1)) == int(model.get("team", -1)):
+				continue
+			if Melee.target_reason(moved_model, enemy, int(model.get("team", -1))).is_empty():
+				return reason
+	return ""
+
+func fall_back_reason(unit_models: Array, delta: Vector2) -> String:
+	if not unit_is_engaged(unit_models):
+		return "UNIT NOT ENGAGED"
+	var movement_error := UnitMovement.movement_reason(unit_models, delta, float(unit_models[0].get("spent", 0.0)), movement_for_model(unit_models[0]), models, terrain)
+	if not movement_error.is_empty():
+		return movement_error
+	return engagement_reason_for_delta(unit_models, delta, "FALL BACK MUST END OUT OF ENGAGEMENT")
+
 func fire_selected() -> void:
 	if phase != "SHOOTING":
 		message = "请先进入射击阶段。"
@@ -753,9 +809,21 @@ func pick(point: Vector2) -> int:
 func preview_reason() -> String:
 	var model: Dictionary = models[selected]
 	var unit_models := selected_unit_models()
+	if falling_back:
+		var fall_back_error := fall_back_reason(unit_models, preview - model.position)
+		if not fall_back_error.is_empty():
+			return fall_back_error
 	if unit_models.size() > 1:
-		return UnitMovement.movement_reason(unit_models, preview - model.position, model.spent, movement_for_model(model), models, terrain)
-	return Rules.movement_reason(model.position, preview, model.spent, movement_for_model(model), model.radius, models, selected, terrain)
+		var unit_move_error := UnitMovement.movement_reason(unit_models, preview - model.position, model.spent, movement_for_model(model), models, terrain)
+		if not unit_move_error.is_empty():
+			return unit_move_error
+		return engagement_reason_for_delta(unit_models, preview - model.position, "CANNOT END IN ENGAGEMENT")
+	if unit_is_engaged(unit_models):
+		return "ENGAGED UNIT MUST FALL BACK"
+	var move_error := Rules.movement_reason(model.position, preview, model.spent, movement_for_model(model), model.radius, models, selected, terrain)
+	if not move_error.is_empty():
+		return move_error
+	return engagement_reason_for_delta(unit_models, preview - model.position, "CANNOT END IN ENGAGEMENT")
 
 func selected_unit_models() -> Array:
 	if selected < 0 or selected >= models.size():
@@ -782,10 +850,16 @@ func finish_drag() -> void:
 				models[index].spent += distance
 				models[index].position += delta
 		history.append({"changes": changes, "selected": selected})
-		command_log = CommandLog.append(command_log, active_team, "MOVE", {"unit_id": models[selected].unit_id, "model": selected, "model_id": models[selected].get("model_id", ""), "delta": [delta.x, delta.y], "distance": distance})
-		message = "本次移动 %.2f 英寸。移动额度按累计值计算。" % distance
+		var move_kind := "FALL_BACK" if falling_back else "MOVE"
+		if falling_back:
+			for moved_model in unit_models:
+				moved_model.fell_back = true
+		command_log = CommandLog.append(command_log, active_team, move_kind, {"unit_id": models[selected].unit_id, "model": selected, "model_id": models[selected].get("model_id", ""), "delta": [delta.x, delta.y], "distance": distance})
+		message = ("撤退 %.2f 英寸，单位本回合不能射击或冲锋。" if falling_back else "本次移动 %.2f 英寸。移动额度按累计值计算。") % distance
+		falling_back = false
 	else:
 		message = "非法移动：%s。已还原位置。" % display_reason(reason)
+		falling_back = false
 	dragging = false
 	queue_redraw()
 
@@ -828,6 +902,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				load_roster()
 			KEY_ESCAPE:
 				dragging = false
+				falling_back = false
 				placing = false
 				message = "已取消。"
 			KEY_P:
@@ -839,6 +914,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				new_phase()
 			KEY_Q:
 				advance_selected()
+			KEY_Z:
+				fall_back_selected()
 			KEY_R:
 				reset_table()
 			KEY_T:

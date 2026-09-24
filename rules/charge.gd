@@ -12,6 +12,8 @@ static func target_reason(attacker: Dictionary, target: Dictionary, active_team:
 		return "INVALID MODEL"
 	if int(attacker.get("team", -1)) != active_team:
 		return "NOT ACTIVE TEAM"
+	if bool(attacker.get("fell_back", false)):
+		return "FELL BACK"
 	if int(target.get("team", -1)) == active_team:
 		return "FRIENDLY TARGET"
 	var attacker_radius := float(attacker.get("base_radius", attacker.get("radius", 0.0)))

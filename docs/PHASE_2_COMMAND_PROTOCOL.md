@@ -4,7 +4,7 @@
 
 ## 已完成
 
-- 新增 `rules/command_schema.gd`，统一定义 MOVE、ADVANCE、SHOOT、CHARGE、FIGHT、PHASE_ADVANCE、END_TURN、BATTLE_SHOCK、HAZARDOUS 和 STRATAGEM 十类命令。
+- 新增 `rules/command_schema.gd`，统一定义 MOVE、ADVANCE、FALL_BACK、SHOOT、CHARGE、FIGHT、PHASE_ADVANCE、END_TURN、BATTLE_SHOCK、HAZARDOUS 和 STRATAGEM 十一类命令。
 - 统一检查序号、操作阵营、命令类型、载荷字段和阶段要求；只对需要字段的命令执行校验，避免各模块重复实现同一套规则。
 - `rules/command_log.gd` 使用统一契约验证存档日志。
 - `rules/replay.gd` 使用统一契约验证回放命令，并保留未知单位、越权阵营、错误阶段和非法目标的语义错误。
@@ -26,6 +26,7 @@
 - 重型武器读取模型本回合 `spent` 移动消耗，静止时改善 1 点命中值，移动后自动取消；界面和规则上下文不再各自推断状态。
 - 近战入口也复用武器上下文，针对等关键词会按接战目标生效，避免射击和战斗阶段使用两套武器解释。
 - `ADVANCE` 命令记录单位的 D6 前进结果；回放恢复额外移动状态，前进后的射击目标校验只允许突击武器，冲锋入口会拒绝前进单位。
+- `FALL_BACK` 命令记录接战单位的撤退移动；模型写入 `fell_back` 状态，后续射击和冲锋会拒绝该单位，进入下一次移动阶段时清除状态。
 - 手枪规则读取同一套接战几何：接战中的非手枪不能射击，手枪只能指定接战范围内的敌方目标。
 - 曲射武器可以越过当前矩形地形的视线阻挡，但攻击使用间接火力命中修正，目标获得掩体修正；普通武器仍由视线采样阻挡。
 - 一次性武器的消耗写入模型状态；回放校验会拒绝同一模型第二次提交同名一次性武器。
@@ -39,7 +40,7 @@
 godot --headless --path . --script tests/run_tests.gd
 ```
 
-当前结果：**270 项检查，0 失败**。
+当前结果：**273 项检查，0 失败**。
 
 ## 下一步
 

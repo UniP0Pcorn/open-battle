@@ -30,6 +30,17 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 					found = true
 			if not found:
 				return {"ok": false, "reason": "UNKNOWN UNIT", "state": state}
+		"FALL_BACK":
+			var fall_back_delta: Array = payload.delta
+			var fall_back_unit_id := str(payload.get("unit_id", ""))
+			var fall_back_found := false
+			for model in next.models:
+				if str(model.get("unit_id", "")) == fall_back_unit_id:
+					model.position += Vector2(float(fall_back_delta[0]), float(fall_back_delta[1]))
+					model.fell_back = true
+					fall_back_found = true
+			if not fall_back_found:
+				return {"ok": false, "reason": "UNKNOWN UNIT", "state": state}
 		"ADVANCE":
 			var advance_unit_id := str(payload.get("unit_id", ""))
 			var advance_roll := int(payload.get("roll", 0))
@@ -60,6 +71,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 					model.spent = 0.0
 					model.advanced = false
 					model.advance_bonus = 0
+					model.fell_back = false
 		"PHASE_ADVANCE":
 			var phase_state := {
 				"round": int(next.get("round", 1)),
@@ -80,6 +92,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 						model.spent = 0.0
 						model.advanced = false
 						model.advance_bonus = 0
+						model.fell_back = false
 		"BATTLE_SHOCK":
 			var unit_id := str(payload.get("unit_id", ""))
 			var found := false
@@ -143,7 +156,7 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 					if int(model.get("team", -1)) != actor_team:
 						return "NOT ACTIVE TEAM"
 			return "" if found else "UNKNOWN UNIT"
-		"ADVANCE":
+		"ADVANCE", "FALL_BACK":
 			var advance_found := false
 			for model in models:
 				if str(model.get("unit_id", "")) == str(payload.get("unit_id", "")):

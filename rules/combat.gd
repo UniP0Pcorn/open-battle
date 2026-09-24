@@ -11,6 +11,8 @@ static func target_reason(attacker: Dictionary, target: Dictionary, distance: fl
 		return "INVALID MODEL"
 	if int(attacker.get("team", -1)) != active_team:
 		return "NOT ACTIVE TEAM"
+	if bool(attacker.get("fell_back", false)):
+		return "FELL BACK"
 	if bool(attacker.get("advanced", false)) and not WeaponRules.ids_from_weapon(weapon).has("assault"):
 		return "ADVANCED WITHOUT ASSAULT"
 	var pistol := WeaponRules.ids_from_weapon(weapon).has("pistol")

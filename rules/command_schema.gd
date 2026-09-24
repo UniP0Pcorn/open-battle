@@ -2,11 +2,12 @@
 extends RefCounted
 ## Canonical command envelope and phase contract shared by saves, replay and servers.
 
-const KINDS := ["MOVE", "ADVANCE", "SHOOT", "CHARGE", "FIGHT", "PHASE_ADVANCE", "END_TURN", "BATTLE_SHOCK", "HAZARDOUS", "STRATAGEM"]
+const KINDS := ["MOVE", "ADVANCE", "FALL_BACK", "SHOOT", "CHARGE", "FIGHT", "PHASE_ADVANCE", "END_TURN", "BATTLE_SHOCK", "HAZARDOUS", "STRATAGEM"]
 const PHASES := ["COMMAND", "MOVEMENT", "SHOOTING", "CHARGE", "FIGHT"]
 const PHASE_BY_KIND := {
 	"MOVE": "MOVEMENT",
 	"ADVANCE": "MOVEMENT",
+	"FALL_BACK": "MOVEMENT",
 	"SHOOT": "SHOOTING",
 	"CHARGE": "CHARGE",
 	"FIGHT": "FIGHT"
@@ -26,7 +27,7 @@ static func validate_entry(entry: Dictionary) -> String:
 
 static func validate_payload(kind: String, payload: Dictionary) -> String:
 	match kind:
-		"MOVE":
+		"MOVE", "FALL_BACK":
 			if str(payload.get("unit_id", "")).is_empty() or not _numbers(payload.get("delta", []), 2):
 				return "INVALID MOVE"
 		"ADVANCE":
