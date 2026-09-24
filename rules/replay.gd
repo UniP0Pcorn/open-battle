@@ -118,6 +118,9 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 					found = true
 			if not found:
 				return {"ok": false, "reason": "UNKNOWN UNIT", "state": state}
+			for effect in next.get("stratagem_effects", []):
+				if effect is Dictionary and str(effect.get("effect", "")) == "PASS_BATTLE_SHOCK" and int(effect.get("team", -1)) == int(entry.team) and str(effect.get("payload", {}).get("unit_id", "")) == unit_id:
+					effect.consumed = true
 		"SHOOT", "FIGHT":
 			var target_index := _index_for(next.models, payload, "target_id", "target")
 			if bool(payload.get("one_shot", false)):
@@ -190,6 +193,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 				"timing": str(stratagem_result.get("timing", "")),
 				"round": int(next.get("round", 1)),
 				"phase": str(next.get("phase", "")),
+				"consumed": false,
 				"payload": payload.duplicate(true)
 			})
 			next.stratagem_effects = effects
@@ -396,7 +400,7 @@ static func _feel_no_pain_reference_error(model: Dictionary, damage: int, payloa
 
 static func _has_active_effect(effects: Array, effect: String, team: int, unit_id: String) -> bool:
 	for entry in effects:
-		if not (entry is Dictionary) or str(entry.get("effect", "")) != effect or int(entry.get("team", -1)) != team:
+		if not (entry is Dictionary) or bool(entry.get("consumed", false)) or str(entry.get("effect", "")) != effect or int(entry.get("team", -1)) != team:
 			continue
 		var payload: Variant = entry.get("payload", {})
 		if payload is Dictionary and str(payload.get("unit_id", "")) == unit_id:
