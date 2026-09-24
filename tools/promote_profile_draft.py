@@ -10,6 +10,11 @@ import json
 import re
 from pathlib import Path
 
+try:
+    from tools.weapon_tag_support import unsupported_tags
+except ModuleNotFoundError:  # Direct ``python tools/script.py`` invocation.
+    from weapon_tag_support import unsupported_tags
+
 
 def number(value: object, label: str) -> int:
     text = str(value).replace("”", "").replace('"', "").strip()
@@ -82,6 +87,13 @@ def promote(draft: dict, faction: str, base_mm: float, coherency: float) -> dict
         })
     if not result["points"] or not result["weapons"]:
         raise ValueError("draft has no usable points or weapon rows")
+    unsupported: list[str] = []
+    for weapon in draft.get("weapons", []):
+        for tag in unsupported_tags(weapon.get("tags", [])):
+            if tag not in unsupported:
+                unsupported.append(tag)
+    if unsupported:
+        raise ValueError("unsupported weapon keywords: " + ", ".join(unsupported))
     return result
 
 

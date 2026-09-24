@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from tools.export_profile_review_sheet import review_flags, rows, source_lookup
+from tools.weapon_tag_support import unsupported_tags
 
 
 class ReviewSheetTests(unittest.TestCase):
@@ -42,6 +43,15 @@ class ReviewSheetTests(unittest.TestCase):
             "points": [{"models": 5, "points": 100}],
         }
         self.assertEqual(review_flags(draft), [])
+
+    def test_unimplemented_weapon_keywords_stay_in_review(self) -> None:
+        self.assertEqual(unsupported_tags(["突击", "手枪"]), ["突击", "手枪"])
+        draft = {
+            "models": [{"movement": "6", "toughness": "4", "save": "4+", "wounds": "2", "leadership": "7", "objective_control": "1"}],
+            "weapons": [{"range": "24", "attacks": "2", "skill": "3", "strength": "5", "damage": "2", "ap": "-1", "tags": ["突击"]}],
+            "points": [{"models": 5, "points": 100}],
+        }
+        self.assertIn("unsupported_weapon_keywords", review_flags(draft))
 
 
 if __name__ == "__main__":

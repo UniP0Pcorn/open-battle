@@ -106,7 +106,7 @@ python tools/extract_profile_candidates.py <source.pdf> --edition 11 --output wo
 运行 `python tools/build_profile_drafts.py work/source_candidates --output-dir work/profile_drafts` 可生成逐条待复核草稿；草稿保留骰面表达式与来源页码，明确标记为不可上桌的 `pending_manual_review`。
 确认底座、连结距离、阵营及所有字段后，可用 `tools/promote_profile_draft.py` 严格转换为正式 profile；候选草稿中的能力、单位关键词、阵营关键词和来源备注会保留，攻击次数和伤害允许规则层已支持的 `D3/D6/2D6` 等表达式，其余不受支持的骰面或缺失字段仍会失败，不会静默猜值。
 `tools/index_promotable_candidates.py` 会生成 `work/promotable_candidates.json`，列出字段结构完整但仍需明确底座与阵营的候选，并统计被复杂骰面或缺失字段拦截的记录。
-`tools/export_profile_review_sheet.py` 可将 `work/profile_drafts/` 导出为 `work/profile_review.csv`，并从 `data/sources/manifest.json` 自动填入 `source_id` 和默认阵营标识，供人工补录底座尺寸、编队信息并逐条标记审核决定；导出表只含结构化数值和来源页码，默认阵营仍可人工覆盖。`review_bucket` 与 `review_flags` 会列出缺失分数/武器、非数字属性和复杂武器骰面，帮助按问题类型分批处理，但所有行仍保持 `pending_manual_review`。
+`tools/export_profile_review_sheet.py` 可将 `work/profile_drafts/` 导出为 `work/profile_review.csv`，并从 `data/sources/manifest.json` 自动填入 `source_id` 和默认阵营标识，供人工补录底座尺寸、编队信息并逐条标记审核决定；导出表只含结构化数值和来源页码，默认阵营仍可人工覆盖。`review_bucket` 与 `review_flags` 会列出缺失分数/武器、非数字属性、复杂武器骰面和未实现武器标签，帮助按问题类型分批处理，但所有行仍保持 `pending_manual_review`。`tools/promote_profile_draft.py` 会拒绝带未执行武器标签的草稿。
 `tools/generate_profile_stubs.py --review-csv work/profile_review.csv` 会把每个来源的候选数量回写到 `data/units/pending/` 元数据；客户端显示来源数与候选数，但候选仍不能上桌。
 `tools/rebuild_profile_catalog.py` 会递归重建 `data/units/catalog.json`，把正式和待复核 profile 的路径、版本、阵营与状态同步到索引。
 

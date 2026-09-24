@@ -12,6 +12,11 @@ import json
 import re
 from pathlib import Path
 
+try:
+    from tools.weapon_tag_support import unsupported_tags
+except ModuleNotFoundError:  # Direct ``python tools/script.py`` invocation.
+    from weapon_tag_support import unsupported_tags
+
 
 def source_lookup(manifest_path: Path) -> dict[str, dict]:
     if not manifest_path.is_file():
@@ -42,6 +47,8 @@ def review_flags(draft: dict) -> list[str]:
                 flags.append("complex_weapon_" + field)
         if not _fixed(weapon.get("ap", ""), signed=True):
             flags.append("complex_weapon_ap")
+        if unsupported_tags(weapon.get("tags", [])):
+            flags.append("unsupported_weapon_keywords")
     return sorted(set(flags))
 
 
@@ -54,6 +61,7 @@ def rows(root: Path, sources: dict[str, dict] | None = None):
         source = sources.get(source_file, {})
         source_id = str(source.get("id", ""))
         flags = review_flags(draft)
+        weapon_tags = sorted({str(tag) for weapon in draft.get("weapons", []) for tag in weapon.get("tags", [])})
         yield {
             "draft_file": path.name,
             "id": draft.get("id", ""),
@@ -75,6 +83,7 @@ def rows(root: Path, sources: dict[str, dict] | None = None):
             "coherency_inches": "2.0",
             "review_bucket": "needs_field_review" if flags else "ready_for_base_faction_review",
             "review_flags": "|".join(flags),
+            "weapon_tags": "|".join(weapon_tags),
             "decision": "pending_manual_review",
         }
 
