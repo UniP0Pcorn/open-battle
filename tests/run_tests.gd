@@ -44,6 +44,7 @@ const MissionValidation = preload("res://rules/mission_validation.gd")
 const ModelState = preload("res://rules/model_state.gd")
 const AIPlayer = preload("res://rules/ai_player.gd")
 const Reserves = preload("res://rules/reserves.gd")
+const Attachments = preload("res://rules/attachments.gd")
 var failures := 0
 var checks := 0
 
@@ -133,6 +134,10 @@ func run() -> void:
 	check(CommandSchema.validate_for_state(reserve_entry, {"active_team": 0, "phase": "MOVEMENT"}).is_empty(), "command schema accepts reserve arrival")
 	var scout_entry := {"sequence": 0, "team": 0, "kind": "SCOUT", "payload": {"unit_id": "u", "delta": [3.0, 0.0]}}
 	check(CommandSchema.validate_for_state(scout_entry, {"active_team": 0, "phase": "COMMAND"}).is_empty(), "command schema accepts scout")
+	var attach_entry := {"sequence": 0, "team": 0, "kind": "ATTACH", "payload": {"leader_unit_id": "leader", "bodyguard_unit_id": "bodyguard"}}
+	check(CommandSchema.validate_for_state(attach_entry, {"active_team": 0, "phase": "COMMAND"}).is_empty(), "command schema accepts attachment")
+	var detach_entry := {"sequence": 0, "team": 0, "kind": "DETACH", "payload": {"leader_unit_id": "leader"}}
+	check(CommandSchema.validate_for_state(detach_entry, {"active_team": 0, "phase": "COMMAND"}).is_empty(), "command schema accepts detachment")
 	var embark_entry := {"sequence": 0, "team": 0, "kind": "EMBARK", "payload": {"unit_id": "u", "transport_id": "transport_m001"}}
 	check(CommandSchema.validate_for_state(embark_entry, {"active_team": 0, "phase": "MOVEMENT"}).is_empty(), "command schema accepts embark")
 	var disembark_entry := {"sequence": 0, "team": 0, "kind": "DISEMBARK", "payload": {"unit_id": "u", "positions": [[10.0, 20.0]]}}
@@ -405,6 +410,21 @@ func run() -> void:
 	repeated_scout_log = CommandLog.append(repeated_scout_log, 0, "SCOUT", {"unit_id": "scout_unit", "delta": [1, 0]})
 	var repeated_scout := Replay.replay(Replay.initial_state(scout_models, "COMMAND", 0), repeated_scout_log)
 	check(not repeated_scout.ok and repeated_scout.reason == "UNIT ALREADY SCOUTED", "replay blocks repeated scout")
+	var attachment_models: Array = [{"model_id": "leader_m001", "unit_id": "leader", "team": 0, "position": Vector2(5, 5), "radius": 0.5, "movement_inches": 6.0, "wounds": 3, "leader": true, "leader_for": ["bodyguard"]}, {"model_id": "bodyguard_m001", "unit_id": "bodyguard", "team": 0, "position": Vector2(6.2, 5), "radius": 0.5, "movement_inches": 6.0, "wounds": 3, "keywords": ["bodyguard"]}, {"model_id": "attachment_enemy_m001", "unit_id": "attachment_enemy", "team": 1, "position": Vector2(40, 30), "radius": 0.5}]
+	check(Attachments.attach_reason(attachment_models, "leader", "bodyguard", 0).is_empty(), "leader attachment eligibility")
+	var attachment_log: Array = []
+	attachment_log = CommandLog.append(attachment_log, 0, "ATTACH", {"leader_unit_id": "leader", "bodyguard_unit_id": "bodyguard"})
+	var attachment_replay := Replay.replay(Replay.initial_state(attachment_models, "COMMAND", 0), attachment_log)
+	check(attachment_replay.ok and attachment_replay.state.models[0].attached_to == "bodyguard" and attachment_replay.state.models[1].attached_leader_id == "leader", "replay applies leader attachment")
+	var attachment_move_log: Array = attachment_log.duplicate(true)
+	attachment_move_log = CommandLog.append(attachment_move_log, 0, "PHASE_ADVANCE", {"from": "COMMAND", "to": "MOVEMENT"})
+	attachment_move_log = CommandLog.append(attachment_move_log, 0, "MOVE", {"unit_id": "bodyguard", "delta": [1, 0]})
+	var attachment_move := Replay.replay(Replay.initial_state(attachment_models, "COMMAND", 0), attachment_move_log)
+	check(attachment_move.ok and attachment_move.state.models[0].position == Vector2(6, 5) and attachment_move.state.models[1].position == Vector2(7.2, 5), "attached leader and bodyguard move together")
+	var detach_log: Array = attachment_log.duplicate(true)
+	detach_log = CommandLog.append(detach_log, 0, "DETACH", {"leader_unit_id": "leader"})
+	var detach_replay := Replay.replay(Replay.initial_state(attachment_models, "COMMAND", 0), detach_log)
+	check(detach_replay.ok and detach_replay.state.models[0].attached_to.is_empty() and detach_replay.state.models[1].attached_leader_id.is_empty(), "replay clears leader attachment")
 	var repeated_advance_log := advance_replay_log.duplicate(true)
 	repeated_advance_log = CommandLog.append(repeated_advance_log, 0, "ADVANCE", {"unit_id": "u", "roll": 3})
 	var repeated_advance := Replay.replay(Replay.initial_state(replay_models), repeated_advance_log)
@@ -590,6 +610,12 @@ func run() -> void:
 	check(DatasheetValidation.validate_profile(keyword_profile).is_empty(), "datasheet validates unit keywords")
 	keyword_profile.keywords = ["not_a_keyword"]
 	check(DatasheetValidation.validate_profile(keyword_profile) == "UNKNOWN KEYWORD not_a_keyword", "datasheet rejects unknown keyword")
+	var leader_profile: Dictionary = profile.duplicate(true)
+	leader_profile.leader = true
+	leader_profile.leader_for = ["custodian_guard"]
+	check(DatasheetValidation.validate_profile(leader_profile).is_empty(), "datasheet validates leader metadata")
+	leader_profile.leader_for = "custodian_guard"
+	check(DatasheetValidation.validate_profile(leader_profile) == "INVALID LEADER_FOR", "datasheet rejects malformed leader metadata")
 	var charge_rng := RandomNumberGenerator.new()
 	charge_rng.seed = 12
 	var charge_roll := Charge.charge_distance(charge_rng)
@@ -990,6 +1016,13 @@ func run() -> void:
 		if str(ai_entry.get("kind", "")) == "SCOUT":
 			ai_scout_used = true
 	check(ai_scout_turn.ok and ai_scout_used, "single-player AI uses scout before the first turn")
+	var ai_attachment_models: Array = [{"model_id": "ai_leader_m001", "unit_id": "ai_leader", "team": 1, "position": Vector2(30, 38), "radius": 0.5, "movement_inches": 6.0, "leader": true, "leader_for": ["ai_bodyguard"], "wounds": 3}, {"model_id": "ai_bodyguard_m001", "unit_id": "ai_bodyguard", "team": 1, "position": Vector2(31.2, 38), "radius": 0.5, "movement_inches": 6.0, "keywords": ["bodyguard"], "wounds": 3}, {"model_id": "ai_attachment_enemy_m001", "unit_id": "ai_attachment_enemy", "team": 0, "position": Vector2(30, 5), "radius": 0.5, "wounds": 3}]
+	var ai_attachment_turn := AIPlayer.play_turn(BattleSession.create(ai_attachment_models, 11, 1), 1, 83)
+	var ai_attached := false
+	for ai_entry in ai_attachment_turn.commands:
+		if str(ai_entry.get("kind", "")) == "ATTACH":
+			ai_attached = true
+	check(ai_attachment_turn.ok and ai_attached, "single-player AI attaches eligible leader")
 	scene.save_state()
 	scene.queue_free()
 	await process_frame

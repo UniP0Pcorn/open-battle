@@ -2,6 +2,8 @@
 extends RefCounted
 ## Configurable battle-shock test. Leadership values come from unit data.
 
+const Attachments = preload("res://rules/attachments.gd")
+
 static func test(leadership: int, rng: RandomNumberGenerator, modifier: int = 0) -> Dictionary:
 	var first := rng.randi_range(1, 6)
 	var second := rng.randi_range(1, 6)
@@ -21,7 +23,7 @@ static func apply_to_models(models: Array, unit_id: String, result: Dictionary) 
 	var shocked := not bool(result.get("passed", false))
 	for model in models:
 		var copy: Dictionary = model.duplicate(true)
-		if str(copy.get("unit_id", "")) == unit_id:
+		if Attachments.group_id(copy) == unit_id:
 			copy.battle_shocked = shocked
 			copy.can_control = not shocked
 		next.append(copy)

@@ -92,6 +92,10 @@ static func expand_unit(profile: Dictionary, count: int, team: int, unit_id: Str
 			"reserve_status": "deployed",
 			"transport_capacity": int(model_template.get("transport_capacity", profile.get("transport_capacity", 0))),
 			"transport_moved": false,
-			"embarked_in": ""
+			"embarked_in": "",
+			"leader": bool(profile.get("leader", model_template.get("leader", false))),
+			"leader_for": profile.get("leader_for", model_template.get("leader_for", [])).duplicate(true),
+			"attached_to": "",
+			"attached_leader_id": ""
 		})
 	return {"unit_id": unit_id, "team": team, "models": models, "profile": profile.id, "abilities": ability_ids, "keywords": profile.get("keywords", []).duplicate(true), "faction_keywords": profile.get("faction_keywords", []).duplicate(true)}

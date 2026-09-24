@@ -28,6 +28,7 @@ const BattleSession = preload("res://rules/battle_session.gd")
 const AIPlayer = preload("res://rules/ai_player.gd")
 const Reserves = preload("res://rules/reserves.gd")
 const Transports = preload("res://rules/transports.gd")
+const Attachments = preload("res://rules/attachments.gd")
 const SCALE := 15.0
 const OFFSET := Vector2(38, 112)
 const GOLD := Color("e5ba6b")
@@ -127,6 +128,8 @@ func _ready() -> void:
 	add_button("深入打击 / 出预备队  [H]", Vector2(976, 925), deploy_selected_reserve)
 	add_button("搭载所选单位  [F9]", Vector2(976, 965), embark_selected)
 	add_button("运输工具下车  [F10]", Vector2(976, 1005), disembark_selected)
+	add_button("附属角色  [F11]", Vector2(976, 1045), attach_selected)
+	add_button("解除附属  [F12]", Vector2(976, 1085), detach_selected)
 
 func add_button(title: String, position_px: Vector2, action: Callable) -> void:
 	var button := Button.new()
@@ -167,7 +170,7 @@ func reset_table() -> void:
 			for i in range(10):
 				add_model(Vector2(6 + (i % 5) * 3, 6 + (i / 5) * 3 + side * 29), side)
 	for model in models:
-		var unit_id := str(model.get("unit_id", ""))
+		var unit_id := Attachments.group_id(model)
 		starting_unit_sizes[unit_id] = int(starting_unit_sizes.get(unit_id, 0)) + 1
 	message = "20 个底座已就绪。当前为本地移动沙盒。"
 	queue_redraw()
@@ -361,7 +364,7 @@ func add_model(point: Vector2, side: int, unit_id: String = "", model_data: Dict
 	var objective_control := int(model_data.get("objective_control", 1)) + int(ability_mods.objective_control_bonus)
 	# Retain movement per model; the current catalogue selection is only a default.
 	var movement_inches := float(model_data.get("movement_inches", fixture.get("movement_inches", 6.0)))
-	models.append({"model_id": model_id, "position": point, "radius": Rules.radius_inches(base_mm), "spent": 0.0, "advanced": bool(model_data.get("advanced", false)), "advance_bonus": int(model_data.get("advance_bonus", 0)), "fell_back": bool(model_data.get("fell_back", false)), "fought": bool(model_data.get("fought", false)), "reserve_status": str(model_data.get("reserve_status", "deployed")), "transport_capacity": int(model_data.get("transport_capacity", unit_profile.get("transport_capacity", 0))), "transport_moved": bool(model_data.get("transport_moved", false)), "embarked_in": str(model_data.get("embarked_in", "")), "used_weapon_names": model_data.get("used_weapon_names", []).duplicate(true), "team": side, "wounds": int(model_data.get("wounds", fixture.get("wounds", 3))), "toughness": int(model_data.get("toughness", fixture.get("toughness", 4))), "save_on": int(model_data.get("save_on", fixture.get("save_on", 7))), "invulnerable_save": int(model_data.get("invulnerable_save", fixture.get("invulnerable_save", 0))), "leadership": int(model_data.get("leadership", fixture.get("leadership", 7))), "objective_control": objective_control, "ability_ids": ability_ids, "keywords": model_data.get("keywords", unit_profile.get("keywords", [])).duplicate(true), "faction_keywords": model_data.get("faction_keywords", unit_profile.get("faction_keywords", [])).duplicate(true), "weapons": model_data.get("weapons", unit_profile.get("weapons", [])).duplicate(true), "unit_id": unit_id, "battle_shocked": false, "can_control": true})
+	models.append({"model_id": model_id, "position": point, "radius": Rules.radius_inches(base_mm), "spent": 0.0, "advanced": bool(model_data.get("advanced", false)), "advance_bonus": int(model_data.get("advance_bonus", 0)), "fell_back": bool(model_data.get("fell_back", false)), "fought": bool(model_data.get("fought", false)), "reserve_status": str(model_data.get("reserve_status", "deployed")), "transport_capacity": int(model_data.get("transport_capacity", unit_profile.get("transport_capacity", 0))), "transport_moved": bool(model_data.get("transport_moved", false)), "embarked_in": str(model_data.get("embarked_in", "")), "leader": bool(model_data.get("leader", unit_profile.get("leader", false))), "leader_for": model_data.get("leader_for", unit_profile.get("leader_for", [])).duplicate(true), "attached_to": str(model_data.get("attached_to", "")), "attached_leader_id": str(model_data.get("attached_leader_id", "")), "used_weapon_names": model_data.get("used_weapon_names", []).duplicate(true), "team": side, "wounds": int(model_data.get("wounds", fixture.get("wounds", 3))), "toughness": int(model_data.get("toughness", fixture.get("toughness", 4))), "save_on": int(model_data.get("save_on", fixture.get("save_on", 7))), "invulnerable_save": int(model_data.get("invulnerable_save", fixture.get("invulnerable_save", 0))), "leadership": int(model_data.get("leadership", fixture.get("leadership", 7))), "objective_control": objective_control, "ability_ids": ability_ids, "keywords": model_data.get("keywords", unit_profile.get("keywords", [])).duplicate(true), "faction_keywords": model_data.get("faction_keywords", unit_profile.get("faction_keywords", [])).duplicate(true), "weapons": model_data.get("weapons", unit_profile.get("weapons", [])).duplicate(true), "unit_id": unit_id, "battle_shocked": false, "can_control": true})
 
 	models[-1].movement_inches = movement_inches
 	models[-1].coherency_inches = float(model_data.get("coherency_inches", 2.0))
@@ -416,7 +419,7 @@ func advance_selected() -> void:
 			queue_redraw()
 			return
 	var roll := Dice.roll_d6(combat_rng, 1, 0)
-	var unit_id := str(models[selected].get("unit_id", ""))
+	var unit_id := Attachments.group_id(models[selected])
 	if _submit_network_command("ADVANCE", {"unit_id": unit_id, "roll": int(roll.total), "rolls": roll.rolls}):
 		return
 	for model in unit_models:
@@ -472,7 +475,7 @@ func deploy_selected_reserve() -> void:
 	for model in unit_models:
 		var offset: Vector2 = model.position - anchor
 		destinations.append([preview.x + offset.x, preview.y + offset.y])
-	var unit_id := str(models[selected].get("unit_id", ""))
+	var unit_id := Attachments.group_id(models[selected])
 	var reason := Reserves.arrival_reason(models, unit_id, active_team, destinations)
 	if not reason.is_empty():
 		message = "非法深入打击：" + display_reason(reason)
@@ -498,7 +501,7 @@ func embark_selected() -> void:
 		message = "请选择当前阵营要搭载的单位。"
 		queue_redraw()
 		return
-	var unit_id := str(models[selected].get("unit_id", ""))
+	var unit_id := Attachments.group_id(models[selected])
 	var nearest_id := ""
 	var nearest := INF
 	for model in models:
@@ -558,12 +561,12 @@ func disembark_selected() -> void:
 	for index in range(unit_models.size()):
 		var row_offset := (float(index) - float(unit_models.size() - 1) / 2.0) * (radius * 2.0 + 0.1)
 		positions.append([transport.position.x + side_offset, transport.position.y + row_offset])
-	var reason := Transports.disembark_reason(models, str(models[selected].get("unit_id", "")), positions, active_team)
+	var reason := Transports.disembark_reason(models, Attachments.group_id(models[selected]), positions, active_team)
 	if not reason.is_empty():
 		message = "非法下车：" + display_reason(reason)
 		queue_redraw()
 		return
-	var payload := {"unit_id": str(models[selected].get("unit_id", "")), "positions": positions}
+	var payload := {"unit_id": Attachments.group_id(models[selected]), "positions": positions}
 	if _submit_network_command("DISEMBARK", payload):
 		return
 	for index in range(unit_models.size()):
@@ -573,6 +576,74 @@ func disembark_selected() -> void:
 		unit_models[index].disembarked = true
 	command_log = CommandLog.append(command_log, active_team, "DISEMBARK", payload)
 	message = "单位已从运输工具下车。"
+	queue_redraw()
+
+func attach_selected() -> void:
+	if phase != "COMMAND":
+		message = "附属角色只能在指挥阶段编入单位。"
+		queue_redraw()
+		return
+	if selected < 0 or selected >= models.size() or int(models[selected].get("team", -1)) != active_team:
+		message = "请选择当前阵营的角色模型。"
+		queue_redraw()
+		return
+	var leader_id := str(models[selected].get("unit_id", ""))
+	if not Attachments.is_leader(models[selected]):
+		message = "所选模型不是可附属的角色。"
+		queue_redraw()
+		return
+	var bodyguard_id := ""
+	var nearest := INF
+	for candidate in models:
+		if str(candidate.get("unit_id", "")) == leader_id or int(candidate.get("team", -1)) != active_team:
+			continue
+		var reason := Attachments.attach_reason(models, leader_id, str(candidate.get("unit_id", "")), active_team)
+		if reason.is_empty():
+			var distance: float = models[selected].position.distance_to(candidate.position)
+			if distance < nearest:
+				nearest = distance
+				bodyguard_id = str(candidate.get("unit_id", ""))
+	if bodyguard_id.is_empty():
+		message = "没有找到符合编入条件的友方单位。"
+		queue_redraw()
+		return
+	var payload := {"leader_unit_id": leader_id, "bodyguard_unit_id": bodyguard_id}
+	if _submit_network_command("ATTACH", payload):
+		return
+	for model in models:
+		if str(model.get("unit_id", "")) == leader_id:
+			model.attached_to = bodyguard_id
+		elif str(model.get("unit_id", "")) == bodyguard_id:
+			model.attached_leader_id = leader_id
+	command_log = CommandLog.append(command_log, active_team, "ATTACH", payload)
+	message = "角色已附属到 %s。" % bodyguard_id
+	queue_redraw()
+
+func detach_selected() -> void:
+	if phase != "COMMAND":
+		message = "解除附属只能在指挥阶段进行。"
+		queue_redraw()
+		return
+	if selected < 0 or selected >= models.size() or int(models[selected].get("team", -1)) != active_team:
+		message = "请选择当前阵营的角色模型。"
+		queue_redraw()
+		return
+	var leader_id := str(models[selected].get("unit_id", ""))
+	if not Attachments.is_leader(models[selected]) or str(models[selected].get("attached_to", "")).is_empty():
+		message = "所选角色当前没有附属单位。"
+		queue_redraw()
+		return
+	var payload := {"leader_unit_id": leader_id}
+	if _submit_network_command("DETACH", payload):
+		return
+	var bodyguard_id := str(models[selected].get("attached_to", ""))
+	for model in models:
+		if str(model.get("unit_id", "")) == leader_id:
+			model.attached_to = ""
+		elif str(model.get("unit_id", "")) == bodyguard_id:
+			model.attached_leader_id = ""
+	command_log = CommandLog.append(command_log, active_team, "DETACH", payload)
+	message = "角色已从 %s 解除附属。" % bodyguard_id
 	queue_redraw()
 
 func end_turn() -> void:
@@ -653,14 +724,19 @@ func resolve_battle_shock(team_id: int) -> String:
 	for model in models:
 		if int(model.get("team", -1)) != team_id:
 			continue
-		var unit_id := str(model.get("unit_id", ""))
+		var unit_id := Attachments.group_id(model)
 		if not grouped.has(unit_id):
 			grouped[unit_id] = []
 		grouped[unit_id].append(model)
 	var failed := 0
 	for unit_id in grouped:
 		var unit_models: Array = grouped[unit_id]
-		var starting := int(starting_unit_sizes.get(unit_id, unit_models.size()))
+		var starting := 0
+		for candidate in models:
+			if int(candidate.get("team", -1)) == team_id and Attachments.group_id(candidate) == unit_id:
+				starting += 1
+		if starting <= 0:
+			starting = int(starting_unit_sizes.get(unit_id, unit_models.size()))
 		var result := {"passed": true, "rolls": [], "total": 0}
 		if BattleShock.required(unit_models.size(), starting):
 			result = BattleShock.test(int(unit_models[0].get("leadership", 7)), combat_rng)
@@ -1133,10 +1209,10 @@ func preview_reason() -> String:
 func selected_unit_models() -> Array:
 	if selected < 0 or selected >= models.size():
 		return []
-	var unit_id := str(models[selected].get("unit_id", ""))
+	var unit_id := Attachments.group_id(models[selected])
 	var unit_models: Array = []
 	for model in models:
-		if str(model.get("unit_id", "")) == unit_id:
+		if Attachments.group_id(model) == unit_id:
 			unit_models.append(model)
 	return unit_models
 
@@ -1174,7 +1250,7 @@ func finish_drag() -> void:
 				models[index].position += delta
 		history.append({"changes": changes, "selected": selected})
 		var move_kind := "FALL_BACK" if falling_back else "MOVE"
-		var move_payload := {"unit_id": models[selected].unit_id, "model": selected, "model_id": models[selected].get("model_id", ""), "delta": [delta.x, delta.y], "distance": distance}
+		var move_payload := {"unit_id": Attachments.group_id(models[selected]), "model": selected, "model_id": models[selected].get("model_id", ""), "delta": [delta.x, delta.y], "distance": distance}
 		if _submit_network_command(move_kind, move_payload):
 			dragging = false
 			return
@@ -1414,3 +1490,4 @@ func _draw() -> void:
 			label_at(Vector2(780, row), "%02d  %s  ×%d  (%d点)" % [index + 1, str(entry.get("unit_id", "未知")), int(entry.get("count", 0)), int(entry.get("points_each", 0))], 14)
 			row += 24
 		label_at(Vector2(780, 416), "B 关闭面板", 13, BLUE)
+

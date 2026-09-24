@@ -50,6 +50,13 @@ static func validate_model(model: Variant, index: int = 0, ids: Dictionary = {})
 		return "INVALID MODEL TRANSPORT_CAPACITY " + model_id
 	if model.has("embarked_in") and typeof(model.embarked_in) != TYPE_STRING:
 		return "INVALID MODEL EMBARKED_IN " + model_id
+	for field in ["attached_to", "attached_leader_id"]:
+		if model.has(field) and typeof(model[field]) != TYPE_STRING:
+			return "INVALID MODEL " + field.to_upper() + " " + model_id
+	if model.has("leader") and typeof(model.leader) != TYPE_BOOL:
+		return "INVALID MODEL LEADER " + model_id
+	if model.has("leader_for") and not (model.leader_for is Array):
+		return "INVALID MODEL LEADER_FOR " + model_id
 	if model.has("reserve_status") and str(model.reserve_status) not in ["deployed", "reserve", "destroyed"]:
 		return "INVALID MODEL RESERVE_STATUS " + model_id
 	return ""

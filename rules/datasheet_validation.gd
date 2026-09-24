@@ -21,6 +21,10 @@ static func validate_profile(profile: Dictionary) -> String:
 		return "INVALID WEAPONS"
 	if not (profile.get("abilities", []) is Array):
 		return "INVALID ABILITIES"
+	if profile.has("leader") and typeof(profile.leader) != TYPE_BOOL:
+		return "INVALID LEADER"
+	if profile.has("leader_for") and not (profile.leader_for is Array):
+		return "INVALID LEADER_FOR"
 	var ability_errors := UnitAbilities.validate(UnitAbilities.ids_from_profile(profile))
 	if not ability_errors.is_empty():
 		return ability_errors[0]
@@ -35,6 +39,10 @@ static func validate_profile(profile: Dictionary) -> String:
 				return "MODEL MISSING " + field.to_upper()
 		if float(model.movement_inches) < 0 or int(model.toughness) < 1 or int(model.wounds) < 1:
 			return "INVALID MODEL STAT"
+		if model.has("leader") and typeof(model.leader) != TYPE_BOOL:
+			return "MODEL INVALID LEADER"
+		if model.has("leader_for") and not (model.leader_for is Array):
+			return "MODEL INVALID LEADER_FOR"
 	for weapon in profile.weapons:
 		for field in ["name", "range_inches", "attacks", "hit_on", "strength", "damage"]:
 			if not weapon.has(field):

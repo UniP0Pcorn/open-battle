@@ -21,7 +21,7 @@ static func embark_reason(models: Array, unit_id: String, transport_id: String, 
 	var unit_models: Array = []
 	var transport: Dictionary = {}
 	for model in models:
-		if str(model.get("unit_id", "")) == unit_id:
+		if _belongs_to_group(model, unit_id):
 			unit_models.append(model)
 		if str(model.get("model_id", "")) == transport_id:
 			transport = model
@@ -55,7 +55,7 @@ static func disembark_reason(models: Array, unit_id: String, positions: Array, t
 	var transport_id := ""
 	var transport: Dictionary = {}
 	for model in models:
-		if str(model.get("unit_id", "")) == unit_id and is_embarked(model):
+		if _belongs_to_group(model, unit_id) and is_embarked(model):
 			unit_models.append(model)
 			transport_id = str(model.get("embarked_in", ""))
 	for model in models:
@@ -86,7 +86,7 @@ static func disembark_reason(models: Array, unit_id: String, positions: Array, t
 				return "BASE OVERLAP"
 		placed.append({"position": destination, "radius": radius})
 		for other in models:
-			if str(other.get("unit_id", "")) == unit_id or not active(other):
+			if _belongs_to_group(other, unit_id) or not active(other):
 				continue
 			if _position_of(other).distance_to(destination) < radius + float(other.get("radius", 0.0)) - Movement.EPSILON:
 				return "BASE OVERLAP"
@@ -123,6 +123,10 @@ static func move_reason(models: Array, transport_id: String, delta: Array, team:
 
 static func _base_separation(model: Dictionary, other: Dictionary) -> float:
 	return _base_separation_position(_position_of(model), float(model.get("radius", 0.0)), other)
+
+static func _belongs_to_group(model: Dictionary, unit_id: String) -> bool:
+	var attached_to := str(model.get("attached_to", ""))
+	return (attached_to if not attached_to.is_empty() else str(model.get("unit_id", ""))) == unit_id
 
 static func _base_separation_position(position: Vector2, radius: float, other: Dictionary) -> float:
 	return position.distance_to(_position_of(other)) - radius - float(other.get("radius", 0.0))
