@@ -33,8 +33,10 @@ ALIASES = {
 
 def canonical_tag(value: object) -> str:
     text = str(value).strip().lower()
+    if text in {"", "无", "-", "—", "none", "n/a"}:
+        return ""
     compact = text.replace(" ", "").replace("　", "")
-    rapid = re.fullmatch(r"速射(\d+)|rapidfire(\d+)", compact)
+    rapid = re.fullmatch(r"速射(\d+)|连击(\d+)|rapidfire(\d+)", compact)
     if rapid:
         return "rapid_fire_" + next(group for group in rapid.groups() if group is not None)
     melta = re.fullmatch(r"热熔(\d+)|melta(\d+)", compact)
@@ -52,6 +54,8 @@ def canonical_tag(value: object) -> str:
 def is_supported(value: object) -> bool:
     tag = canonical_tag(value)
     return (
+        tag == ""
+        or
         tag in {"torrent", "ignores_cover", "assault", "pistol", "indirect", "hazardous", "devastating_wounds", "lethal_hits", "twin_linked", "heavy", "blast"}
         or re.fullmatch(r"rapid_fire_\d+", tag) is not None
         or re.fullmatch(r"melta_\d+", tag) is not None
@@ -63,6 +67,6 @@ def is_supported(value: object) -> bool:
 def unsupported_tags(values: list[object]) -> list[str]:
     result: list[str] = []
     for value in values:
-        if not is_supported(value) and str(value) not in result:
+        if canonical_tag(value) and not is_supported(value) and str(value) not in result:
             result.append(str(value))
     return result

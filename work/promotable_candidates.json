@@ -1,7 +1,395 @@
 {
   "schema_version": 1,
-  "promotable_count": 17,
+  "promotable_count": 44,
   "promotable": [
+    {
+      "name": "Eversor Assassin",
+      "source_file": "10E-帝国特勤2.0YAZE版.pdf",
+      "source_page": 17,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 125
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Inquisitor Draxus",
+      "source_file": "10E-帝国特勤2.0YAZE版.pdf",
+      "source_page": 19,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Inquisitor Greyfax",
+      "source_file": "10E-帝国特勤2.0YAZE版.pdf",
+      "source_page": 20,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 65
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Inquisitor Eisenhorn",
+      "source_file": "10E-帝国特勤2.0YAZE版.pdf",
+      "source_page": 22,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 55
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Ordo Chimera",
+      "source_file": "10E-帝国特勤2.0YAZE版.pdf",
+      "source_page": 25,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 5,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Watch Master",
+      "source_file": "10E-帝国特勤2.0YAZE版.pdf",
+      "source_page": 26,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 115
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Ministorum Priest",
+      "source_file": "10E-帝国特勤2.0YAZE版.pdf",
+      "source_page": 31,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 45
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Subductor Squad",
+      "source_file": "10E-帝国特勤2.0YAZE版.pdf",
+      "source_page": 34,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 110
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Grey Knights Terminator Squad",
+      "source_file": "10E-帝国特勤2.0YAZE版.pdf",
+      "source_page": 40,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 240
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Navigator",
+      "source_file": "10E-帝国特勤2.0YAZE版.pdf",
+      "source_page": 41,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 60
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Voidsmen-at-Arms",
+      "source_file": "10E-帝国特勤2.0YAZE版.pdf",
+      "source_page": 43,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 50
+        }
+      ],
+      "weapon_count": 4,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Imperium Rhino",
+      "source_file": "10E-帝国特勤2.0YAZE版.pdf",
+      "source_page": 46,
+      "edition": "10",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "法",
+      "source_file": "11版太空死灵规则1.01.pdf",
+      "source_page": 36,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 330
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "之",
+      "source_file": "11版太空死灵规则1.01.pdf",
+      "source_page": 50,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Geomancer",
+      "source_file": "11版太空死灵规则1.01.pdf",
+      "source_page": 54,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "之",
+      "source_file": "11版太空死灵规则1.01.pdf",
+      "source_page": 56,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 90
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "Lokhust Lord",
+      "source_file": "11版太空死灵规则1.01.pdf",
+      "source_page": 57,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "之",
+      "source_file": "11版太空死灵规则1.01.pdf",
+      "source_page": 58,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 75
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "之",
+      "source_file": "11版太空死灵规则1.01.pdf",
+      "source_page": 62,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 50
+        },
+        {
+          "models": 1,
+          "points": 100
+        },
+        {
+          "models": 1,
+          "points": 150
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "法",
+      "source_file": "11版太空死灵规则1.01.pdf",
+      "source_page": 69,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 95
+        },
+        {
+          "models": 1,
+          "points": 220
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "之",
+      "source_file": "11版太空死灵规则1.01.pdf",
+      "source_page": 72,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 50
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "奥",
+      "source_file": "11版太空死灵规则1.01.pdf",
+      "source_page": 76,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 80
+        },
+        {
+          "models": 1,
+          "points": 190
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "法",
+      "source_file": "11版太空死灵规则1.01.pdf",
+      "source_page": 77,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 70
+        },
+        {
+          "models": 1,
+          "points": 140
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "法",
+      "source_file": "11版太空死灵规则1.01.pdf",
+      "source_page": 79,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 60
+        },
+        {
+          "models": 1,
+          "points": 120
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "之",
+      "source_file": "11版太空死灵规则1.01.pdf",
+      "source_page": 81,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 95
+        }
+      ],
+      "weapon_count": 3,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "之",
+      "source_file": "11版太空死灵规则1.01.pdf",
+      "source_page": 90,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 285
+        }
+      ],
+      "weapon_count": 1,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
     {
       "name": "远见指挥官",
       "source_file": "钛帝国11版规则-20260919.pdf",
@@ -20,6 +408,20 @@
       "name": "火刃队长",
       "source_file": "钛帝国11版规则-20260919.pdf",
       "source_page": 18,
+      "edition": "11",
+      "points": [
+        {
+          "models": 1,
+          "points": 50
+        }
+      ],
+      "weapon_count": 2,
+      "promotion_status": "needs_explicit_base_and_faction"
+    },
+    {
+      "name": "以太长老",
+      "source_file": "钛帝国11版规则-20260919.pdf",
+      "source_page": 19,
       "edition": "11",
       "points": [
         {
@@ -55,7 +457,7 @@
           "points": 70
         }
       ],
-      "weapon_count": 4,
+      "weapon_count": 5,
       "promotion_status": "needs_explicit_base_and_faction"
     },
     {
@@ -69,7 +471,7 @@
           "points": 90
         }
       ],
-      "weapon_count": 3,
+      "weapon_count": 4,
       "promotion_status": "needs_explicit_base_and_faction"
     },
     {
@@ -87,7 +489,7 @@
           "points": 110
         }
       ],
-      "weapon_count": 2,
+      "weapon_count": 3,
       "promotion_status": "needs_explicit_base_and_faction"
     },
     {
@@ -105,7 +507,7 @@
           "points": 100
         }
       ],
-      "weapon_count": 1,
+      "weapon_count": 2,
       "promotion_status": "needs_explicit_base_and_faction"
     },
     {
@@ -119,7 +521,7 @@
           "points": 80
         }
       ],
-      "weapon_count": 8,
+      "weapon_count": 9,
       "promotion_status": "needs_explicit_base_and_faction"
     },
     {
@@ -266,11 +668,12 @@
     }
   ],
   "rejected_reasons": {
-    "missing_points": 585,
-    "missing_weapons": 552,
+    "missing_points": 530,
+    "complex_weapon_damage": 212,
+    "complex_weapon_attacks": 196,
+    "missing_weapons": 89,
     "non_numeric_oc": 18,
     "non_numeric_m": 24,
-    "complex_weapon_attacks": 32,
-    "complex_weapon_damage": 39
+    "complex_weapon_strength": 1
   }
 }

@@ -18,13 +18,14 @@ STAT_RE = re.compile(
     r"(?P<w>[0-9-]+)\s+(?P<ld>[0-9-]+\+?)\s+(?P<oc>[0-9-]+)", re.I
 )
 WEAPON_RE = re.compile(
-    r"^(?P<name>.+?)\s+(?P<range>近战|[0-9]+[\"”])\s+"
+    r"^(?P<name>.+?)\s+(?P<range>近战|[0-9]+[\"”]?)\s+"
     r"(?P<attacks>[0-9Dd+\-]+)\s+(?P<skill>[0-9NnAa]+\+?)\s+"
-    r"(?P<strength>[0-9-]+)\s+(?P<ap>-?[0-9]+)\s+(?P<damage>[0-9Dd+\-]+)(?:\s+.*)?$"
+    r"(?P<strength>[0-9-]+)\s+(?P<ap>-?[0-9]+)\s+(?P<damage>[0-9Dd+\-]+)(?P<tail>\s+.*)?$"
 )
 TAG_RE = re.compile(r"\[([^\]]+)\]")
 KEYWORD_RE = re.compile(r"关键词：(?P<unit>.*?)(?:阵营关键词：(?P<faction>.*))?$")
-POINT_RE = re.compile(r"(?P<count>[0-9]+)个模型.*?(?P<points>[0-9]+)分")
+POINT_RE = re.compile(r"(?P<count>[0-9]+)\s*个\s*模型.*?(?P<points>[0-9]+)\s*分")
+POINT_SIMPLE_RE = re.compile(r"(?P<points>[0-9]+)\s*分\s*$")
 
 
 def _clean(line: str) -> str:
@@ -41,6 +42,14 @@ def _name(lines: list[str], stat_index: int) -> str:
         if line and not line.startswith("M T "):
             return line
     return "Unnamed datasheet"
+
+
+def _weapon_tags(line: str, match: re.Match[str]) -> list[str]:
+    tags = TAG_RE.findall(line)
+    tail = (match.group("tail") or "").strip()
+    if not tags and tail:
+        tags = [part.strip() for part in re.split(r"[，,、;；]", tail.strip("[] ")) if part.strip()]
+    return [tag for tag in tags if tag.strip() not in {"", "无", "-", "—", "none", "N/A"}]
 
 
 def extract(pdf_path: Path, edition: str = "", max_pages: int = 0) -> dict:
@@ -73,21 +82,35 @@ def extract(pdf_path: Path, edition: str = "", max_pages: int = 0) -> dict:
                         faction_text = keyword_match.group("faction") or ""
                         faction_keywords = [x.strip() for x in re.split(r"[，,、]", faction_text) if x.strip()]
                         break
-                for candidate_line in lines[i + 2 : i + 24]:
+                # A datasheet can place abilities and section headers between
+                # the statline and its weapon table. Stop only at the next
+                # statline, which is the reliable page-level record boundary.
+                for candidate_line in lines[i + 2 :]:
+                    if candidate_line.startswith("M T "):
+                        break
                     weapon = WEAPON_RE.match(candidate_line)
                     if weapon and weapon.group("range") != "近战":
-                        item = {k: v for k, v in weapon.groupdict().items()}
-                        item["tags"] = TAG_RE.findall(candidate_line)
+                        item = {k: weapon.group(k) for k in ["name", "range", "attacks", "skill", "strength", "ap", "damage"]}
+                        item["tags"] = _weapon_tags(candidate_line, weapon)
                         weapons.append(item)
                     for point in POINT_RE.finditer(candidate_line):
                         points.append({"models": int(point.group("count")), "points": int(point.group("points"))})
-                    if candidate_line.startswith("关键词：") or candidate_line.startswith("Keywords:"):
-                        break
                 # Points are often printed after the keyword/leader section.
                 # Keep only compact model-count/cost pairs from this page.
                 for candidate_line in lines:
                     for point in POINT_RE.finditer(candidate_line):
                         entry = {"models": int(point.group("count")), "points": int(point.group("points"))}
+                        if entry not in points:
+                            points.append(entry)
+                # Single-model profiles frequently print only "Name 415分".
+                # Limit this fallback to the heading immediately before the
+                # statline, avoiding arbitrary numbers in rules prose.
+                for candidate_line in lines[max(0, i - 8) : i + 1]:
+                    if "个" in candidate_line or "+" in candidate_line:
+                        continue
+                    simple = POINT_SIMPLE_RE.search(candidate_line)
+                    if simple and not POINT_RE.search(candidate_line):
+                        entry = {"models": 1, "points": int(simple.group("points"))}
                         if entry not in points:
                             points.append(entry)
                 candidates.append(

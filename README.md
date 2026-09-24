@@ -106,6 +106,7 @@ python tools/extract_profile_candidates.py <source.pdf> --edition 11 --output wo
 
 候选文件只用于复核和后续导入，不会把整段规则说明复制进项目；确认字段后再转换为 `data/units/*.json` 兵牌。
 批量处理来源清单可运行 `tools/extract_all_sources.py --source-root <pdf目录> --output-dir work/source_candidates`，每条候选都保留来源文件名和页码。
+提取器会跨越属性表与武器表之间的能力段落，支持没有英寸符号的射程、带空格的“个模型/分”价格，并把武器技能列拆成结构化标签；无法确定的多模型价格仍留在待复核状态。
 运行 `python tools/build_profile_drafts.py work/source_candidates --output-dir work/profile_drafts` 可生成逐条待复核草稿；草稿保留骰面表达式与来源页码，明确标记为不可上桌的 `pending_manual_review`。
 确认底座、连结距离、阵营及所有字段后，可用 `tools/promote_profile_draft.py` 严格转换为正式 profile；候选草稿中的能力、单位关键词、阵营关键词和来源备注会保留，攻击次数和伤害允许规则层已支持的 `D3/D6/2D6` 等表达式，其余不受支持的骰面或缺失字段仍会失败，不会静默猜值。
 `tools/index_promotable_candidates.py` 会生成 `work/promotable_candidates.json`，列出字段结构完整但仍需明确底座与阵营的候选，并统计被复杂骰面或缺失字段拦截的记录。

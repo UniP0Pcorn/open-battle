@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from tools.export_profile_review_sheet import review_flags, rows, source_lookup
+from tools.extract_profile_candidates import POINT_RE, WEAPON_RE, _weapon_tags
 from tools.weapon_tag_support import unsupported_tags
 
 
@@ -52,6 +53,14 @@ class ReviewSheetTests(unittest.TestCase):
             "points": [{"models": 5, "points": 100}],
         }
         self.assertIn("unsupported_weapon_keywords", review_flags(draft))
+
+    def test_extractor_accepts_bare_range_and_spaced_points(self) -> None:
+        match = WEAPON_RE.match("脉冲激光炮 36 2D6 2+ 7 -1 2 爆炸，连击1")
+        self.assertIsNotNone(match)
+        assert match is not None
+        self.assertEqual(match.group("range"), "36")
+        self.assertEqual(_weapon_tags(match.group(0), match), ["爆炸", "连击1"])
+        self.assertEqual(POINT_RE.search("单位构成 1 个模型，415 分").group("points"), "415")
 
 
 if __name__ == "__main__":

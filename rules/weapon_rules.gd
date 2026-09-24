@@ -36,11 +36,15 @@ const ALIASES := {
 
 static func canonical_id(value: Variant) -> String:
 	var text := str(value).strip_edges().to_lower()
+	if text in ["", "无", "-", "—", "none", "n/a"]:
+		return ""
 	var compact := text.replace(" ", "").replace("　", "")
 	if text.begins_with("速射") and text.substr(2).is_valid_int():
 		return "rapid_fire_" + text.substr(2)
 	if text.begins_with("rapid fire ") and text.substr(11).is_valid_int():
 		return "rapid_fire_" + text.substr(11)
+	if compact.begins_with("连击") and compact.substr(2).is_valid_int():
+		return "rapid_fire_" + compact.substr(2)
 	if text.begins_with("热熔") and text.substr(2).is_valid_int():
 		return "melta_" + text.substr(2)
 	if text.begins_with("melta ") and text.substr(6).is_valid_int():
@@ -68,7 +72,9 @@ static func canonical_id(value: Variant) -> String:
 static func ids_from_weapon(weapon: Dictionary) -> Array:
 	var result: Array = []
 	for value in weapon.get("abilities", []):
-		result.append(canonical_id(value))
+		var canonical := canonical_id(value)
+		if not canonical.is_empty():
+			result.append(canonical)
 	return result
 
 static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, target_models: int = 1, target_keywords: Array = [], stationary: bool = true, line_of_sight: bool = true) -> Dictionary:
