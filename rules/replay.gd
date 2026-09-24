@@ -83,6 +83,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 					model.advanced = false
 					model.advance_bonus = 0
 					model.fell_back = false
+					model.erase("temporary_cover_bonus")
 		"PHASE_ADVANCE":
 			var phase_state := {
 				"round": int(next.get("round", 1)),
@@ -104,8 +105,11 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 						model.advanced = false
 						model.advance_bonus = 0
 						model.fell_back = false
+						model.erase("temporary_cover_bonus")
 		"BATTLE_SHOCK":
 			var unit_id := str(payload.get("unit_id", ""))
+			if _has_active_effect(next.get("stratagem_effects", []), "PASS_BATTLE_SHOCK", int(entry.team), unit_id) and not bool(payload.get("passed", false)):
+				return {"ok": false, "reason": "STRATAGEM REQUIRES PASS", "state": state}
 			var found := false
 			for model in next.models:
 				if str(model.get("unit_id", "")) == unit_id:
@@ -160,6 +164,22 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			var stratagem_result := Stratagems.use(stratagem, str(next.phase), int(entry.team), next.get("command_points", [0, 0]))
 			if not bool(stratagem_result.get("ok", false)):
 				return {"ok": false, "reason": str(stratagem_result.get("reason", "STRATAGEM REJECTED")), "state": state}
+			var effect_id := str(stratagem_result.get("effect", ""))
+			if effect_id in ["TEMPORARY_COVER", "PASS_BATTLE_SHOCK"]:
+				var effect_unit_id := str(payload.get("unit_id", ""))
+				if effect_unit_id.is_empty():
+					return {"ok": false, "reason": "UNIT REQUIRED", "state": state}
+				var effect_unit_found := false
+				for model in next.models:
+					if str(model.get("unit_id", "")) != effect_unit_id:
+						continue
+					if int(model.get("team", -1)) != int(entry.team):
+						return {"ok": false, "reason": "NOT ACTIVE TEAM", "state": state}
+					effect_unit_found = true
+					if effect_id == "TEMPORARY_COVER":
+						model.temporary_cover_bonus = maxi(1, int(model.get("temporary_cover_bonus", 0)))
+				if not effect_unit_found:
+					return {"ok": false, "reason": "UNKNOWN UNIT", "state": state}
 			next.command_points = stratagem_result.points
 			var effects: Array = next.get("stratagem_effects", []).duplicate(true)
 			effects.append({
@@ -373,6 +393,15 @@ static func _feel_no_pain_reference_error(model: Dictionary, damage: int, payloa
 		if typeof(roll) not in [TYPE_INT, TYPE_FLOAT] or int(roll) < 1 or int(roll) > 6 or float(roll) != float(int(roll)):
 			return "INVALID FEEL NO PAIN RESULT"
 	return ""
+
+static func _has_active_effect(effects: Array, effect: String, team: int, unit_id: String) -> bool:
+	for entry in effects:
+		if not (entry is Dictionary) or str(entry.get("effect", "")) != effect or int(entry.get("team", -1)) != team:
+			continue
+		var payload: Variant = entry.get("payload", {})
+		if payload is Dictionary and str(payload.get("unit_id", "")) == unit_id:
+			return true
+	return false
 
 static func _charge_reference_error(models: Array, charger_index: int, target_index: int, payload: Dictionary, terrain: Array) -> String:
 	var charger: Dictionary = models[charger_index]

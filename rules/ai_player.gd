@@ -176,7 +176,7 @@ static func _shooting_command(state: Dictionary, team: int, rng: RandomNumberGen
 				var reason := Combat.target_reason(attacker, target, distance, weapon, team, _model_engaged(attacker, state.models), _model_engaged(target, state.models))
 				if not reason.is_empty():
 					continue
-				var context := WeaponRules.context(weapon, distance, 0, 1, target.get("keywords", []), float(attacker.get("spent", 0.0)) <= EPSILON, true)
+				var context := WeaponRules.context(weapon, distance, int(target.get("temporary_cover_bonus", 0)), 1, target.get("keywords", []), float(attacker.get("spent", 0.0)) <= EPSILON, true)
 				var result := Combat.resolve_ranged_attack(context.weapon, target, rng, 0, UnitAbilities.event_modifiers(attacker.get("ability_ids", []), "before_attack", {"phase": "SHOOTING", "kind": "SHOOT"}))
 				return _attack_payload(attacker_index, attacker, target_index, target, weapon, context.weapon, result, rng)
 	return {}

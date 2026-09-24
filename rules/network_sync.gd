@@ -68,7 +68,7 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, packet: 
 		result = Melee.resolve_attack(resolved_weapon, target, rng, 0, target.get("keywords", []), UnitAbilities.event_modifiers(attacker.get("ability_ids", []), "before_attack", {"phase": "FIGHT", "kind": "FIGHT"}))
 	else:
 		var distance := _position(attacker).distance_to(_position(target))
-		var cover := Visibility.cover_bonus(_position(attacker), _position(target), state.get("terrain", []))
+		var cover := Visibility.cover_bonus(_position(attacker), _position(target), state.get("terrain", [])) + int(target.get("temporary_cover_bonus", 0))
 		var target_count := 0
 		for model in models:
 			if str(model.get("unit_id", "")) == str(target.get("unit_id", "")):

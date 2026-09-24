@@ -884,7 +884,7 @@ func fire_selected() -> void:
 		return
 	var target_for_attack: Dictionary = models[target_index].duplicate(true)
 	var target_abilities := UnitAbilities.modifiers(target_for_attack.get("ability_ids", []))
-	var cover_bonus := Visibility.cover_bonus(attacker.position, target_for_attack.position, terrain) + int(target_abilities.cover_bonus)
+	var cover_bonus := Visibility.cover_bonus(attacker.position, target_for_attack.position, terrain) + int(target_abilities.cover_bonus) + int(target_for_attack.get("temporary_cover_bonus", 0))
 	var target_unit_id := str(target_for_attack.get("unit_id", ""))
 	var target_models := 0
 	for model in models:

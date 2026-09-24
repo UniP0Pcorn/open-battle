@@ -457,6 +457,19 @@ func run() -> void:
 	stratagem_log = CommandLog.append(stratagem_log, 0, "STRATAGEM", {"id": "command_reroll", "phase": "SHOOTING"})
 	var stratagem_replay := Replay.replay(stratagem_state, stratagem_log)
 	check(not stratagem_replay.ok and stratagem_replay.reason == "NOT ENOUGH COMMAND POINTS", "replay enforces stratagem command points")
+	var cover_state := Replay.initial_state(one_shot_models, "SHOOTING", 0)
+	cover_state.command_points = [1, 0]
+	var cover_log: Array = []
+	cover_log = CommandLog.append(cover_log, 0, "STRATAGEM", {"id": "go_to_ground", "phase": "SHOOTING", "unit_id": "shot"})
+	var cover_replay := Replay.replay(cover_state, cover_log)
+	check(cover_replay.ok and int(cover_replay.state.models[0].get("temporary_cover_bonus", 0)) == 1, "replay applies temporary cover stratagem")
+	var bravery_state := Replay.initial_state(one_shot_models, "COMMAND", 0)
+	bravery_state.command_points = [1, 0]
+	var bravery_log: Array = []
+	bravery_log = CommandLog.append(bravery_log, 0, "STRATAGEM", {"id": "insane_bravery", "phase": "COMMAND", "unit_id": "shot"})
+	bravery_log = CommandLog.append(bravery_log, 0, "BATTLE_SHOCK", {"unit_id": "shot", "passed": true})
+	var bravery_replay := Replay.replay(bravery_state, bravery_log)
+	check(bravery_replay.ok and not bool(bravery_replay.state.models[0].get("battle_shocked", false)), "replay applies automatic battle shock pass stratagem")
 	var phase_replay_log: Array = []
 	phase_replay_log = CommandLog.append(phase_replay_log, 0, "PHASE_ADVANCE", {"from": "MOVEMENT", "to": "SHOOTING"})
 	phase_replay_log = CommandLog.append(phase_replay_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "attacker_m001", "target": 1, "target_id": "target_m001", "damage": 1})
