@@ -193,6 +193,14 @@ func run() -> void:
 	var stale_packet := command_packet.duplicate(true)
 	stale_packet.snapshot_hash = "stale"
 	check(not NetworkSync.host_command(room, stale_packet, "player_gold").ok, "host sync rejects a stale peer snapshot")
+	var lobby_probe = P2PLobby.new()
+	root.add_child(lobby_probe)
+	await process_frame
+	lobby_probe.room = room
+	lobby_probe.player_id = "player_gold"
+	var probe_error: String = lobby_probe.submit_command("PHASE_ADVANCE", {"from": "MOVEMENT", "to": "SHOOTING"})
+	check(probe_error != "PLAYER TEAM UNKNOWN", "client lobby stamps the mapped team into command packets")
+	lobby_probe.queue_free()
 	var identity := AccountIdentity.create("Player@Example.com", "correct horse battery staple", "Player")
 	var challenge := AccountIdentity.challenge(identity, "nonce-001")
 	check(AccountIdentity.validate(identity).is_empty() and AccountIdentity.verify(identity, challenge, "nonce-001"), "account challenge proof validates")

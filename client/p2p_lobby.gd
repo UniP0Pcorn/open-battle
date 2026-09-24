@@ -102,7 +102,13 @@ func submit_command(kind: String, payload: Dictionary) -> String:
 	if is_host:
 		return _submit_host_command(player_id, kind, payload)
 	var sequence := int(room.session.get("command_log", []).size())
-	var entry := {"sequence": sequence, "team": -1, "kind": kind, "payload": payload.duplicate(true)}
+	var local_team := -1
+	for player in room.get("players", []):
+		if str(player.get("id", "")) == player_id:
+			local_team = int(player.get("team", -1))
+	if local_team not in [0, 1]:
+		return "PLAYER TEAM UNKNOWN"
+	var entry := {"sequence": sequence, "team": local_team, "kind": kind, "payload": payload.duplicate(true)}
 	var packet := PeerProtocol.command(str(room.id), player_id, _session_id(), sequence, sequence - 1, entry, PeerProtocol.hash_snapshot(room.session), reconnect_token)
 	return transport.send(packet, 1)
 
