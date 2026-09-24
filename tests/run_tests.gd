@@ -348,6 +348,8 @@ func run() -> void:
 	var heavy_stationary := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["重型"]}, 10.0, 0, 1, [], true)
 	var heavy_moved := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["重型"]}, 10.0, 0, 1, [], false)
 	check(heavy_stationary.weapon.hit_on == 3 and heavy_moved.weapon.hit_on == 4, "heavy improves stationary hit and loses the bonus after movement")
+	var precision_context := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["精准"]}, 10.0)
+	check(precision_context.weapon.precision and precision_context.keywords.has("precision"), "precision weapon context is executable")
 	var indirect_context := WeaponRules.context({"range_inches": 60.0, "attacks": 1, "hit_on": 4, "abilities": ["曲射"]}, 30.0, 0, 1, [], true, false)
 	check(indirect_context.weapon.indirect and indirect_context.weapon.hit_on == 5 and indirect_context.cover_bonus == 1, "indirect fire allows blocked targets with hit and cover modifiers")
 	var one_shot_context := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["一次性"]}, 10.0)
@@ -508,6 +510,11 @@ func run() -> void:
 	weapon_replay_log = CommandLog.append(weapon_replay_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "weapon_m001", "target": 1, "target_id": "weapon_target_m001", "weapon": "Test Rifle", "damage": 1})
 	var weapon_replay := Replay.replay(Replay.initial_state(weapon_replay_models, "SHOOTING", 0), weapon_replay_log)
 	check(weapon_replay.ok and weapon_replay.state.models[1].wounds == 2, "replay validates named weapon range")
+	var protected_target_models: Array = [{"model_id": "precision_attacker_m001", "unit_id": "precision_attacker", "team": 0, "position": Vector2(5, 5), "radius": 0.5, "weapons": [{"name": "Basic Rifle", "range_inches": 6.0}]}, {"model_id": "precision_leader_m001", "unit_id": "precision_leader", "team": 1, "position": Vector2(8, 5), "radius": 0.5, "attached_to": "precision_bodyguard", "wounds": 3}, {"model_id": "precision_bodyguard_m001", "unit_id": "precision_bodyguard", "team": 1, "position": Vector2(8.8, 5), "radius": 0.5, "attached_leader_id": "precision_leader", "wounds": 3}]
+	var protected_target_log: Array = []
+	protected_target_log = CommandLog.append(protected_target_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "precision_attacker_m001", "target": 1, "target_id": "precision_leader_m001", "weapon": "Basic Rifle", "damage": 1})
+	var protected_target_replay := Replay.replay(Replay.initial_state(protected_target_models, "SHOOTING", 0), protected_target_log)
+	check(not protected_target_replay.ok and protected_target_replay.reason == "PRECISION REQUIRED", "replay protects attached leader from non-precision fire")
 	var out_of_range_models := weapon_replay_models.duplicate(true)
 	out_of_range_models[1].position = Vector2(20, 5)
 	var out_of_range := Replay.replay(Replay.initial_state(out_of_range_models, "SHOOTING", 0), weapon_replay_log)

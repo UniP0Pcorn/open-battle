@@ -35,6 +35,8 @@ ALIASES = {
     "heavy": "heavy",
     "爆炸": "blast",
     "blast": "blast",
+    "精准": "precision",
+    "precision": "precision",
 }
 
 TRADITIONAL_TAG_CHARS = str.maketrans({
@@ -69,7 +71,7 @@ def is_supported(value: object) -> bool:
     return (
         tag == ""
         or
-        tag in {"torrent", "ignores_cover", "assault", "pistol", "indirect", "one_shot", "hazardous", "devastating_wounds", "lethal_hits", "twin_linked", "heavy", "blast"}
+        tag in {"torrent", "ignores_cover", "assault", "pistol", "indirect", "one_shot", "hazardous", "devastating_wounds", "lethal_hits", "twin_linked", "heavy", "blast", "precision"}
         or re.fullmatch(r"rapid_fire_(?:\d+|d[36](?:[+-]\d+)?)", tag) is not None
         or re.fullmatch(r"melta_\d+", tag) is not None
         or re.fullmatch(r"anti_[^_]+_\d", tag) is not None

@@ -36,7 +36,9 @@ const ALIASES := {
 	"heavy": "heavy",
 	"持续命中": "sustained_hits",
 	"爆炸": "blast",
-	"blast": "blast"
+	"blast": "blast",
+	"精准": "precision",
+	"precision": "precision"
 }
 
 static func canonical_id(value: Variant) -> String:
@@ -157,6 +159,8 @@ static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, t
 			result.sustained_hits = maxi(0, int(str(keyword).trim_prefix("sustained_hits_")))
 	if ids.has("blast") and target_models >= 5:
 		result.attacks = int(result.get("attacks", 1)) + (target_models / 5)
+	if ids.has("precision"):
+		result.precision = true
 	return {"weapon": result, "cover_bonus": cover_bonus, "keywords": ids}
 
 static func _rapid_suffix_valid(value: String) -> bool:

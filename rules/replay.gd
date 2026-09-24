@@ -15,6 +15,7 @@ const UnitAbilities = preload("res://rules/unit_abilities.gd")
 const Reserves = preload("res://rules/reserves.gd")
 const Transports = preload("res://rules/transports.gd")
 const Attachments = preload("res://rules/attachments.gd")
+const WeaponRules = preload("res://rules/weapon_rules.gd")
 
 static func initial_state(models: Array, phase: String = "MOVEMENT", active_team: int = 0, terrain: Array = []) -> Dictionary:
 	var initial_models: Array = models.duplicate(true)
@@ -660,6 +661,8 @@ static func _attack_reference_error(models: Array, attacker_index: int, target_i
 			break
 	if weapon.is_empty():
 		return "UNKNOWN WEAPON"
+	if not str(target.get("attached_to", "")).is_empty() and not WeaponRules.ids_from_weapon(weapon).has("precision"):
+		return "PRECISION REQUIRED"
 	var distance := _position_of(attacker).distance_to(_position_of(target))
 	if kind == "FIGHT":
 		return Melee.target_reason(attacker, target, actor_team)
