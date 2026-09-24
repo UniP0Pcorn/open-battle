@@ -191,6 +191,10 @@ func run() -> void:
 	check(melta_close.weapon.damage == "D6+2" and melta_close.keywords.has("melta_2") and melta_far.weapon.damage == "D6", "melta adds damage only at half range")
 	var hazardous_context := WeaponRules.context({"range_inches": 12.0, "attacks": 1, "hit_on": 4, "damage": 2, "abilities": ["危险"]}, 8.0)
 	check(hazardous_context.weapon.hazardous and hazardous_context.weapon.hazardous_damage == 3, "hazardous weapon context is explicit")
+	var hazardous_rng := RandomNumberGenerator.new()
+	hazardous_rng.seed = 9
+	var hazardous_attack := Combat.resolve_ranged_attack({"attacks": 1, "hit_on": 4, "strength": 4, "damage": 1, "hazardous": true}, {"toughness": 4, "save_on": 7}, hazardous_rng, 1)
+	check(hazardous_attack.hazardous_failures == 1 and hazardous_attack.hits == 1, "hazardous checks unmodified hit after reroll")
 	var blast_context := WeaponRules.context({"range_inches": 24.0, "attacks": 3, "hit_on": 4, "abilities": ["爆炸"]}, 10.0, 0, 10)
 	check(blast_context.weapon.attacks == 5, "blast adds attacks for large units")
 	var devastating_context := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["毁灭伤害"]}, 10.0)

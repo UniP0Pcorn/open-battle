@@ -69,7 +69,8 @@ static func resolve_ranged_attack(weapon: Dictionary, target: Dictionary, rng: R
 	var lethal_hits := bool(weapon.get("lethal_hits", false))
 	var sustained_bonus := maxi(0, int(weapon.get("sustained_hits", 0)))
 	for _i in range(attacks):
-		var hit_roll := rng.randi_range(1, 6)
+		var unmodified_hit_roll := rng.randi_range(1, 6)
+		var hit_roll := unmodified_hit_roll
 		if hit_roll < hit_on and rerolls_left > 0:
 			rerolls_left -= 1
 			hit_roll = rng.randi_range(1, 6)
@@ -102,6 +103,6 @@ static func resolve_ranged_attack(weapon: Dictionary, target: Dictionary, rng: R
 						if damage_roll.valid:
 							damage_total += int(damage_roll.total)
 							damage_rolls.append(damage_roll)
-		if bool(weapon.get("hazardous", false)) and hit_roll == 1:
+		if bool(weapon.get("hazardous", false)) and unmodified_hit_roll == 1:
 			hazardous_failures += 1
 	return {"attacks": attacks, "attack_roll": attacks_roll, "hits": hits, "wounds": wounds, "failed_saves": failed_saves, "damage": damage_total, "damage_rolls": damage_rolls, "hazardous_failures": hazardous_failures, "devastating_wounds": devastating_wounds, "sustained_hits": sustained_hits, "wound_on": wounds_needed, "save_on": save_needed}
