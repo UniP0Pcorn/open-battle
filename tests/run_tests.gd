@@ -165,7 +165,7 @@ func run() -> void:
 	var wrong_end_turn := BattleSession.submit(accepted_move.state, 1, "END_TURN", {})
 	check(not wrong_end_turn.ok and wrong_end_turn.reason == "NOT ACTIVE TEAM", "authoritative session rejects foreign end turn")
 	var ended_session := BattleSession.submit(accepted_move.state, 0, "END_TURN", {})
-	check(ended_session.ok and ended_session.state.active_team == 1 and ended_session.state.command_points[1] == 1, "authoritative session advances turn and grants command point")
+	check(ended_session.ok and ended_session.state.active_team == 1 and ended_session.state.phase == "COMMAND" and ended_session.state.command_points[1] == 1, "authoritative session advances to command phase and grants command point")
 	var scored_session := BattleSession.create([{"model_id": "score_m001", "position": Vector2(10, 10), "unit_id": "score_unit", "team": 0, "objective_control": 3}], 11, 0, [], [{"position": Vector2(10, 10), "points": 2}], 3.0, 2)
 	var scored_turn := BattleSession.submit(scored_session, 0, "END_TURN", {})
 	check(scored_turn.ok and scored_turn.state.score[0] == 2 and scored_turn.state.winner == 0 and scored_turn.state.objectives.size() == 1 and scored_turn.state.score_to_win == 2, "authoritative session scores mission objectives and records the winner")
@@ -866,6 +866,8 @@ func run() -> void:
 	scene.end_turn()
 	check(scene.active_team == 1, "turn passes to the other side")
 	check(scene.pick(Vector2(6, 6)) == 0 and scene.models[0].team != scene.active_team, "opponent base is distinguishable")
+	scene.new_phase()
+	check(scene.phase == "MOVEMENT", "command phase advances into movement")
 	scene.models[10].position = Vector2(8, 6)
 	scene.models[1].position = Vector2(12, 6)
 	scene.selected = 10
@@ -884,11 +886,13 @@ func run() -> void:
 	scene.fight_selected()
 	check(scene.command_log[-1].kind == "FIGHT", "fight action records melee attack")
 	scene.end_turn()
-	check(scene.phase == "MOVEMENT", "ending turn starts movement phase")
+	check(scene.phase == "COMMAND", "ending turn starts command phase")
+	scene.new_phase()
 	scene.models[1].position = Vector2(30, 22)
 	scene.end_turn()
 	check(scene.score[0] == 2, "objective scores for a controlling team")
 	scene.score_to_win = 2
+	scene.new_phase()
 	scene.end_turn()
 	check(scene.message.contains("金方") and scene.message.contains("任务完成"), "victory message names the scoring team")
 	scene.dragging = true
@@ -1025,8 +1029,9 @@ func run() -> void:
 	check(not scene.models[0].advanced and scene.models[0].advance_bonus == 0, "new movement phase clears advance state")
 	scene.reset_table()
 	scene.end_turn()
+	scene.new_phase()
 	var scene_ai_turn: Dictionary = scene.run_single_player_ai()
-	check(scene_ai_turn.ok and scene.active_team == 0 and scene.phase == "MOVEMENT" and scene.command_log.size() > 5, "scene runs AI through authoritative single-player turn")
+	check(scene_ai_turn.ok and scene.active_team == 0 and scene.phase == "COMMAND" and scene.command_log.size() > 5, "scene runs AI through authoritative single-player turn")
 	var ai_reserve_models: Array = [{"model_id": "ai_reserve_m001", "unit_id": "ai_reserve", "team": 1, "position": Vector2(3, 40), "radius": 0.5, "ability_ids": ["deep_strike"], "reserve_status": "reserve", "wounds": 3}, {"model_id": "ai_enemy_m001", "unit_id": "ai_enemy", "team": 0, "position": Vector2(30, 22), "radius": 0.5, "wounds": 3}]
 	var ai_reserve_state := Replay.initial_state(ai_reserve_models, "MOVEMENT", 1)
 	var ai_reserve_turn := AIPlayer.play_turn(BattleSession.create(ai_reserve_models, 11, 1), 1, 77)

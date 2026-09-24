@@ -171,8 +171,8 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 				next.score = score
 				next.winner = MissionRules.winner(score, int(next.get("score_to_win", 5)))
 			next.active_team = 1 - int(next.active_team)
-			next.phase = "MOVEMENT"
-			next.phase_index = TurnState.phase_index("MOVEMENT")
+			next.phase = "COMMAND"
+			next.phase_index = TurnState.phase_index("COMMAND")
 			next.round = int(next.round) + (1 if next.active_team == 0 else 0)
 			var points: Array = next.get("command_points", [0, 0]).duplicate(true)
 			points[next.active_team] = mini(10, int(points[next.active_team]) + 1)

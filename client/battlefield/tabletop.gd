@@ -408,6 +408,18 @@ func new_phase() -> void:
 			message = "联机对局请按阶段按钮推进，不能手动重置移动额度。"
 			queue_redraw()
 		return
+	if phase == "COMMAND":
+		dragging = false
+		falling_back = false
+		placing = false
+		var previous_phase := phase
+		phase = "MOVEMENT"
+		turn_state.phase = phase
+		turn_state.phase_index = TurnState.phase_index(phase)
+		command_log = CommandLog.append(command_log, active_team, "PHASE_ADVANCE", {"from": previous_phase, "to": phase})
+		message = "已进入移动阶段。"
+		queue_redraw()
+		return
 	dragging = false
 	falling_back = false
 	for model in models:
@@ -695,16 +707,16 @@ func end_turn() -> void:
 			model.fought = false
 	command_points = CommandPoints.gain(command_points, active_team)
 	counter_offensive_next = false
-	phase = "MOVEMENT"
+	phase = "COMMAND"
 	if active_team == 0:
 		turn_state.round = int(turn_state.get("round", 1)) + 1
 	turn_state.active_team = active_team
-	turn_state.phase = "MOVEMENT"
-	turn_state.phase_index = TurnState.phase_index("MOVEMENT")
+	turn_state.phase = "COMMAND"
+	turn_state.phase_index = TurnState.phase_index("COMMAND")
 	turn_state.command_points = command_points.duplicate(true)
 	command_log = CommandLog.append(command_log, 1 - active_team, "END_TURN", {"score_gained": gained})
 	var shock_summary := resolve_battle_shock(active_team)
-	message = "得分 +%d。现在轮到%s方。%s" % [gained, "金" if active_team == 0 else "蓝", shock_summary]
+	message = "得分 +%d。现在轮到%s方的指挥阶段。%s" % [gained, "金" if active_team == 0 else "蓝", shock_summary]
 	var winning_team := MissionRules.winner(score, score_to_win)
 	if winning_team >= 0:
 		message = "%s方达到 %d 分，任务完成！" % ["金" if winning_team == 0 else "蓝", score_to_win]
@@ -746,7 +758,7 @@ func run_single_player_ai() -> Dictionary:
 	var shock_summary := resolve_battle_shock(active_team)
 	selected = -1
 	history.clear()
-	message = "蓝方 AI 已完成回合，得分 +%d，命令 %d 条。现在轮到金方。%s" % [ai_score, ai_result.commands.size(), shock_summary]
+	message = "蓝方 AI 已完成回合，得分 +%d，命令 %d 条。现在轮到金方的指挥阶段。%s" % [ai_score, ai_result.commands.size(), shock_summary]
 	var winning_team := MissionRules.winner(score, score_to_win)
 	if winning_team >= 0:
 		message = "%s方达到 %d 分，任务完成！" % ["金" if winning_team == 0 else "蓝", score_to_win]
