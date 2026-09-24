@@ -16,4 +16,5 @@
 `rules/peer_protocol.gd` 固定 P2P 命令、快照、重连和认证包的版本、序列与快照哈希；`client/p2p_transport.gd` 提供 ENet 对等传输入口，`rules/account_identity.gd` 提供离线账户挑战证明。传输层只负责收发和完整性校验，战斗判定仍由 `BattleSession`/`Replay` 完成。
 `rules/network_sync.gd` 是主机/客户端共用的同步适配器：主机先核对房间、对端、快照哈希和命令序列，再调用 `Room.submit`；客户端只接受通过内容哈希校验的权威快照。
 `rules/faction_rules.gd` 统一读取 profile 的 `abilities`、`faction_abilities` 和 `faction_stratagems`，`ArmyBuilder` 会把它们带入模型；阵营导入只需补数据声明，能力和策略的校验/执行器保持共用。
+`rules/account_store.gd` 将经过校验的身份记录写入 Godot `user://`，只保存派生 credential hash，不保存密码明文；大厅启动后可直接加载该身份参与挑战认证。
 部署阶段使用 `rules/deployment.gd`，将底座几何检查与阵营部署区分开：部署时限制在任务给出的纵深内，进入移动阶段后仍可在整张桌面移动。

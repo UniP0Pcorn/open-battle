@@ -9,6 +9,7 @@ const BattleSession = preload("res://rules/battle_session.gd")
 const Room = preload("res://rules/room.gd")
 const PeerProtocol = preload("res://rules/peer_protocol.gd")
 const AccountIdentity = preload("res://rules/account_identity.gd")
+const AccountStore = preload("res://rules/account_store.gd")
 const P2PTransport = preload("res://client/p2p_transport.gd")
 const P2PLobby = preload("res://client/p2p_lobby.gd")
 const NetworkSync = preload("res://rules/network_sync.gd")
@@ -197,6 +198,10 @@ func run() -> void:
 	check(not AccountIdentity.verify(identity, challenge, "nonce-002") and AccountIdentity.session_token(identity, "").is_empty(), "account proof rejects a changed nonce")
 	var auth_packet := PeerProtocol.auth("player_gold", peer_session_id, challenge)
 	check(PeerProtocol.validate(auth_packet).is_empty() and P2PTransport != null and P2PLobby != null, "P2P transport accepts authenticated envelopes")
+	var identity_path := "user://open_battle_identity_test.json"
+	AccountStore.remove_identity(identity_path)
+	check(AccountStore.save_identity(identity, identity_path).is_empty() and AccountStore.load_identity(identity_path).fingerprint == identity.fingerprint, "account identity persists without plaintext password")
+	AccountStore.remove_identity(identity_path)
 	var abandoned_room := Room.leave(room, "player_gold")
 	check(abandoned_room.ok and abandoned_room.room.status == Room.ABANDONED, "room marks active player leave")
 	var ai_models: Array = [
