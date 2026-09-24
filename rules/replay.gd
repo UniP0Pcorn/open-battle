@@ -3,6 +3,7 @@ extends RefCounted
 ## Deterministic command-log replay for local verification and future servers.
 
 const CommandSchema = preload("res://rules/command_schema.gd")
+const Stratagems = preload("res://rules/stratagems.gd")
 const TurnState = preload("res://rules/turn_state.gd")
 
 static func initial_state(models: Array, phase: String = "MOVEMENT", active_team: int = 0) -> Dictionary:
@@ -118,7 +119,14 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			else:
 				next.models[attacker_index] = hazardous_result
 		"STRATAGEM":
-			pass
+			var stratagem_id := str(payload.get("id", ""))
+			var stratagem: Dictionary = Stratagems.command_reroll() if stratagem_id == "command_reroll" else {}
+			if stratagem.is_empty():
+				return {"ok": false, "reason": "UNKNOWN STRATAGEM", "state": state}
+			var stratagem_result := Stratagems.use(stratagem, str(next.phase), int(entry.team), next.get("command_points", [0, 0]))
+			if not bool(stratagem_result.get("ok", false)):
+				return {"ok": false, "reason": str(stratagem_result.get("reason", "STRATAGEM REJECTED")), "state": state}
+			next.command_points = stratagem_result.points
 		_:
 			return {"ok": false, "reason": "UNKNOWN COMMAND", "state": state}
 	next.events.append(kind)

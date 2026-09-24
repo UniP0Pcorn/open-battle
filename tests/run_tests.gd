@@ -244,6 +244,13 @@ func run() -> void:
 	one_shot_fight_log = CommandLog.append(one_shot_fight_log, 0, "FIGHT", {"attacker": 0, "attacker_id": "shot_m001", "target": 1, "target_id": "shot_target_m001", "weapon": "Single-use melee", "one_shot": true, "damage": 1})
 	var one_shot_fight_replay := Replay.replay(Replay.initial_state(one_shot_models, "FIGHT", 0), one_shot_fight_log)
 	check(not one_shot_fight_replay.ok and one_shot_fight_replay.reason == "ONE SHOT ALREADY USED", "replay rejects repeated one-shot melee weapon")
+	var stratagem_state := Replay.initial_state(one_shot_models, "SHOOTING", 0)
+	stratagem_state.command_points = [1, 0]
+	var stratagem_log: Array = []
+	stratagem_log = CommandLog.append(stratagem_log, 0, "STRATAGEM", {"id": "command_reroll", "phase": "SHOOTING"})
+	stratagem_log = CommandLog.append(stratagem_log, 0, "STRATAGEM", {"id": "command_reroll", "phase": "SHOOTING"})
+	var stratagem_replay := Replay.replay(stratagem_state, stratagem_log)
+	check(not stratagem_replay.ok and stratagem_replay.reason == "NOT ENOUGH COMMAND POINTS", "replay enforces stratagem command points")
 	var phase_replay_log: Array = []
 	phase_replay_log = CommandLog.append(phase_replay_log, 0, "PHASE_ADVANCE", {"from": "MOVEMENT", "to": "SHOOTING"})
 	phase_replay_log = CommandLog.append(phase_replay_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "attacker_m001", "target": 1, "target_id": "target_m001", "damage": 1})
