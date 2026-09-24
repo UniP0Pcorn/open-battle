@@ -161,7 +161,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 				next.models[attacker_index] = hazardous_result
 		"STRATAGEM":
 			var stratagem_id := str(payload.get("id", ""))
-			var stratagem: Dictionary = Stratagems.definition(stratagem_id)
+			var stratagem: Dictionary = _stratagem_for(next, int(entry.team), stratagem_id)
 			if stratagem.is_empty():
 				return {"ok": false, "reason": "UNKNOWN STRATAGEM", "state": state}
 			var stratagem_result := Stratagems.use(stratagem, str(next.phase), int(entry.team), next.get("command_points", [0, 0]))
@@ -406,6 +406,18 @@ static func _has_active_effect(effects: Array, effect: String, team: int, unit_i
 		if payload is Dictionary and str(payload.get("unit_id", "")) == unit_id:
 			return true
 	return false
+
+static func _stratagem_for(state: Dictionary, team: int, stratagem_id: String) -> Dictionary:
+	var builtin := Stratagems.definition(stratagem_id)
+	if not builtin.is_empty():
+		return builtin
+	for model in state.get("models", []):
+		if int(model.get("team", -1)) != team:
+			continue
+		for declared in model.get("faction_stratagems", []):
+			if declared is Dictionary and str(declared.get("id", "")) == stratagem_id:
+				return declared.duplicate(true)
+	return {}
 
 static func _charge_reference_error(models: Array, charger_index: int, target_index: int, payload: Dictionary, terrain: Array) -> String:
 	var charger: Dictionary = models[charger_index]

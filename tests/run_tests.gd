@@ -470,6 +470,14 @@ func run() -> void:
 	bravery_log = CommandLog.append(bravery_log, 0, "BATTLE_SHOCK", {"unit_id": "shot", "passed": true})
 	var bravery_replay := Replay.replay(bravery_state, bravery_log)
 	check(bravery_replay.ok and not bool(bravery_replay.state.models[0].get("battle_shocked", false)), "replay applies automatic battle shock pass stratagem")
+	var faction_stratagem_models: Array = one_shot_models.duplicate(true)
+	faction_stratagem_models[0].faction_stratagems = [{"id": "faction_cover", "cost": 1, "phase": "SHOOTING", "effect": "TEMPORARY_COVER", "timing": "SHOOTING"}]
+	var faction_stratagem_state := Replay.initial_state(faction_stratagem_models, "SHOOTING", 0)
+	faction_stratagem_state.command_points = [1, 0]
+	var faction_stratagem_log: Array = []
+	faction_stratagem_log = CommandLog.append(faction_stratagem_log, 0, "STRATAGEM", {"id": "faction_cover", "phase": "SHOOTING", "unit_id": "shot"})
+	var faction_stratagem_replay := Replay.replay(faction_stratagem_state, faction_stratagem_log)
+	check(faction_stratagem_replay.ok and int(faction_stratagem_replay.state.models[0].get("temporary_cover_bonus", 0)) == 1, "replay resolves faction-declared stratagem")
 	var phase_replay_log: Array = []
 	phase_replay_log = CommandLog.append(phase_replay_log, 0, "PHASE_ADVANCE", {"from": "MOVEMENT", "to": "SHOOTING"})
 	phase_replay_log = CommandLog.append(phase_replay_log, 0, "SHOOT", {"attacker": 0, "attacker_id": "attacker_m001", "target": 1, "target_id": "target_m001", "damage": 1})
