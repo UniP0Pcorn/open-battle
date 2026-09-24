@@ -16,6 +16,8 @@ const ALIASES := {
 	"assault": "assault",
 	"手枪": "pistol",
 	"pistol": "pistol",
+	"曲射": "indirect",
+	"indirect": "indirect",
 	"危险": "hazardous",
 	"hazardous": "hazardous",
 	"毁灭伤害": "devastating_wounds",
@@ -69,7 +71,7 @@ static func ids_from_weapon(weapon: Dictionary) -> Array:
 		result.append(canonical_id(value))
 	return result
 
-static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, target_models: int = 1, target_keywords: Array = [], stationary: bool = true) -> Dictionary:
+static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, target_models: int = 1, target_keywords: Array = [], stationary: bool = true, line_of_sight: bool = true) -> Dictionary:
 	var result := weapon.duplicate(true)
 	var ids := ids_from_weapon(result)
 	var normalized_target_keywords: Array = []
@@ -91,6 +93,11 @@ static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, t
 		result.hit_on = maxi(1, int(result.get("hit_on", 4)) - 1)
 	if ids.has("ignores_cover"):
 		cover_bonus = 0
+	if ids.has("indirect") and not line_of_sight:
+		result.indirect = true
+		result.hit_on = int(result.get("hit_on", 4)) + 1
+		if not ids.has("ignores_cover"):
+			cover_bonus = maxi(cover_bonus, 1)
 	if distance <= float(result.get("range_inches", 0.0)) / 2.0:
 		var rapid_bonus := -1
 		for keyword in ids:

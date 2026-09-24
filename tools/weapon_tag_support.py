@@ -22,6 +22,8 @@ ALIASES = {
     "assault": "assault",
     "手枪": "pistol",
     "pistol": "pistol",
+    "曲射": "indirect",
+    "indirect": "indirect",
     "重型": "heavy",
     "heavy": "heavy",
     "爆炸": "blast",
@@ -50,7 +52,7 @@ def canonical_tag(value: object) -> str:
 def is_supported(value: object) -> bool:
     tag = canonical_tag(value)
     return (
-        tag in {"torrent", "ignores_cover", "assault", "pistol", "hazardous", "devastating_wounds", "lethal_hits", "twin_linked", "heavy", "blast"}
+        tag in {"torrent", "ignores_cover", "assault", "pistol", "indirect", "hazardous", "devastating_wounds", "lethal_hits", "twin_linked", "heavy", "blast"}
         or re.fullmatch(r"rapid_fire_\d+", tag) is not None
         or re.fullmatch(r"melta_\d+", tag) is not None
         or re.fullmatch(r"anti_[^_]+_\d", tag) is not None

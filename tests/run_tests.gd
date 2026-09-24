@@ -205,6 +205,8 @@ func run() -> void:
 	var heavy_stationary := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["重型"]}, 10.0, 0, 1, [], true)
 	var heavy_moved := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["重型"]}, 10.0, 0, 1, [], false)
 	check(heavy_stationary.weapon.hit_on == 3 and heavy_moved.weapon.hit_on == 4, "heavy improves stationary hit and loses the bonus after movement")
+	var indirect_context := WeaponRules.context({"range_inches": 60.0, "attacks": 1, "hit_on": 4, "abilities": ["曲射"]}, 30.0, 0, 1, [], true, false)
+	check(indirect_context.weapon.indirect and indirect_context.weapon.hit_on == 5 and indirect_context.cover_bonus == 1, "indirect fire allows blocked targets with hit and cover modifiers")
 	var replay_models: Array = [{"unit_id": "u", "team": 0, "position": Vector2(1, 1)}]
 	var replay_log: Array = []
 	replay_log = CommandLog.append(replay_log, 0, "MOVE", {"unit_id": "u", "delta": [2, 0]})

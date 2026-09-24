@@ -675,15 +675,18 @@ func fire_selected() -> void:
 	var attacker_engaged := model_is_engaged_with_enemy(attacker)
 	var target_index := -1
 	var nearest := INF
+	var target_has_line_of_sight := true
 	for i in range(models.size()):
 		if models[i].team != active_team:
 			var distance: float = attacker.position.distance_to(models[i].position)
-			if Visibility.blocked(attacker.position, models[i].position, terrain):
+			var has_line_of_sight := not Visibility.blocked(attacker.position, models[i].position, terrain)
+			if not has_line_of_sight and not WeaponRules.ids_from_weapon(weapon).has("indirect"):
 				continue
 			var target_engaged := model_is_engaged_with_enemy(models[i])
 			if Combat.target_reason(attacker, models[i], distance, weapon, active_team, attacker_engaged, target_engaged).is_empty() and distance < nearest:
 				nearest = distance
 				target_index = i
+				target_has_line_of_sight = has_line_of_sight
 	if target_index < 0:
 		message = "射程 %.1f 英寸内没有目标。" % float(weapon.range_inches)
 		queue_redraw()
@@ -696,7 +699,7 @@ func fire_selected() -> void:
 	for model in models:
 		if str(model.get("unit_id", "")) == target_unit_id:
 			target_models += 1
-	var weapon_context := WeaponRules.context(weapon, nearest, cover_bonus, target_models, target_for_attack.get("keywords", []), is_zero_approx(float(attacker.get("spent", 0.0))))
+	var weapon_context := WeaponRules.context(weapon, nearest, cover_bonus, target_models, target_for_attack.get("keywords", []), is_zero_approx(float(attacker.get("spent", 0.0))), target_has_line_of_sight)
 	target_for_attack.cover_save_bonus = int(weapon_context.cover_bonus)
 	var attacker_abilities := UnitAbilities.modifiers(attacker.get("ability_ids", []))
 	var result := Combat.resolve_ranged_attack(weapon_context.weapon, target_for_attack, combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls))
