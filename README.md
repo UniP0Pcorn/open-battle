@@ -49,6 +49,7 @@ godot --headless --path . --script tests/run_tests.gd
 | L / 加载 | 读取本机最近一次存档 |
 | K / 导出军表 | 将当前编成写入 `user://open_battle_roster.json` |
 | O / 导入军表 | 读取并校验本机军表文件，失败时保留当前编成 |
+| J / 单机 AI 回合 | 金方结束回合后，蓝方 AI 通过权威会话完成一整回合 |
 
 桌面横向 60 英寸、纵向 44 英寸。每格 1 英寸，底座直径 40mm，即约 1.5748 英寸。窗口缩放只改变显示，不改变规则单位。权威会话快照会通过 `rules/model_state.gd` 检查稳定模型 ID、单位归属、阵营和坐标，网络传输可复用同一入口。
 
@@ -56,7 +57,7 @@ godot --headless --path . --script tests/run_tests.gd
 
 射击阶段使用 `data/units/custodian_guard.json` 中的可配置测试武器，先由规则层验证攻击者属于当前阵营、目标属于敌方且处于射程内，再按攻击次数、命中值、力量、目标韧性、豁免、掩体和伤害计算结果。被减至 0 伤口的底座会从桌面移除；模型有 `feel_no_pain` 时，回放命令必须携带逐点 D6 结果，规则层会重新校验并应用忽略伤害。指挥点和策略资源由 `rules/command_points.gd` 校验；`rules/stratagems.gd` 提供可注册的策略定义、阶段/资源校验和回放效果记录，能力定义支持常驻修正与事件修正。回合交接时桌面会按记录的单位初始规模触发战斗震慑检定，结果写入命令日志和存档，震慑单位不能控制目标。所有这些数值均为原型配置，不代表任何已核验的官方规则版本。
 
-桌面中央有一个 3 英寸控制半径的目标点。回合结束时，任务规则会计算每个目标的控制权和数据中的分值；达到任务目标分数后显示完成，并保留实际得分阵营。任务从 `data/missions/control_center.json` 加载，还可以声明矩形地形；底座不能穿过地形，地形会阻挡射击视线，并可通过 `cover_bonus` 修改目标豁免值；任务控制判定同时识别 `can_control=false` 和战斗震慑状态。军队示例和通用编成校验位于 `data/armies/` 与 `rules/army_validation.gd`；`rules/army_builder.gd` 会把版本化兵牌 profile 展开成可上桌的多模型单位，并拒绝版本不匹配的编成，棋盘初始化已通过该构建器读取原型 roster。保存文件写入 Godot 的 `user://` 目录，不进入仓库；加载前会验证 JSON 结构和命令日志序列，损坏或篡改的存档会被拒绝并保留当前对局。
+桌面中央有一个 3 英寸控制半径的目标点。回合结束时，任务规则会计算每个目标的控制权和数据中的分值；达到任务目标分数后显示完成，并保留实际得分阵营。任务从 `data/missions/control_center.json` 加载，还可以声明矩形地形；底座不能穿过地形，地形会阻挡射击视线，并可通过 `cover_bonus` 修改目标豁免值；任务控制判定同时识别 `can_control=false` 和战斗震慑状态。单机 AI 通过 `client/battlefield/tabletop.gd` 的 `run_single_player_ai()` 调用 `rules/ai_player.gd`，不会绕过权威命令校验。军队示例和通用编成校验位于 `data/armies/` 与 `rules/army_validation.gd`；`rules/army_builder.gd` 会把版本化兵牌 profile 展开成可上桌的多模型单位，并拒绝版本不匹配的编成，棋盘初始化已通过该构建器读取原型 roster。保存文件写入 Godot 的 `user://` 目录，不进入仓库；加载前会验证 JSON 结构和命令日志序列，损坏或篡改的存档会被拒绝并保留当前对局。
 
 ## 测试单位与数据
 

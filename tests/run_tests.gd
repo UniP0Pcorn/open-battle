@@ -816,6 +816,10 @@ func run() -> void:
 	check(scene.command_log[-1].kind == "ADVANCE", "scene records advance command")
 	scene.new_phase()
 	check(not scene.models[0].advanced and scene.models[0].advance_bonus == 0, "new movement phase clears advance state")
+	scene.reset_table()
+	scene.end_turn()
+	var scene_ai_turn: Dictionary = scene.run_single_player_ai()
+	check(scene_ai_turn.ok and scene.active_team == 0 and scene.phase == "MOVEMENT" and scene.command_log.size() > 5, "scene runs AI through authoritative single-player turn")
 	scene.save_state()
 	scene.queue_free()
 	await process_frame

@@ -24,6 +24,8 @@ const TurnState = preload("res://rules/turn_state.gd")
 const Deployment = preload("res://rules/deployment.gd")
 const MissionValidation = preload("res://rules/mission_validation.gd")
 const Dice = preload("res://rules/dice.gd")
+const BattleSession = preload("res://rules/battle_session.gd")
+const AIPlayer = preload("res://rules/ai_player.gd")
 const SCALE := 15.0
 const OFFSET := Vector2(38, 112)
 const GOLD := Color("e5ba6b")
@@ -104,6 +106,7 @@ func _ready() -> void:
 	add_button("新移动阶段  [N]", Vector2(976, 525), new_phase)
 	add_button("重置棋盘  [R]", Vector2(976, 565), reset_table)
 	add_button("结束回合  [T]", Vector2(976, 605), end_turn)
+	add_button("单机 AI 回合  [J]", Vector2(976, 325), run_single_player_ai)
 	add_button("撤销移动  [U]", Vector2(976, 645), undo_last)
 	add_button("进入射击阶段  [SPACE]", Vector2(976, 685), enter_shooting)
 	add_button("射击最近目标  [F]", Vector2(976, 725), fire_selected)
@@ -419,6 +422,39 @@ func end_turn() -> void:
 	if winning_team >= 0:
 		message = "%s方达到 %d 分，任务完成！" % ["金" if winning_team == 0 else "蓝", score_to_win]
 	queue_redraw()
+
+func run_single_player_ai() -> Dictionary:
+	if active_team != 1:
+		message = "单机模式中，先结束金方回合再让蓝方 AI 行动。"
+		queue_redraw()
+		return {"ok": false, "reason": "NOT AI TEAM", "state": {}}
+	var state := BattleSession.create(models, 11, active_team, terrain)
+	if state.is_empty():
+		message = "无法创建单机权威会话。"
+		queue_redraw()
+		return {"ok": false, "reason": "SESSION CREATE FAILED", "state": {}}
+	state.round = int(turn_state.get("round", 1))
+	state.command_points = command_points.duplicate(true)
+	state.command_log = command_log.duplicate(true)
+	state.phase = "COMMAND"
+	state.phase_index = TurnState.phase_index("COMMAND")
+	var ai_result := AIPlayer.play_turn(state, 1, 402000 + int(state.round), 64)
+	if not bool(ai_result.get("ok", false)):
+		message = "蓝方 AI 回合失败：" + str(ai_result.get("reason", "UNKNOWN"))
+		queue_redraw()
+		return ai_result
+	var next: Dictionary = ai_result.state
+	models = next.models.duplicate(true)
+	command_log = next.command_log.duplicate(true)
+	active_team = int(next.active_team)
+	phase = str(next.phase)
+	command_points = next.command_points.duplicate(true)
+	turn_state = {"round": int(next.round), "active_team": active_team, "phase": phase, "phase_index": int(next.phase_index), "command_points": command_points.duplicate(true)}
+	selected = -1
+	history.clear()
+	message = "蓝方 AI 已完成回合，命令 %d 条。现在轮到金方。" % ai_result.commands.size()
+	queue_redraw()
+	return ai_result
 
 func resolve_battle_shock(team_id: int) -> String:
 	var grouped: Dictionary = {}
@@ -925,6 +961,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				reset_table()
 			KEY_T:
 				end_turn()
+			KEY_J:
+				run_single_player_ai()
 			KEY_U:
 				undo_last()
 			KEY_SPACE:

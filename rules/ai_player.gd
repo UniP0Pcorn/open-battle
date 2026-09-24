@@ -82,11 +82,14 @@ static func play_turn(state: Dictionary, team: int, seed: int = 1, max_commands:
 					next = fight_result.state
 					commands.append(fight_result.entry)
 					continue
-			var fight_advance := _advance_phase(next, team)
-			if not fight_advance.ok:
-				return {"ok": false, "reason": fight_advance.reason, "state": next, "commands": commands}
-			next = fight_advance.state
-			commands.append(fight_advance.entry)
+			# A player ends the turn after the Fight phase.  Advancing through
+			# COMMAND would hand control over with the wrong phase and would
+			# bypass the command-point/cleanup path shared by the tabletop UI.
+			var end_result := _submit(next, team, "END_TURN", {})
+			if not end_result.ok:
+				return {"ok": false, "reason": end_result.reason, "state": next, "commands": commands}
+			next = end_result.state
+			commands.append(end_result.entry)
 			continue
 		if phase == "COMMAND":
 			continue
