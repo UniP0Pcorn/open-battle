@@ -153,6 +153,7 @@ func _on_packet_received(peer_id: int, packet: Dictionary) -> void:
 			if is_host:
 				var result := Room.reconnect(room, str(packet.peer_id), str(packet.get("reconnect_token", "")), int(packet.sequence))
 				if bool(result.get("ok", false)):
+					room = result.room
 					transport.send(result.snapshot, peer_id)
 
 func _handle_lobby(peer_id: int, packet: Dictionary) -> void:
@@ -193,12 +194,26 @@ func _handle_auth(peer_id: int, packet: Dictionary) -> void:
 	authenticated_peers[peer_id] = str(trusted.account_id)
 	transport.send(PeerProtocol.lobby(str(room.id), player_id, _session_id(), "AUTH_OK"), peer_id)
 
-func _on_peer_state_changed(_peer_id: int, connected: bool) -> void:
+func _on_peer_state_changed(peer_id: int, connected: bool) -> void:
+	if not connected:
+		if is_host:
+			var disconnected_id := str(authenticated_peers.get(peer_id, ""))
+			if not disconnected_id.is_empty():
+				var dropped := Room.drop_connection(room, disconnected_id)
+				if bool(dropped.get("ok", false)):
+					room = dropped.room
+					lobby_changed.emit(Room.public_snapshot(room))
+		else:
+			status_message("连接已断开，可使用重连入口恢复。")
+		return
 	if connected and not is_host and pending_join:
 		pending_join = false
 		var response := AccountIdentity.challenge(identity, _session_id())
 		response["public_record"] = AccountIdentity.public_record(identity)
 		transport.send(PeerProtocol.auth(player_id, _session_id(), response), 1)
+
+func status_message(value: String) -> void:
+	error_occurred.emit(value)
 
 func _on_transport_error(reason: String) -> void:
 	error_occurred.emit(reason)
