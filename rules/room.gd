@@ -4,6 +4,7 @@ extends RefCounted
 
 const BattleSession = preload("res://rules/battle_session.gd")
 const RulesetCatalog = preload("res://rules/ruleset_catalog.gd")
+const PeerProtocol = preload("res://rules/peer_protocol.gd")
 
 const SCHEMA_VERSION := 1
 const MAX_PLAYERS := 2
@@ -46,8 +47,9 @@ static func join(room: Dictionary, player_id: String, preferred_team: int = -1) 
 	var team := _available_team(next.players, preferred_team)
 	if team < 0:
 		return _failure("TEAM UNAVAILABLE", room)
-	next.players.append({"id": player_id, "team": team, "ready": false})
-	return {"ok": true, "reason": "", "room": next, "team": team}
+	var reconnect_token := _reconnect_token(next.id, player_id)
+	next.players.append({"id": player_id, "team": team, "ready": false, "connected": true, "last_sequence": -1, "reconnect_token": reconnect_token})
+	return {"ok": true, "reason": "", "room": next, "team": team, "reconnect_token": reconnect_token}
 
 static func set_ready(room: Dictionary, player_id: String, ready: bool = true) -> Dictionary:
 	var error := validate(room)
@@ -95,7 +97,42 @@ static func submit(room: Dictionary, player_id: String, kind: String, payload: D
 		return {"ok": false, "reason": str(result.get("reason", "COMMAND REJECTED")), "room": room, "state": result.get("state", room.session)}
 	var next := room.duplicate(true)
 	next.session = result.state
+	for joined in next.players:
+		if str(joined.get("id", "")) == player_id:
+			joined.connected = true
+			joined.last_sequence = int(result.entry.get("sequence", -1))
 	return {"ok": true, "reason": "", "room": next, "entry": result.entry, "state": result.state}
+
+static func drop_connection(room: Dictionary, player_id: String) -> Dictionary:
+	var error := validate(room)
+	if not error.is_empty():
+		return _failure(error, room)
+	if room.status != ACTIVE:
+		return _failure("ROOM NOT ACTIVE", room)
+	var next := room.duplicate(true)
+	for player in next.players:
+		if str(player.get("id", "")) == player_id:
+			player.connected = false
+			return {"ok": true, "reason": "", "room": next}
+	return _failure("PLAYER NOT FOUND", room)
+
+static func reconnect(room: Dictionary, player_id: String, reconnect_token: String, last_sequence: int = -1) -> Dictionary:
+	var error := validate(room)
+	if not error.is_empty():
+		return _failure(error, room)
+	if room.status != ACTIVE:
+		return _failure("ROOM NOT ACTIVE", room)
+	var next := room.duplicate(true)
+	for player in next.players:
+		if str(player.get("id", "")) == player_id:
+			if str(player.get("reconnect_token", "")) != reconnect_token:
+				return _failure("INVALID RECONNECT TOKEN", room)
+			player.connected = true
+			player.last_sequence = maxi(last_sequence, int(player.get("last_sequence", -1)))
+			var sequence := maxi(0, int(next.session.get("command_log", []).size()) - 1)
+			var session_id := PeerProtocol.hash_snapshot({"room_id": str(next.id), "edition": int(next.edition), "mission": str(next.mission_id)})
+			return {"ok": true, "reason": "", "room": next, "state": next.session, "snapshot": PeerProtocol.snapshot(str(next.id), player_id, session_id, sequence, next.session, reconnect_token)}
+	return _failure("PLAYER NOT FOUND", room)
 
 static func leave(room: Dictionary, player_id: String) -> Dictionary:
 	var error := validate(room)
@@ -142,12 +179,17 @@ static func validate(room: Dictionary) -> String:
 
 static func public_snapshot(room: Dictionary) -> Dictionary:
 	var snapshot := room.duplicate(true)
+	for player in snapshot.get("players", []):
+		player.erase("reconnect_token")
 	if snapshot.has("session") and snapshot.session is Dictionary:
 		# Command logs are useful for replay but not needed for a lobby listing.
 		var session: Dictionary = snapshot.session.duplicate(true)
 		session.erase("command_log")
 		snapshot.session = session
 	return snapshot
+
+static func _reconnect_token(room_id: String, player_id: String) -> String:
+	return PeerProtocol.hash_snapshot({"room_id": room_id, "player_id": player_id})
 
 static func _available_team(players: Array, preferred_team: int) -> int:
 	var used := {}
