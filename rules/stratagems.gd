@@ -7,6 +7,11 @@ extends RefCounted
 ## faction book in the command parser.
 
 const CommandPoints = preload("res://rules/command_points.gd")
+const UnitAbilities = preload("res://rules/unit_abilities.gd")
+
+const SUPPORTED_EFFECTS := ["REROLL_HIT", "PASS_BATTLE_SHOCK", "FIGHT_NEXT", "REACTION_SHOOT", "TEMPORARY_COVER", "GRANT_ABILITY"]
+## Only abilities evaluated dynamically by existing action consumers are grantable.
+const GRANTABLE_ABILITIES := ["fall_back_and_shoot", "fall_back_and_charge", "advance_and_charge", "shoot_after_advance", "fights_first", "reroll_hit", "reroll_hit_ones", "reroll_wound", "reroll_wound_ones", "stealth", "lone_operator"]
 
 const DEFINITIONS := {
 	"command_reroll": {"id": "command_reroll", "cost": 1, "phase": "ANY", "effect": "REROLL_HIT", "timing": "AFTER_ROLL"},
@@ -47,6 +52,16 @@ static func validate(stratagem: Dictionary) -> String:
 		return "UNNORMALIZED STRATAGEM"
 	if int(stratagem.cost) < 0 or str(stratagem.phase).is_empty() or str(stratagem.effect).is_empty():
 		return "INVALID STRATAGEM"
+	if str(stratagem.effect) not in SUPPORTED_EFFECTS:
+		return "UNSUPPORTED EFFECT"
+	if str(stratagem.effect) == "GRANT_ABILITY":
+		if str(stratagem.get("target", "")) != "FRIENDLY_UNIT" or str(stratagem.get("duration", "")) != "BATTLE":
+			return "INVALID ABILITY TARGET OR DURATION"
+		if str(stratagem.phase) not in ["COMMAND", "MOVEMENT", "SHOOTING", "CHARGE", "FIGHT"] or str(stratagem.timing) != str(stratagem.phase):
+			return "INVALID ABILITY TIMING"
+		var ability: Variant = stratagem.get("ability", "")
+		if not (ability is String) or ability not in GRANTABLE_ABILITIES or not UnitAbilities.DEFINITIONS.has(ability):
+			return "UNKNOWN GRANTED ABILITY"
 	return ""
 
 static func use(stratagem: Dictionary, phase: String, team: int, points: Array) -> Dictionary:

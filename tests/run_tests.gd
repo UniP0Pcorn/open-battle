@@ -213,6 +213,50 @@ func run() -> void:
 	check(PeerProtocol.sequence_status(1, command_packet) == "NEXT", "peer command sequence advances without a gap")
 	var synced := NetworkSync.host_command(room, command_packet, "player_gold")
 	check(synced.ok and synced.room.session.phase == "SHOOTING", "host sync applies a verified peer command")
+	# Original fixture mechanics, not an official faction datasheet.
+	var grant := {"id": "fixture_mobility", "cost": 1, "phase": "MOVEMENT", "effect": "GRANT_ABILITY", "timing": "MOVEMENT", "target": "FRIENDLY_UNIT", "duration": "BATTLE", "ability": "fall_back_and_shoot"}
+	var grant_room: Dictionary = room.duplicate(true)
+	grant_room.session.command_points = [2, 0]
+	grant_room.session.models[0].faction_stratagems = [grant]
+	var grant_payload := {"id": "fixture_mobility", "phase": "MOVEMENT", "unit_id": "room_unit", "ability": "invulnerable_4", "effect": "CLIENT_OVERRIDE"}
+	var grant_entry := {"sequence": 2, "team": 0, "kind": "STRATAGEM", "payload": grant_payload}
+	var grant_packet := PeerProtocol.command(room.id, "player_gold", peer_session_id, 2, 1, grant_entry, PeerProtocol.hash_snapshot(grant_room.session))
+	var grant_network := NetworkSync.host_command(grant_room, grant_packet, "player_gold")
+	check(grant_network.ok and grant_network.room.session.models[0].ability_ids.has("fall_back_and_shoot"), "host executes data-defined grant instead of recording only effect")
+	check(not grant_network.room.session.models[0].ability_ids.has("invulnerable_4") and grant_network.room.session.command_points[0] == 1, "host ignores client ability override and spends authoritative cost")
+	check(UnitAbilities.modifiers(grant_network.room.session.models[0].ability_ids).fall_back_and_shoot, "granted ability activates existing rules consumer")
+	var grant_attacker: Dictionary = grant_network.room.session.models[0].duplicate(true)
+	grant_attacker.fell_back = true
+	check(Combat.target_reason(grant_attacker, {"team": 1}, 5.0, {"range_inches": 24}, 0).is_empty(), "granted fallback ability changes actual shooting eligibility")
+	var grant_replay := Replay.apply_entry(grant_room.session, grant_entry)
+	check(grant_replay.ok and grant_replay.state.models == grant_network.room.session.models, "grant replay matches host model state")
+	var grant_snapshot := NetworkSync.accept_snapshot(grant_room.session, grant_network.snapshot)
+	check(grant_snapshot.ok and grant_snapshot.state.models[0].ability_ids.has("fall_back_and_shoot"), "client snapshot retains executed grant")
+	var bad_grant_entry: Dictionary = grant_entry.duplicate(true)
+	bad_grant_entry.payload.unit_id = "missing"
+	var bad_grant := Replay.apply_entry(grant_room.session, bad_grant_entry)
+	check(not bad_grant.ok and bad_grant.state == grant_room.session, "invalid grant target is atomic and spends no points")
+	var wrong_phase_grant: Dictionary = grant_room.session.duplicate(true)
+	wrong_phase_grant.phase = "FIGHT"
+	check(not Replay.apply_entry(wrong_phase_grant, grant_entry).ok, "grant enforces declared phase")
+	var reserve_grant: Dictionary = grant_room.session.duplicate(true)
+	reserve_grant.models[0].reserve_status = "reserve"
+	check(not Replay.apply_entry(reserve_grant, grant_entry).ok, "grant rejects inactive reserve recipient")
+	var unsupported_grant: Dictionary = grant.duplicate(true)
+	unsupported_grant.effect = "NO_IMPLEMENTATION"
+	check(Stratagems.validate(unsupported_grant) == "UNSUPPORTED EFFECT", "unknown effects cannot silently consume points")
+	unsupported_grant = grant.duplicate(true)
+	unsupported_grant.timing = "AFTER_ROLL"
+	check(Stratagems.validate(unsupported_grant) == "INVALID ABILITY TIMING", "grant rejects unsupported timing window")
+	unsupported_grant = grant.duplicate(true)
+	unsupported_grant.ability = "invented_ability"
+	check(Stratagems.validate(unsupported_grant) == "UNKNOWN GRANTED ABILITY", "grant validates executable ability identifier")
+	check(UnitAbilities.modifiers(["invulnerable_4", "invulnerable_5"]).invulnerable_save == 4, "stacked defensive passives choose best save instead of adding thresholds")
+	check(UnitAbilities.modifiers(["feel_no_pain_6", "feel_no_pain_5"]).feel_no_pain == 5, "stacked damage prevention chooses best threshold")
+	var detachment_profile := {"abilities": ["stealth"], "faction_abilities": ["reroll_hit"], "detachment_abilities": ["fall_back_and_shoot"]}
+	check(FactionRules.validate(detachment_profile).is_empty() and UnitAbilities.modifiers(FactionRules.abilities(detachment_profile)).fall_back_and_shoot, "detachment abilities join shared profile execution contract")
+	detachment_profile.detachment_abilities = "bad"
+	check(FactionRules.validate(detachment_profile).has("INVALID DETACHMENT_ABILITIES"), "invalid detachment container is rejected")
 	var accepted_snapshot := NetworkSync.accept_snapshot(room.session, synced.snapshot)
 	check(accepted_snapshot.ok and accepted_snapshot.state.phase == "SHOOTING", "client sync accepts an authoritative snapshot")
 	var stale_packet := command_packet.duplicate(true)
@@ -248,7 +292,7 @@ func run() -> void:
 	lobby_probe.room = room
 	lobby_probe.player_id = "player_gold"
 	var probe_error: String = lobby_probe.submit_command("PHASE_ADVANCE", {"from": "MOVEMENT", "to": "SHOOTING"})
-	check(probe_error != "PLAYER TEAM UNKNOWN", "client lobby stamps the mapped team into command packets")
+	check(probe_error == "TRANSPORT NOT CONNECTED", "client lobby validates mapped team then rejects disconnected transport without RPC")
 	lobby_probe.queue_free()
 	var identity := AccountIdentity.create("Player@Example.com", "correct horse battery staple", "Player")
 	var challenge := AccountIdentity.challenge(identity, "nonce-001")

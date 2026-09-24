@@ -14,6 +14,9 @@ static func abilities(profile: Dictionary) -> Array:
 	var faction_abilities: Variant = profile.get("faction_abilities", [])
 	if faction_abilities is Array:
 		result.append_array(faction_abilities.duplicate(true))
+	var detachment_abilities: Variant = profile.get("detachment_abilities", [])
+	if detachment_abilities is Array:
+		result.append_array(detachment_abilities.duplicate(true))
 	return result
 
 static func stratagems(profile: Dictionary) -> Array:
@@ -32,6 +35,9 @@ static func stratagems(profile: Dictionary) -> Array:
 
 static func validate(profile: Dictionary) -> Array[String]:
 	var errors: Array[String] = []
+	for field in ["abilities", "faction_abilities", "detachment_abilities", "faction_stratagems"]:
+		if profile.has(field) and not (profile[field] is Array):
+			errors.append("INVALID " + field.to_upper())
 	errors.append_array(UnitAbilities.validate(abilities(profile)))
 	var declared: Variant = profile.get("faction_stratagems", [])
 	if declared is Array:

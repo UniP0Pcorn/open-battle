@@ -101,6 +101,8 @@ static func modifiers(ids: Array) -> Dictionary:
 		for field in values:
 			if not result.has(field):
 				result[field] = values[field]
+			elif field in ["invulnerable_save", "feel_no_pain"]:
+				result[field] = _best_threshold(int(result[field]), int(values[field]))
 			elif typeof(values[field]) == TYPE_BOOL:
 				result[field] = bool(result[field]) or bool(values[field])
 			else:
@@ -119,6 +121,8 @@ static func event_modifiers(ids: Array, event: String, context: Dictionary = {})
 			for field in event_data.get("modifiers", {}):
 				if not result.has(field):
 					result[field] = event_data.modifiers[field]
+				elif field in ["invulnerable_save", "feel_no_pain"]:
+					result[field] = _best_threshold(int(result[field]), int(event_data.modifiers[field]))
 				elif typeof(event_data.modifiers[field]) == TYPE_BOOL:
 					result[field] = bool(result[field]) or bool(event_data.modifiers[field])
 				else:
@@ -164,3 +168,8 @@ static func _conditions_match(conditions: Variant, context: Dictionary) -> bool:
 		if not context.has(field) or context[field] != conditions[field]:
 			return false
 	return true
+
+static func _best_threshold(current: int, incoming: int) -> int:
+	if incoming <= 0:
+		return current
+	return incoming if current <= 0 else mini(current, incoming)

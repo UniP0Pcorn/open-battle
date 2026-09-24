@@ -297,6 +297,26 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			if not bool(stratagem_result.get("ok", false)):
 				return {"ok": false, "reason": str(stratagem_result.get("reason", "STRATAGEM REJECTED")), "state": state}
 			var effect_id := str(stratagem_result.get("effect", ""))
+			if effect_id == "GRANT_ABILITY":
+				var grant_unit := str(payload.get("unit_id", ""))
+				var recipients: Array = []
+				if grant_unit.is_empty():
+					return {"ok": false, "reason": "UNIT REQUIRED", "state": state}
+				for model in next.models:
+					if Attachments.group_id(model) != grant_unit:
+						continue
+					if int(model.get("team", -1)) != int(entry.team):
+						return {"ok": false, "reason": "NOT ACTIVE TEAM", "state": state}
+					if not Reserves.active(model) or Transports.is_embarked(model):
+						return {"ok": false, "reason": "TARGET NOT DEPLOYED", "state": state}
+					recipients.append(model)
+				if recipients.is_empty():
+					return {"ok": false, "reason": "UNKNOWN UNIT", "state": state}
+				for model in recipients:
+					var abilities: Array = model.get("ability_ids", []).duplicate(true)
+					if not abilities.has(stratagem.ability):
+						abilities.append(stratagem.ability)
+					model.ability_ids = abilities
 			if effect_id in ["TEMPORARY_COVER", "PASS_BATTLE_SHOCK"]:
 				var effect_unit_id := str(payload.get("unit_id", ""))
 				if effect_unit_id.is_empty():
@@ -322,7 +342,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 				"timing": str(stratagem_result.get("timing", "")),
 				"round": int(next.get("round", 1)),
 				"phase": str(next.get("phase", "")),
-				"consumed": false,
+				"consumed": effect_id == "GRANT_ABILITY",
 				"payload": payload.duplicate(true)
 			})
 			next.stratagem_effects = effects
