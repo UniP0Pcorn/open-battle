@@ -264,6 +264,10 @@ func run() -> void:
 	fall_back_log = CommandLog.append(fall_back_log, 0, "FALL_BACK", {"unit_id": "fall", "delta": [-2, 0]})
 	var fall_back_replay := Replay.replay(Replay.initial_state(fall_back_models, "MOVEMENT", 0), fall_back_log)
 	check(fall_back_replay.ok and fall_back_replay.state.models[0].position == Vector2(6, 8) and fall_back_replay.state.models[0].fell_back and is_equal_approx(fall_back_replay.state.models[0].spent, 2.0), "replay applies fall back metadata")
+	var repeated_fall_back_move_log := fall_back_log.duplicate(true)
+	repeated_fall_back_move_log = CommandLog.append(repeated_fall_back_move_log, 0, "MOVE", {"unit_id": "fall", "delta": [-1, 0]})
+	var repeated_fall_back_move := Replay.replay(Replay.initial_state(fall_back_models, "MOVEMENT", 0), repeated_fall_back_move_log)
+	check(not repeated_fall_back_move.ok and repeated_fall_back_move.reason == "FELL BACK", "replay blocks movement after fall back")
 	var limited_move_models: Array = [{"model_id": "limited_m001", "unit_id": "limited", "team": 0, "position": Vector2(8, 8), "movement_inches": 2.0, "spent": 0.0}]
 	var limited_move_log: Array = []
 	limited_move_log = CommandLog.append(limited_move_log, 0, "MOVE", {"unit_id": "limited", "delta": [3, 0]})
@@ -664,6 +668,9 @@ func run() -> void:
 	scene.finish_drag()
 	var fall_back_last_kind := "" if scene.command_log.is_empty() else str(scene.command_log[-1].get("kind", ""))
 	check(scene.models[0].fell_back and fall_back_last_kind == "FALL_BACK", "scene records fall back movement")
+	scene.selected = 0
+	scene.preview = Vector2(5, 8)
+	check(scene.preview_reason() == "FELL BACK", "scene blocks movement after fall back")
 	scene.new_phase()
 	check(not scene.models[0].fell_back, "new movement phase clears fall back state")
 	# Mixed movement values must constrain every member, even when the fast model is selected.

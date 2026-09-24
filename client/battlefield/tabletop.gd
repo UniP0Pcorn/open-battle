@@ -811,6 +811,9 @@ func preview_reason() -> String:
 	var unit_models := selected_unit_models()
 	if falling_back:
 		return fall_back_reason(unit_models, preview - model.position)
+	for unit_model in unit_models:
+		if bool(unit_model.get("fell_back", false)):
+			return "FELL BACK"
 	if unit_models.size() > 1:
 		var unit_move_error := UnitMovement.movement_reason(unit_models, preview - model.position, model.spent, movement_for_model(model), models, terrain)
 		if not unit_move_error.is_empty():

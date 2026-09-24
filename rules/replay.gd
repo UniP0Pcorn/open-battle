@@ -246,6 +246,8 @@ static func _movement_reference_error(models: Array, unit_id: String, delta: Arr
 		if str(model.get("unit_id", "")) != unit_id:
 			external_models.append(model)
 	for model in unit_models:
+		if bool(model.get("fell_back", false)):
+			return "FELL BACK"
 		var allowance := float(model.get("movement_inches", INF))
 		if bool(model.get("advanced", false)):
 			allowance += float(model.get("advance_bonus", 0))
