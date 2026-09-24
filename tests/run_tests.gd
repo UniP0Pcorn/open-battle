@@ -603,6 +603,21 @@ func run() -> void:
 	scene.save_state()
 	scene.reset_table()
 	check(scene.models.size() == 20 and scene.selected == -1, "reset restores fixture")
+	scene.terrain = []
+	scene.models.clear()
+	scene.add_model(Vector2(8, 8), 0, "fall_scene")
+	scene.add_model(Vector2(9, 8), 1, "fall_enemy_scene")
+	scene.selected = 0
+	scene.preview = Vector2(6, 8)
+	check(scene.preview_reason() == "ENGAGED UNIT MUST FALL BACK", "scene blocks normal movement while engaged")
+	scene.fall_back_selected()
+	check(scene.falling_back, "scene enters fall back mode")
+	scene.dragging = true
+	scene.finish_drag()
+	var fall_back_last_kind := "" if scene.command_log.is_empty() else str(scene.command_log[-1].get("kind", ""))
+	check(scene.models[0].fell_back and fall_back_last_kind == "FALL_BACK", "scene records fall back movement")
+	scene.new_phase()
+	check(not scene.models[0].fell_back, "new movement phase clears fall back state")
 	# Mixed movement values must constrain every member, even when the fast model is selected.
 	var saved_terrain: Array = scene.terrain.duplicate(true)
 	scene.terrain = []

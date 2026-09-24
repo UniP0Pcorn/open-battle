@@ -810,9 +810,7 @@ func preview_reason() -> String:
 	var model: Dictionary = models[selected]
 	var unit_models := selected_unit_models()
 	if falling_back:
-		var fall_back_error := fall_back_reason(unit_models, preview - model.position)
-		if not fall_back_error.is_empty():
-			return fall_back_error
+		return fall_back_reason(unit_models, preview - model.position)
 	if unit_models.size() > 1:
 		var unit_move_error := UnitMovement.movement_reason(unit_models, preview - model.position, model.spent, movement_for_model(model), models, terrain)
 		if not unit_move_error.is_empty():
