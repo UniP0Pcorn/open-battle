@@ -6,13 +6,18 @@ const Dice = preload("res://rules/dice.gd")
 const UnitAbilities = preload("res://rules/unit_abilities.gd")
 const WeaponRules = preload("res://rules/weapon_rules.gd")
 
-static func target_reason(attacker: Dictionary, target: Dictionary, distance: float, weapon: Dictionary, active_team: int) -> String:
+static func target_reason(attacker: Dictionary, target: Dictionary, distance: float, weapon: Dictionary, active_team: int, attacker_engaged: bool = false, target_engaged: bool = false) -> String:
 	if attacker.is_empty() or target.is_empty():
 		return "INVALID MODEL"
 	if int(attacker.get("team", -1)) != active_team:
 		return "NOT ACTIVE TEAM"
 	if bool(attacker.get("advanced", false)) and not WeaponRules.ids_from_weapon(weapon).has("assault"):
 		return "ADVANCED WITHOUT ASSAULT"
+	var pistol := WeaponRules.ids_from_weapon(weapon).has("pistol")
+	if attacker_engaged and not pistol:
+		return "ENGAGED NON-PISTOL"
+	if attacker_engaged and pistol and not target_engaged:
+		return "PISTOL TARGET OUTSIDE ENGAGEMENT"
 	if int(target.get("team", -1)) == active_team:
 		return "FRIENDLY TARGET"
 	var target_abilities := UnitAbilities.ids_from_profile({"abilities": target.get("ability_ids", [])})

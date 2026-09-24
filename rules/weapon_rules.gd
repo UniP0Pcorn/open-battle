@@ -14,6 +14,8 @@ const ALIASES := {
 	"rapid fire": "rapid_fire",
 	"突击": "assault",
 	"assault": "assault",
+	"手枪": "pistol",
+	"pistol": "pistol",
 	"危险": "hazardous",
 	"hazardous": "hazardous",
 	"毁灭伤害": "devastating_wounds",

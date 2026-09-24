@@ -82,6 +82,9 @@ func run() -> void:
 	check(Combat.target_reason(attacker, {"team": 0}, 12.0, weapon, 0) == "FRIENDLY TARGET", "friendly target is rejected")
 	var advanced_attacker := {"team": 0, "advanced": true}
 	check(Combat.target_reason(advanced_attacker, enemy, 12.0, weapon, 0) == "ADVANCED WITHOUT ASSAULT" and Combat.target_reason(advanced_attacker, enemy, 12.0, {"range_inches": 24.0, "abilities": ["突击"]}, 0).is_empty(), "advance restricts shooting to assault weapons")
+	var engaged_attacker := {"team": 0}
+	var pistol_weapon := {"range_inches": 12.0, "abilities": ["手枪"]}
+	check(Combat.target_reason(engaged_attacker, enemy, 6.0, weapon, 0, true, true) == "ENGAGED NON-PISTOL" and Combat.target_reason(engaged_attacker, enemy, 6.0, pistol_weapon, 0, true, true).is_empty() and Combat.target_reason(engaged_attacker, enemy, 6.0, pistol_weapon, 0, true, false) == "PISTOL TARGET OUTSIDE ENGAGEMENT", "pistol target restrictions use engagement state")
 	var combat_rng := RandomNumberGenerator.new()
 	combat_rng.seed = 1
 	var combat_result := Combat.resolve_ranged_attack({"attacks": 2, "hit_on": 3, "strength": 5, "damage": 2}, {"toughness": 5}, combat_rng)
@@ -192,7 +195,7 @@ func run() -> void:
 	check(blast_context.weapon.attacks == 5, "blast adds attacks for large units")
 	var devastating_context := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["毁灭伤害"]}, 10.0)
 	check(devastating_context.weapon.devastating_wounds, "devastating wounds context is explicit")
-	check(WeaponRules.canonical_id("针对步兵 4+") == "anti_infantry_4" and WeaponRules.canonical_id("双联") == "twin_linked", "anti and twin-linked keywords normalize")
+	check(WeaponRules.canonical_id("针对步兵 4+") == "anti_infantry_4" and WeaponRules.canonical_id("双联") == "twin_linked" and WeaponRules.canonical_id("手枪") == "pistol", "anti, twin-linked and pistol keywords normalize")
 	var anti_context := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["针对步兵4+", "致命一击", "双联", "持续命中1"]}, 10.0, 0, 1, ["步兵"])
 	check(anti_context.weapon.anti_wound_on == 4 and anti_context.weapon.lethal_hits and anti_context.weapon.twin_linked and anti_context.weapon.sustained_hits == 1, "anti, lethal, twin-linked and sustained hits apply to matching target")
 	var anti_miss := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["针对步兵4+"]}, 10.0, 0, 1, ["载具"])

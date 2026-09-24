@@ -653,6 +653,14 @@ func fight_selected() -> void:
 		message = "近战命中 %d，造成 %d 点伤害，目标剩余 %d 伤口。" % [result.hits, result.damage, damage_result.wounds_after]
 	queue_redraw()
 
+func model_is_engaged_with_enemy(model: Dictionary) -> bool:
+	for other in models:
+		if int(other.get("team", -1)) == int(model.get("team", -1)):
+			continue
+		if Melee.target_reason(model, other, int(model.get("team", -1))).is_empty():
+			return true
+	return false
+
 func fire_selected() -> void:
 	if phase != "SHOOTING":
 		message = "请先进入射击阶段。"
@@ -664,6 +672,7 @@ func fire_selected() -> void:
 		return
 	var attacker: Dictionary = models[selected]
 	var weapon := weapon_for_model(attacker)
+	var attacker_engaged := model_is_engaged_with_enemy(attacker)
 	var target_index := -1
 	var nearest := INF
 	for i in range(models.size()):
@@ -671,7 +680,8 @@ func fire_selected() -> void:
 			var distance: float = attacker.position.distance_to(models[i].position)
 			if Visibility.blocked(attacker.position, models[i].position, terrain):
 				continue
-			if Combat.target_reason(attacker, models[i], distance, weapon, active_team).is_empty() and distance < nearest:
+			var target_engaged := model_is_engaged_with_enemy(models[i])
+			if Combat.target_reason(attacker, models[i], distance, weapon, active_team, attacker_engaged, target_engaged).is_empty() and distance < nearest:
 				nearest = distance
 				target_index = i
 	if target_index < 0:
