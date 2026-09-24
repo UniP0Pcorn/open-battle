@@ -30,6 +30,8 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 	var contract_error := CommandSchema.validate_for_state(entry, next)
 	if not contract_error.is_empty():
 		return {"ok": false, "reason": contract_error, "state": state}
+	if kind == "SCOUT" and int(next.get("round", 1)) != 1:
+		return {"ok": false, "reason": "SCOUT WINDOW CLOSED", "state": state}
 	var payload: Dictionary = entry.payload
 	var reference_error := _validate_references(next.models, entry, kind, payload, next.get("terrain", []))
 	if not reference_error.is_empty():
@@ -89,6 +91,14 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 				model.advance_bonus = 0
 				model.fell_back = false
 				position_index += 1
+		"SCOUT":
+			var scout_unit_id := str(payload.get("unit_id", ""))
+			var scout_delta: Array = payload.get("delta", [])
+			var scout_vector := Vector2(float(scout_delta[0]), float(scout_delta[1]))
+			for model in next.models:
+				if str(model.get("unit_id", "")) == scout_unit_id:
+					model.position += scout_vector
+					model.scouted = true
 		"CHARGE":
 			var model_index := _index_for(next.models, payload, "model_id", "model")
 			var destination: Array = payload.get("to", [])
@@ -268,6 +278,8 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 			return _advance_reference_error(models, str(payload.get("unit_id", "")))
 		"DEPLOY_RESERVE":
 			return Reserves.arrival_reason(models, str(payload.get("unit_id", "")), actor_team, payload.get("positions", []))
+		"SCOUT":
+			return _scout_reference_error(models, str(payload.get("unit_id", "")), payload.delta, actor_team)
 		"CHARGE":
 			var charger := _index_for(models, payload, "model_id", "model")
 			var charge_target := _index_for(models, payload, "target_id", "target")
@@ -413,6 +425,45 @@ static func _advance_reference_error(models: Array, unit_id: String) -> String:
 		for enemy in enemies:
 			if Engagement.in_engagement(model, enemy):
 				return "ENGAGED UNIT MUST FALL BACK"
+	return ""
+
+static func _scout_reference_error(models: Array, unit_id: String, delta: Array, actor_team: int) -> String:
+	var unit_models: Array = []
+	var enemies: Array = []
+	var allowance := 0.0
+	for model in models:
+		if str(model.get("unit_id", "")) == unit_id:
+			if int(model.get("team", -1)) != actor_team:
+				return "NOT ACTIVE TEAM"
+			if Reserves.in_reserve(model):
+				return "UNIT IN RESERVE"
+			if bool(model.get("scouted", false)) or float(model.get("spent", 0.0)) > Engagement.EPSILON:
+				return "UNIT ALREADY SCOUTED"
+			unit_models.append(model)
+			allowance = maxf(allowance, float(UnitAbilities.modifiers(model.get("ability_ids", [])).get("prebattle_move_inches", 0.0)))
+		elif int(model.get("team", -1)) != actor_team and Reserves.active(model):
+			enemies.append(model)
+	if unit_models.is_empty():
+		return "UNKNOWN UNIT"
+	if allowance <= 0.0:
+		return "UNIT LACKS SCOUT"
+	var movement_delta := Vector2(float(delta[0]), float(delta[1]))
+	if movement_delta.length() > allowance + Engagement.EPSILON:
+		return "SCOUT LIMIT EXCEEDED"
+	var external: Array = []
+	for model in models:
+		if str(model.get("unit_id", "")) != unit_id and Reserves.active(model):
+			external.append(model)
+	for model in unit_models:
+		var destination := _position_of(model) + movement_delta
+		var move_error := Movement.movement_reason(_position_of(model), destination, 0.0, allowance, float(model.get("radius", 0.0)), external, -1, [])
+		if not move_error.is_empty():
+			return move_error
+		var moved: Dictionary = model.duplicate(true)
+		moved.position = destination
+		for enemy in enemies:
+			if Engagement.separation(moved, enemy) < 9.0 - Engagement.EPSILON:
+				return "SCOUT TOO CLOSE TO ENEMY"
 	return ""
 
 static func _battle_shock_reference_error(models: Array, unit_id: String, payload: Dictionary) -> String:

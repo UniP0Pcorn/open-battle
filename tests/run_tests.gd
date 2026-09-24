@@ -131,6 +131,8 @@ func run() -> void:
 	check(CommandSchema.validate_for_state(fall_back_entry, {"active_team": 0, "phase": "MOVEMENT"}).is_empty(), "command schema accepts fall back")
 	var reserve_entry := {"sequence": 0, "team": 0, "kind": "DEPLOY_RESERVE", "payload": {"unit_id": "u", "positions": [[10.0, 20.0]]}}
 	check(CommandSchema.validate_for_state(reserve_entry, {"active_team": 0, "phase": "MOVEMENT"}).is_empty(), "command schema accepts reserve arrival")
+	var scout_entry := {"sequence": 0, "team": 0, "kind": "SCOUT", "payload": {"unit_id": "u", "delta": [3.0, 0.0]}}
+	check(CommandSchema.validate_for_state(scout_entry, {"active_team": 0, "phase": "COMMAND"}).is_empty(), "command schema accepts scout")
 	var bad_reserve_entry := reserve_entry.duplicate(true)
 	bad_reserve_entry.payload.positions = [[10.0]]
 	check(CommandSchema.validate_entry(bad_reserve_entry) == "INVALID RESERVE ARRIVAL", "command schema rejects malformed reserve arrival")
@@ -375,6 +377,15 @@ func run() -> void:
 	reserve_move_log = CommandLog.append(reserve_move_log, 0, "MOVE", {"unit_id": "reserve_unit", "delta": [1, 0]})
 	var reserve_move := Replay.replay(Replay.initial_state(reserve_models, "MOVEMENT", 0), reserve_move_log)
 	check(not reserve_move.ok and reserve_move.reason == "UNIT IN RESERVE", "reserve unit cannot move before arrival")
+	var scout_models: Array = [{"model_id": "scout_m001", "unit_id": "scout_unit", "team": 0, "position": Vector2(5, 5), "radius": 0.5, "ability_ids": ["scout_6"]}, {"model_id": "scout_enemy_m001", "unit_id": "scout_enemy", "team": 1, "position": Vector2(30, 30), "radius": 0.5}]
+	var scout_log: Array = []
+	scout_log = CommandLog.append(scout_log, 0, "SCOUT", {"unit_id": "scout_unit", "delta": [3, 0]})
+	var scout_replay := Replay.replay(Replay.initial_state(scout_models, "COMMAND", 0), scout_log)
+	check(scout_replay.ok and scout_replay.state.models[0].position == Vector2(8, 5) and scout_replay.state.models[0].scouted, "replay applies scout move")
+	var repeated_scout_log := scout_log.duplicate(true)
+	repeated_scout_log = CommandLog.append(repeated_scout_log, 0, "SCOUT", {"unit_id": "scout_unit", "delta": [1, 0]})
+	var repeated_scout := Replay.replay(Replay.initial_state(scout_models, "COMMAND", 0), repeated_scout_log)
+	check(not repeated_scout.ok and repeated_scout.reason == "UNIT ALREADY SCOUTED", "replay blocks repeated scout")
 	var repeated_advance_log := advance_replay_log.duplicate(true)
 	repeated_advance_log = CommandLog.append(repeated_advance_log, 0, "ADVANCE", {"unit_id": "u", "roll": 3})
 	var repeated_advance := Replay.replay(Replay.initial_state(replay_models), repeated_advance_log)
@@ -943,6 +954,13 @@ func run() -> void:
 		if str(ai_entry.get("kind", "")) == "DEPLOY_RESERVE":
 			ai_reserve_deployed = true
 	check(ai_reserve_turn.ok and ai_reserve_deployed, "single-player AI deploys deep strike reserves")
+	var ai_scout_models: Array = [{"model_id": "ai_scout_m001", "unit_id": "ai_scout", "team": 1, "position": Vector2(30, 38), "radius": 0.5, "ability_ids": ["scout_6"], "wounds": 3}, {"model_id": "ai_scout_enemy_m001", "unit_id": "ai_scout_enemy", "team": 0, "position": Vector2(30, 5), "radius": 0.5, "wounds": 3}]
+	var ai_scout_turn := AIPlayer.play_turn(BattleSession.create(ai_scout_models, 11, 1), 1, 79)
+	var ai_scout_used := false
+	for ai_entry in ai_scout_turn.commands:
+		if str(ai_entry.get("kind", "")) == "SCOUT":
+			ai_scout_used = true
+	check(ai_scout_turn.ok and ai_scout_used, "single-player AI uses scout before the first turn")
 	scene.save_state()
 	scene.queue_free()
 	await process_frame

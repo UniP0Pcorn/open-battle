@@ -29,6 +29,13 @@ static func play_turn(state: Dictionary, team: int, seed: int = 1, max_commands:
 		guard += 1
 		var phase := str(next.get("phase", ""))
 		if phase == "COMMAND":
+			var scout := _scout_command(next, team)
+			if not scout.is_empty():
+				var scout_result := _submit(next, team, "SCOUT", scout)
+				if scout_result.ok:
+					next = scout_result.state
+					commands.append(scout_result.entry)
+					continue
 			var command_result := _submit(next, team, "PHASE_ADVANCE", {"from": "COMMAND", "to": "MOVEMENT"})
 			if not command_result.ok:
 				return {"ok": false, "reason": command_result.reason, "state": next, "commands": commands}
@@ -296,5 +303,30 @@ static func _reserve_command(state: Dictionary, team: int) -> Dictionary:
 				positions.append([anchor.x + index * (radius * 2.0 + 0.1), anchor.y])
 			if Reserves.arrival_reason(state.models, unit_id, team, positions).is_empty():
 				return {"unit_id": unit_id, "positions": positions}
+	return {}
+
+static func _scout_command(state: Dictionary, team: int) -> Dictionary:
+	var unit_ids: Array = []
+	for model in state.get("models", []):
+		if int(model.get("team", -1)) == team and Reserves.active(model) and not unit_ids.has(str(model.get("unit_id", ""))):
+			unit_ids.append(str(model.get("unit_id", "")))
+	for unit_id in unit_ids:
+		var unit_models: Array = []
+		for model in state.models:
+			if str(model.get("unit_id", "")) == unit_id:
+				unit_models.append(model)
+		if unit_models.is_empty() or bool(unit_models[0].get("scouted", false)):
+			continue
+		var modifiers := UnitAbilities.modifiers(unit_models[0].get("ability_ids", []))
+		var allowance := float(modifiers.get("prebattle_move_inches", 0.0))
+		if allowance <= 0.0:
+			continue
+		var nearest := _nearest_enemy(unit_models[0], state.models, team)
+		if nearest.is_empty():
+			continue
+		var direction := (_position(nearest) - _position(unit_models[0])).normalized()
+		if direction.is_zero_approx():
+			continue
+		return {"unit_id": unit_id, "delta": [direction.x * allowance, direction.y * allowance]}
 	return {}
 

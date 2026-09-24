@@ -4,7 +4,7 @@
 
 ## 已完成
 
-- 新增 `rules/command_schema.gd`，统一定义 MOVE、ADVANCE、FALL_BACK、DEPLOY_RESERVE、SHOOT、CHARGE、FIGHT、PHASE_ADVANCE、END_TURN、BATTLE_SHOCK、HAZARDOUS 和 STRATAGEM 十二类命令。
+- 新增 `rules/command_schema.gd`，统一定义 MOVE、ADVANCE、FALL_BACK、DEPLOY_RESERVE、SCOUT、SHOOT、CHARGE、FIGHT、PHASE_ADVANCE、END_TURN、BATTLE_SHOCK、HAZARDOUS 和 STRATAGEM 十三类命令。
 - 统一检查序号、操作阵营、命令类型、载荷字段和阶段要求；只对需要字段的命令执行校验，避免各模块重复实现同一套规则。
 - `rules/command_log.gd` 使用统一契约验证存档日志。
 - `rules/replay.gd` 使用统一契约验证回放命令，并保留未知单位、越权阵营、错误阶段和非法目标的语义错误。
@@ -31,6 +31,7 @@
 - 前进命令会拒绝已移动、已前进、已撤退或处于接战的单位，客户端与回放器使用同一状态边界。
 - 深入打击预备队使用 `reserve_status` 和 `DEPLOY_RESERVE` 命令；入场会检查 `deep_strike`、桌面边界、单位内底座重叠和距敌 9 英寸，单机 AI 会选择确定性的合法落点。
 - 近战回放按接战状态执行 `fights_first` 优先窗口；普通单位不能越过仍可激活的首发单位，客户端和单机 AI 使用同一优先级。
+- `SCOUT` 只在首回合指挥阶段可用，回放按能力声明限制 6/9 英寸额度，并拒绝重复斥候、路径阻挡和进入敌方 9 英寸范围。
 - 带骰面记录的战斗震慑命令会校验每个骰值、总和、修正值和领导力结果，不能只伪造 `passed`。
 - `rules/room.gd` 提供传输无关的房间生命周期：创建、加入、准备、开始、按玩家映射阵营提交权威命令、公开快照和离开状态。
 - 手枪规则读取同一套接战几何：接战中的非手枪不能射击，手枪只能指定接战范围内的敌方目标。
@@ -49,7 +50,7 @@
 godot --headless --path . --script tests/run_tests.gd
 ```
 
-当前结果：**351 项检查，0 失败**。联机攻击意图还会由主机记录危险武器自伤及对应 FNP 骰面；重放会执行临时掩体、自动通过战斗震慑、阵营自定义策略、首发优先级和每单位每战斗阶段一次的近战激活约束，单机、主机和 AI 共用目标隐匿掩体修正，断线重连快照保持一致，预备队入场状态也会进入权威快照。
+当前结果：**355 项检查，0 失败**。联机攻击意图还会由主机记录危险武器自伤及对应 FNP 骰面；重放会执行临时掩体、自动通过战斗震慑、阵营自定义策略、首发优先级和每单位每战斗阶段一次的近战激活约束，单机、主机和 AI 共用目标隐匿掩体修正，断线重连快照保持一致，预备队和斥候状态也会进入权威命令日志。
 
 ## 下一步
 
