@@ -6,6 +6,7 @@ const AccountIdentity = preload("res://rules/account_identity.gd")
 const PeerProtocol = preload("res://rules/peer_protocol.gd")
 const P2PTransport = preload("res://client/p2p_transport.gd")
 const Room = preload("res://rules/room.gd")
+const NetworkSync = preload("res://rules/network_sync.gd")
 
 signal lobby_changed(room: Dictionary)
 signal battle_snapshot_received(state: Dictionary)
@@ -130,14 +131,24 @@ func _on_packet_received(peer_id: int, packet: Dictionary) -> void:
 			_handle_lobby(peer_id, packet)
 		"COMMAND":
 			if is_host:
-				_submit_host_command(str(packet.peer_id), str(packet.command.kind), packet.command.payload)
+				var sync_result := NetworkSync.host_command(room, packet, str(packet.peer_id))
+				if bool(sync_result.get("ok", false)):
+					room = sync_result.room
+					transport.broadcast(sync_result.snapshot)
+					lobby_changed.emit(Room.public_snapshot(room))
+				else:
+					error_occurred.emit(str(sync_result.get("reason", "COMMAND REJECTED")))
 		"AUTH":
 			if is_host:
 				_handle_auth(peer_id, packet)
 		"SNAPSHOT":
 			if not is_host:
-				room.session = packet.state.duplicate(true)
-				battle_snapshot_received.emit(room.session)
+				var snapshot_result := NetworkSync.accept_snapshot(room.session, packet)
+				if bool(snapshot_result.get("ok", false)):
+					room.session = snapshot_result.state
+					battle_snapshot_received.emit(room.session)
+				else:
+					error_occurred.emit(str(snapshot_result.get("reason", "SNAPSHOT REJECTED")))
 		"RECONNECT":
 			if is_host:
 				var result := Room.reconnect(room, str(packet.peer_id), str(packet.get("reconnect_token", "")), int(packet.sequence))
