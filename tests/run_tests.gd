@@ -271,6 +271,9 @@ func run() -> void:
 	check(UnitAbilities.validate(["隐匿", "斥候6英寸"]).is_empty(), "localized ability aliases validate")
 	var ability_mods := UnitAbilities.modifiers(["stealth", "objective_control_plus_1", "reroll_hit_ones"])
 	check(ability_mods.cover_bonus == 1 and ability_mods.objective_control_bonus == 1 and ability_mods.hit_rerolls == 1, "ability modifiers aggregate")
+	var stealth_target_abilities := UnitAbilities.modifiers(["stealth"])
+	var stealth_context := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4}, 10.0, int(stealth_target_abilities.cover_bonus), 1)
+	check(stealth_context.cover_bonus == 1, "target stealth contributes to shared cover context")
 	var reroll_mods := UnitAbilities.modifiers(["reroll_wound_ones", "reroll_save_ones"])
 	check(reroll_mods.wound_reroll_ones == 1 and reroll_mods.save_reroll_ones == 1, "ability reroll ones modifiers are executable")
 	var faction_profile: Dictionary = {"abilities": []}
