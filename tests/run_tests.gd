@@ -80,6 +80,8 @@ func run() -> void:
 	check(Combat.target_reason(attacker, lone_operator, 13.0, weapon, 0) == "LONE OPERATOR" and Combat.target_reason(attacker, lone_operator, 12.0, weapon, 0).is_empty(), "lone operator limits distant shooting")
 	check(Combat.target_reason(attacker, enemy, 25.0, weapon, 0) == "OUT OF RANGE", "out of range target is rejected")
 	check(Combat.target_reason(attacker, {"team": 0}, 12.0, weapon, 0) == "FRIENDLY TARGET", "friendly target is rejected")
+	var advanced_attacker := {"team": 0, "advanced": true}
+	check(Combat.target_reason(advanced_attacker, enemy, 12.0, weapon, 0) == "ADVANCED WITHOUT ASSAULT" and Combat.target_reason(advanced_attacker, enemy, 12.0, {"range_inches": 24.0, "abilities": ["突击"]}, 0).is_empty(), "advance restricts shooting to assault weapons")
 	var combat_rng := RandomNumberGenerator.new()
 	combat_rng.seed = 1
 	var combat_result := Combat.resolve_ranged_attack({"attacks": 2, "hit_on": 3, "strength": 5, "damage": 2}, {"toughness": 5}, combat_rng)
@@ -109,6 +111,13 @@ func run() -> void:
 	check(CommandSchema.validate_entry(malformed_command) == "INVALID MOVE", "command schema rejects incomplete payload")
 	var incomplete_damage := {"sequence": 0, "team": 0, "kind": "SHOOT", "payload": {"target": 1, "damage": 1}}
 	check(CommandSchema.validate_entry(incomplete_damage) == "INVALID DAMAGE EVENT", "command schema requires damage attacker")
+	var advance_entry := {"sequence": 0, "team": 0, "kind": "ADVANCE", "payload": {"unit_id": "u", "roll": 4}}
+	check(CommandSchema.validate_for_state(advance_entry, {"active_team": 0, "phase": "MOVEMENT"}).is_empty(), "command schema accepts advance")
+	var bad_advance := advance_entry.duplicate(true)
+	bad_advance.payload.roll = -1
+	check(CommandSchema.validate_entry(bad_advance) == "INVALID ADVANCE", "command schema rejects invalid advance roll")
+	bad_advance.payload.roll = 7
+	check(CommandSchema.validate_entry(bad_advance) == "INVALID ADVANCE", "command schema bounds advance roll")
 	var session := BattleSession.create([{"model_id": "u_m001", "position": Vector2(2, 2), "unit_id": "u", "team": 0}], 11, 0)
 	check(not session.is_empty() and BattleSession.validate_snapshot(session).is_empty() and session.phase == "COMMAND", "authoritative session creates a versioned snapshot")
 	var session_move := BattleSession.submit(session, 0, "MOVE", {"unit_id": "u", "delta": [1, 0]})
@@ -128,6 +137,7 @@ func run() -> void:
 	check(BattleSession.validate_snapshot(duplicate_snapshot) == "DUPLICATE MODEL ID u_m001", "authoritative session rejects duplicate model ids")
 	var invalid_model := {"model_id": "bad_m001", "unit_id": "bad", "team": 0, "position": Vector2(INF, 2)}
 	check(ModelState.validate_models([invalid_model]).has("INVALID MODEL POSITION bad_m001"), "model state rejects non-finite position")
+	check(ModelState.validate_models([{ "model_id": "advance_m001", "unit_id": "advance", "team": 0, "position": Vector2.ZERO, "advance_bonus": 4 }]).is_empty(), "model state accepts advance metadata")
 	check(Deployment.zone_reason(Vector2(10, 6), 1.0, 0, Rules.BOARD_SIZE, 12.0).is_empty(), "gold deployment zone accepts legal base")
 	check(Deployment.zone_reason(Vector2(10, 20), 1.0, 0, Rules.BOARD_SIZE, 12.0) == "OUTSIDE DEPLOYMENT ZONE", "gold deployment zone rejects midfield base")
 	check(Deployment.zone_reason(Vector2(10, 38), 1.0, 1, Rules.BOARD_SIZE, 12.0).is_empty(), "blue deployment zone accepts legal base")
@@ -197,6 +207,12 @@ func run() -> void:
 	replay_log = CommandLog.append(replay_log, 0, "MOVE", {"unit_id": "u", "delta": [2, 0]})
 	var replay_result := Replay.replay(Replay.initial_state(replay_models), replay_log)
 	check(replay_result.ok and replay_result.state.models[0].position == Vector2(3, 1), "replay reconstructs movement")
+	var advance_replay_log: Array = []
+	advance_replay_log = CommandLog.append(advance_replay_log, 0, "ADVANCE", {"unit_id": "u", "roll": 4})
+	var advance_replay := Replay.replay(Replay.initial_state(replay_models), advance_replay_log)
+	check(advance_replay.ok and advance_replay.state.models[0].advanced and advance_replay.state.models[0].advance_bonus == 4, "replay applies advance metadata")
+	var foreign_advance := Replay.replay(Replay.initial_state(replay_models), [{"sequence": 0, "team": 1, "kind": "ADVANCE", "payload": {"unit_id": "u", "roll": 4}}])
+	check(not foreign_advance.ok and foreign_advance.reason == "NOT ACTIVE TEAM", "replay rejects foreign advance")
 	var bad_replay := Replay.replay(Replay.initial_state(replay_models), [{"sequence": 1, "team": 0, "kind": "MOVE", "payload": {}}])
 	check(not bad_replay.ok and bad_replay.reason == "SEQUENCE GAP", "replay rejects sequence gaps")
 	var shock_replay_log: Array = []
@@ -583,6 +599,14 @@ func run() -> void:
 	check(scene.preview_reason().is_empty(), "single model uses own eight-inch allowance instead of fixture six")
 	scene.terrain = saved_terrain
 	scene.reset_table()
+	scene.selected = 0
+	var base_movement := float(scene.models[0].movement_inches)
+	scene.advance_selected()
+	var advance_bonus := int(scene.models[0].advance_bonus)
+	check(scene.models[0].advanced and advance_bonus >= 1 and advance_bonus <= 6 and is_equal_approx(scene.movement_for_model(scene.models[0]), base_movement + advance_bonus), "scene records advance roll and extends movement")
+	check(scene.command_log[-1].kind == "ADVANCE", "scene records advance command")
+	scene.new_phase()
+	check(not scene.models[0].advanced and scene.models[0].advance_bonus == 0, "new movement phase clears advance state")
 	scene.save_state()
 	scene.queue_free()
 	await process_frame

@@ -4,7 +4,7 @@
 
 ## 已完成
 
-- 新增 `rules/command_schema.gd`，统一定义 MOVE、SHOOT、CHARGE、FIGHT、PHASE_ADVANCE、END_TURN、BATTLE_SHOCK、HAZARDOUS 和 STRATAGEM 九类命令。
+- 新增 `rules/command_schema.gd`，统一定义 MOVE、ADVANCE、SHOOT、CHARGE、FIGHT、PHASE_ADVANCE、END_TURN、BATTLE_SHOCK、HAZARDOUS 和 STRATAGEM 十类命令。
 - 统一检查序号、操作阵营、命令类型、载荷字段和阶段要求；只对需要字段的命令执行校验，避免各模块重复实现同一套规则。
 - `rules/command_log.gd` 使用统一契约验证存档日志。
 - `rules/replay.gd` 使用统一契约验证回放命令，并保留未知单位、越权阵营、错误阶段和非法目标的语义错误。
@@ -25,6 +25,7 @@
 - 武器上下文支持 `针对 X+`、双联、致命一击和持续命中 X；针对只在目标关键词匹配时覆盖致伤阈值，双联重掷失败致伤骰，其余额外命中进入同一伤害流程。
 - 重型武器读取模型本回合 `spent` 移动消耗，静止时改善 1 点命中值，移动后自动取消；界面和规则上下文不再各自推断状态。
 - 近战入口也复用武器上下文，针对等关键词会按接战目标生效，避免射击和战斗阶段使用两套武器解释。
+- `ADVANCE` 命令记录单位的 D6 前进结果；回放恢复额外移动状态，前进后的射击目标校验只允许突击武器，冲锋入口会拒绝前进单位。
 - 编成校验支持 profile 的 `organization.unique`、`organization.max_copies`、`organization.role`，以及军表的 `organization.minimum_roles`；未声明组织字段的原型 profile 行为保持不变。
 - 新增回归覆盖：活动阵营可执行命令、错误阶段拒绝、缺字段载荷拒绝。
 
@@ -34,7 +35,7 @@
 godot --headless --path . --script tests/run_tests.gd
 ```
 
-当前结果：**252 项检查，0 失败**。
+当前结果：**262 项检查，0 失败**。
 
 ## 下一步
 

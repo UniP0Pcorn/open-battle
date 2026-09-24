@@ -2,10 +2,11 @@
 extends RefCounted
 ## Canonical command envelope and phase contract shared by saves, replay and servers.
 
-const KINDS := ["MOVE", "SHOOT", "CHARGE", "FIGHT", "PHASE_ADVANCE", "END_TURN", "BATTLE_SHOCK", "HAZARDOUS", "STRATAGEM"]
+const KINDS := ["MOVE", "ADVANCE", "SHOOT", "CHARGE", "FIGHT", "PHASE_ADVANCE", "END_TURN", "BATTLE_SHOCK", "HAZARDOUS", "STRATAGEM"]
 const PHASES := ["COMMAND", "MOVEMENT", "SHOOTING", "CHARGE", "FIGHT"]
 const PHASE_BY_KIND := {
 	"MOVE": "MOVEMENT",
+	"ADVANCE": "MOVEMENT",
 	"SHOOT": "SHOOTING",
 	"CHARGE": "CHARGE",
 	"FIGHT": "FIGHT"
@@ -28,6 +29,9 @@ static func validate_payload(kind: String, payload: Dictionary) -> String:
 		"MOVE":
 			if str(payload.get("unit_id", "")).is_empty() or not _numbers(payload.get("delta", []), 2):
 				return "INVALID MOVE"
+		"ADVANCE":
+			if str(payload.get("unit_id", "")).is_empty() or not _nonnegative_int(payload.get("roll", -1)) or int(payload.get("roll", 0)) < 1 or int(payload.get("roll", 0)) > 6:
+				return "INVALID ADVANCE"
 		"SHOOT", "FIGHT":
 			if not _model_ref(payload, "attacker_id", "attacker") or not _model_ref(payload, "target_id", "target") or not _nonnegative_int(payload.get("damage", -1)):
 				return "INVALID DAMAGE EVENT"

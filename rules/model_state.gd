@@ -35,7 +35,7 @@ static func validate_model(model: Variant, index: int = 0, ids: Dictionary = {})
 			return "INVALID MODEL POSITION " + model_id
 	else:
 		return "MISSING MODEL POSITION " + model_id
-	for field in ["radius", "wounds", "spent"]:
+	for field in ["radius", "wounds", "spent", "advance_bonus"]:
 		if model.has(field) and (typeof(model[field]) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(model[field])) or float(model[field]) < 0.0):
 			return "INVALID MODEL " + field.to_upper() + " " + model_id
 	return ""

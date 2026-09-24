@@ -23,6 +23,7 @@ const BattleShock = preload("res://rules/battle_shock.gd")
 const TurnState = preload("res://rules/turn_state.gd")
 const Deployment = preload("res://rules/deployment.gd")
 const MissionValidation = preload("res://rules/mission_validation.gd")
+const Dice = preload("res://rules/dice.gd")
 const SCALE := 15.0
 const OFFSET := Vector2(38, 112)
 const GOLD := Color("e5ba6b")
@@ -305,13 +306,13 @@ func add_model(point: Vector2, side: int, unit_id: String = "", model_data: Dict
 	var objective_control := int(model_data.get("objective_control", 1)) + int(ability_mods.objective_control_bonus)
 	# Retain movement per model; the current catalogue selection is only a default.
 	var movement_inches := float(model_data.get("movement_inches", fixture.get("movement_inches", 6.0)))
-	models.append({"model_id": model_id, "position": point, "radius": Rules.radius_inches(base_mm), "spent": 0.0, "team": side, "wounds": int(model_data.get("wounds", fixture.get("wounds", 3))), "toughness": int(model_data.get("toughness", fixture.get("toughness", 4))), "save_on": int(model_data.get("save_on", fixture.get("save_on", 7))), "invulnerable_save": int(model_data.get("invulnerable_save", fixture.get("invulnerable_save", 0))), "leadership": int(model_data.get("leadership", fixture.get("leadership", 7))), "objective_control": objective_control, "ability_ids": ability_ids, "keywords": model_data.get("keywords", unit_profile.get("keywords", [])).duplicate(true), "faction_keywords": model_data.get("faction_keywords", unit_profile.get("faction_keywords", [])).duplicate(true), "weapons": model_data.get("weapons", unit_profile.get("weapons", [])).duplicate(true), "unit_id": unit_id, "battle_shocked": false, "can_control": true})
+	models.append({"model_id": model_id, "position": point, "radius": Rules.radius_inches(base_mm), "spent": 0.0, "advanced": bool(model_data.get("advanced", false)), "advance_bonus": int(model_data.get("advance_bonus", 0)), "team": side, "wounds": int(model_data.get("wounds", fixture.get("wounds", 3))), "toughness": int(model_data.get("toughness", fixture.get("toughness", 4))), "save_on": int(model_data.get("save_on", fixture.get("save_on", 7))), "invulnerable_save": int(model_data.get("invulnerable_save", fixture.get("invulnerable_save", 0))), "leadership": int(model_data.get("leadership", fixture.get("leadership", 7))), "objective_control": objective_control, "ability_ids": ability_ids, "keywords": model_data.get("keywords", unit_profile.get("keywords", [])).duplicate(true), "faction_keywords": model_data.get("faction_keywords", unit_profile.get("faction_keywords", [])).duplicate(true), "weapons": model_data.get("weapons", unit_profile.get("weapons", [])).duplicate(true), "unit_id": unit_id, "battle_shocked": false, "can_control": true})
 
 	models[-1].movement_inches = movement_inches
 	models[-1].coherency_inches = float(model_data.get("coherency_inches", 2.0))
 
 func movement_for_model(model: Dictionary) -> float:
-	return float(model.get("movement_inches", fixture.get("movement_inches", 6.0)))
+	return float(model.get("movement_inches", fixture.get("movement_inches", 6.0))) + float(model.get("advance_bonus", 0)) if bool(model.get("advanced", false)) else float(model.get("movement_inches", fixture.get("movement_inches", 6.0)))
 
 func selected_unit_remaining_movement() -> float:
 	var remaining := INF
@@ -323,7 +324,37 @@ func new_phase() -> void:
 	dragging = false
 	for model in models:
 		model.spent = 0.0
+		model.advanced = false
+		model.advance_bonus = 0
 	message = "双方底座的移动额度已重置。"
+	queue_redraw()
+
+func advance_selected() -> void:
+	if phase != "MOVEMENT":
+		message = "请在移动阶段宣布前进。"
+		queue_redraw()
+		return
+	if selected < 0 or selected >= models.size() or models[selected].team != active_team:
+		message = "请选择当前阵营的底座。"
+		queue_redraw()
+		return
+	var unit_models := selected_unit_models()
+	if unit_models.is_empty():
+		message = "没有找到所选单位。"
+		queue_redraw()
+		return
+	for model in unit_models:
+		if float(model.get("spent", 0.0)) > Rules.EPSILON or bool(model.get("advanced", false)):
+			message = "该单位已经开始移动，不能再宣布前进。"
+			queue_redraw()
+			return
+	var roll := Dice.roll_d6(combat_rng, 1, 0)
+	var unit_id := str(models[selected].get("unit_id", ""))
+	for model in unit_models:
+		model.advanced = true
+		model.advance_bonus = int(roll.total)
+	command_log = CommandLog.append(command_log, active_team, "ADVANCE", {"unit_id": unit_id, "roll": int(roll.total), "rolls": roll.rolls})
+	message = "单位宣布前进：D6=%d，移动额度增加 %d 英寸；只能使用突击武器射击且不能冲锋。" % [roll.total, roll.total]
 	queue_redraw()
 
 func end_turn() -> void:
@@ -334,6 +365,11 @@ func end_turn() -> void:
 	var gained := score_objectives(scoring_team)
 	score[scoring_team] += gained
 	active_team = 1 - active_team
+	for model in models:
+		if int(model.get("team", -1)) == active_team:
+			model.spent = 0.0
+			model.advanced = false
+			model.advance_bonus = 0
 	command_points = CommandPoints.gain(command_points, active_team)
 	phase = "MOVEMENT"
 	if active_team == 0:
@@ -546,6 +582,10 @@ func charge_selected() -> void:
 		queue_redraw()
 		return
 	var attacker: Dictionary = models[selected]
+	if bool(attacker.get("advanced", false)):
+		message = "前进后的单位不能冲锋。"
+		queue_redraw()
+		return
 	var target_index := -1
 	var nearest := INF
 	for i in range(models.size()):
@@ -768,6 +808,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				team = 1 - team
 			KEY_N:
 				new_phase()
+			KEY_Q:
+				advance_selected()
 			KEY_R:
 				reset_table()
 			KEY_T:

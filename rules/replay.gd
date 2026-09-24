@@ -29,6 +29,17 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 					found = true
 			if not found:
 				return {"ok": false, "reason": "UNKNOWN UNIT", "state": state}
+		"ADVANCE":
+			var advance_unit_id := str(payload.get("unit_id", ""))
+			var advance_roll := int(payload.get("roll", 0))
+			var advanced_found := false
+			for model in next.models:
+				if str(model.get("unit_id", "")) == advance_unit_id:
+					model.advanced = true
+					model.advance_bonus = advance_roll
+					advanced_found = true
+			if not advanced_found:
+				return {"ok": false, "reason": "UNKNOWN UNIT", "state": state}
 		"CHARGE":
 			var model_index := _index_for(next.models, payload, "model_id", "model")
 			var destination: Array = payload.get("to", [])
@@ -43,6 +54,11 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			var points: Array = next.get("command_points", [0, 0]).duplicate(true)
 			points[next.active_team] = mini(10, int(points[next.active_team]) + 1)
 			next.command_points = points
+			for model in next.models:
+				if int(model.get("team", -1)) == int(next.active_team):
+					model.spent = 0.0
+					model.advanced = false
+					model.advance_bonus = 0
 		"PHASE_ADVANCE":
 			var phase_state := {
 				"round": int(next.get("round", 1)),
@@ -57,6 +73,12 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			next.phase = advanced.phase
 			next.phase_index = advanced.phase_index
 			next.command_points = advanced.command_points.duplicate(true)
+			if str(next.phase) == "MOVEMENT":
+				for model in next.models:
+					if int(model.get("team", -1)) == int(next.active_team):
+						model.spent = 0.0
+						model.advanced = false
+						model.advance_bonus = 0
 		"BATTLE_SHOCK":
 			var unit_id := str(payload.get("unit_id", ""))
 			var found := false
@@ -105,6 +127,14 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 					if int(model.get("team", -1)) != actor_team:
 						return "NOT ACTIVE TEAM"
 			return "" if found else "UNKNOWN UNIT"
+		"ADVANCE":
+			var advance_found := false
+			for model in models:
+				if str(model.get("unit_id", "")) == str(payload.get("unit_id", "")):
+					advance_found = true
+					if int(model.get("team", -1)) != actor_team:
+						return "NOT ACTIVE TEAM"
+			return "" if advance_found else "UNKNOWN UNIT"
 		"CHARGE":
 			var charger := _index_for(models, payload, "model_id", "model")
 			var charge_target := _index_for(models, payload, "target_id", "target")
