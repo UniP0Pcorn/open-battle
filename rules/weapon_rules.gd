@@ -44,11 +44,11 @@ static func canonical_id(value: Variant) -> String:
 	if text in ["", "无", "-", "—", "none", "n/a"]:
 		return ""
 	var compact := text.replace(" ", "").replace("　", "")
-	if text.begins_with("速射") and text.substr(2).is_valid_int():
+	if text.begins_with("速射") and _rapid_suffix_valid(text.substr(2)):
 		return "rapid_fire_" + text.substr(2)
-	if text.begins_with("rapid fire ") and text.substr(11).is_valid_int():
+	if text.begins_with("rapid fire ") and _rapid_suffix_valid(text.substr(11)):
 		return "rapid_fire_" + text.substr(11)
-	if compact.begins_with("连击") and compact.substr(2).is_valid_int():
+	if compact.begins_with("连击") and _rapid_suffix_valid(compact.substr(2)):
 		return "rapid_fire_" + compact.substr(2)
 	if text.begins_with("热熔") and text.substr(2).is_valid_int():
 		return "melta_" + text.substr(2)
@@ -121,12 +121,16 @@ static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, t
 		if not ids.has("ignores_cover"):
 			cover_bonus = maxi(cover_bonus, 1)
 	if distance <= float(result.get("range_inches", 0.0)) / 2.0:
-		var rapid_bonus := -1
+		var rapid_bonus: Variant = null
 		for keyword in ids:
 			if str(keyword).begins_with("rapid_fire_"):
-				rapid_bonus = maxi(0, int(str(keyword).trim_prefix("rapid_fire_")))
+				var suffix := str(keyword).trim_prefix("rapid_fire_")
+				if suffix.is_valid_int():
+					rapid_bonus = maxi(0, int(suffix))
+				elif Dice.parse_expression(suffix).valid:
+					rapid_bonus = suffix.to_upper()
 				break
-		if rapid_bonus >= 0:
+		if rapid_bonus != null:
 			result.attacks = _add_expression(result.get("attacks", 1), rapid_bonus)
 		elif ids.has("rapid_fire"):
 			# Bare rapid fire remains the original prototype shorthand.
@@ -155,14 +159,30 @@ static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, t
 		result.attacks = int(result.get("attacks", 1)) + (target_models / 5)
 	return {"weapon": result, "cover_bonus": cover_bonus, "keywords": ids}
 
-static func _add_expression(value: Variant, modifier: int) -> Variant:
+static func _rapid_suffix_valid(value: String) -> bool:
+	return value.is_valid_int() or Dice.parse_expression(value).valid
+
+static func _add_expression(value: Variant, modifier: Variant) -> Variant:
 	var parsed := Dice.parse_expression(value)
+	var bonus := Dice.parse_expression(modifier)
 	if not parsed.valid:
 		return value
+	if not bonus.valid:
+		return value
+	if int(bonus.sides) > 0:
+		if int(parsed.sides) > 0:
+			return value
+		var bonus_expression := (str(bonus.count) if int(bonus.count) != 1 else "") + "D" + str(bonus.sides)
+		var combined_modifier := int(parsed.modifier) + int(bonus.modifier)
+		if combined_modifier > 0:
+			bonus_expression += "+" + str(combined_modifier)
+		elif combined_modifier < 0:
+			bonus_expression += str(combined_modifier)
+		return bonus_expression
 	if int(parsed.sides) == 0:
-		return int(parsed.modifier) + modifier
+		return int(parsed.modifier) + int(bonus.modifier)
 	var expression := (str(parsed.count) if int(parsed.count) != 1 else "") + "D" + str(parsed.sides)
-	var total_modifier := int(parsed.modifier) + modifier
+	var total_modifier := int(parsed.modifier) + int(bonus.modifier)
 	if total_modifier > 0:
 		expression += "+" + str(total_modifier)
 	elif total_modifier < 0:

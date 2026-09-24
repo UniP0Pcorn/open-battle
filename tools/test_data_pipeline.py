@@ -66,6 +66,7 @@ class ReviewSheetTests(unittest.TestCase):
     def test_unimplemented_weapon_keywords_stay_in_review(self) -> None:
         self.assertEqual(unsupported_tags(["突击", "手枪", "曲射", "一次性", "一次性武器", "精准"]), ["精准"])
         self.assertEqual(unsupported_tags(["反步兵4+", "反载具3+", "反飞行2+", "反巨兽4+"]), [])
+        self.assertEqual(unsupported_tags(["速射D3", "连击D6+3"]), [])
         self.assertEqual(unsupported_tags(["熱熔2", "連擊1", "雙聯", "無", "無視掩體"]), [])
         self.assertEqual(unsupported_tags(["曲射，双联", "爆炸、危险"]), [])
         self.assertEqual(unsupported_tags(["爆炸，灵能"]), ["爆炸，灵能"])
