@@ -26,6 +26,9 @@ TAG_RE = re.compile(r"\[([^\]]+)\]")
 UNIT_KEYWORD_RE = re.compile(
     r"^(?:关键词|關鍵字)\s*[:：]?\s*(?P<unit>.*?)(?:\s+(?:阵营关键词|陣營關鍵字)\s*[:：]?\s*(?P<faction>.*))?$"
 )
+COMBINED_KEYWORD_RE = re.compile(
+    r"^(?:关键词|關鍵字)\s*[:：]?\s*(?P<unit>.*?)\s+(?:阵营关键词|陣營關鍵字)\s*[:：]?\s*(?P<faction>.*)$"
+)
 FACTION_KEYWORD_RE = re.compile(r"^(?:阵营关键词|陣營關鍵字)\s*[:：]?\s*(?P<faction>.+)$")
 POINT_RE = re.compile(r"(?P<count>[0-9]+)\s*个\s*模型.*?(?P<points>[0-9]+)\s*分")
 POINT_SHORT_RE = re.compile(r"(?P<count>[0-9]+)\s*\+\s*个(?:\s*模型)?\s*(?P<points>[0-9]+)\s*分")
@@ -83,7 +86,8 @@ def extract(pdf_path: Path, edition: str = "", max_pages: int = 0) -> dict:
                 unit_keywords: list[str] = []
                 faction_keywords: list[str] = []
                 for keyword_line in lines:
-                    unit_match = UNIT_KEYWORD_RE.match(keyword_line)
+                    combined_match = COMBINED_KEYWORD_RE.match(keyword_line)
+                    unit_match = combined_match or UNIT_KEYWORD_RE.match(keyword_line)
                     if unit_match:
                         unit_keywords = [x.strip() for x in re.split(r"[，,、]", unit_match.group("unit")) if x.strip()]
                         if unit_match.group("faction"):
