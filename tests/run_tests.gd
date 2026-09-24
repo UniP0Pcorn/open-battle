@@ -279,6 +279,15 @@ func run() -> void:
 	base_replay_log = CommandLog.append(base_replay_log, 0, "MOVE", {"unit_id": "base", "delta": [6, 0]})
 	var base_replay := Replay.replay(Replay.initial_state(base_replay_models, "MOVEMENT", 0), base_replay_log)
 	check(not base_replay.ok and base_replay.reason == "PATH BLOCKED", "replay blocks base crossing")
+	var charge_replay_models: Array = [{"model_id": "charge_m001", "unit_id": "charge", "team": 0, "position": Vector2(5, 5), "radius": 0.5}, {"model_id": "charge_target_m001", "unit_id": "charge_target", "team": 1, "position": Vector2(8, 5), "radius": 0.5}]
+	var charge_replay_log: Array = []
+	charge_replay_log = CommandLog.append(charge_replay_log, 0, "CHARGE", {"model": 0, "model_id": "charge_m001", "target": 1, "target_id": "charge_target_m001", "roll": [2, 2], "to": [7.0, 5.0]})
+	var charge_replay := Replay.replay(Replay.initial_state(charge_replay_models, "CHARGE", 0), charge_replay_log)
+	check(charge_replay.ok and charge_replay.state.models[0].position == Vector2(7, 5), "replay validates charge distance and engagement")
+	var bad_charge_log: Array = []
+	bad_charge_log = CommandLog.append(bad_charge_log, 0, "CHARGE", {"model": 0, "model_id": "charge_m001", "target": 1, "target_id": "charge_target_m001", "roll": [6, 6], "to": [5.0, 12.0]})
+	var bad_charge := Replay.replay(Replay.initial_state(charge_replay_models, "CHARGE", 0), bad_charge_log)
+	check(not bad_charge.ok and bad_charge.reason == "NOT IN ENGAGEMENT", "replay rejects invalid charge endpoint")
 	var stratagem_state := Replay.initial_state(one_shot_models, "SHOOTING", 0)
 	stratagem_state.command_points = [1, 0]
 	var stratagem_log: Array = []

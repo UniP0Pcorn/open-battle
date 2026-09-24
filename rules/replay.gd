@@ -3,6 +3,7 @@ extends RefCounted
 ## Deterministic command-log replay for local verification and future servers.
 
 const CommandSchema = preload("res://rules/command_schema.gd")
+const Charge = preload("res://rules/charge.gd")
 const Engagement = preload("res://rules/engagement.gd")
 const Movement = preload("res://rules/movement.gd")
 const Stratagems = preload("res://rules/stratagems.gd")
@@ -181,6 +182,7 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 				return "NOT ACTIVE TEAM"
 			if int(models[charge_target].get("team", -1)) == actor_team:
 				return "FRIENDLY TARGET"
+			return _charge_reference_error(models, charger, charge_target, payload, terrain)
 		"SHOOT", "FIGHT":
 			var attacker := _index_for(models, payload, "attacker_id", "attacker")
 			var target := _index_for(models, payload, "target_id", "target")
@@ -263,6 +265,42 @@ static func _movement_reference_error(models: Array, unit_id: String, delta: Arr
 	if engaged:
 		return "ENGAGED UNIT MUST FALL BACK"
 	return "CANNOT END IN ENGAGEMENT" if remains_engaged else ""
+
+static func _charge_reference_error(models: Array, charger_index: int, target_index: int, payload: Dictionary, terrain: Array) -> String:
+	var charger: Dictionary = models[charger_index]
+	var target: Dictionary = models[target_index]
+	if bool(charger.get("advanced", false)):
+		return "ADVANCED CANNOT CHARGE"
+	if bool(charger.get("fell_back", false)):
+		return "FELL BACK"
+	var charge_distance := INF
+	if payload.has("roll"):
+		var rolls: Variant = payload.get("roll", [])
+		if not (rolls is Array) or rolls.size() != 2:
+			return "INVALID CHARGE ROLL"
+		charge_distance = 0.0
+		for roll in rolls:
+			if typeof(roll) not in [TYPE_INT, TYPE_FLOAT] or int(roll) < 1 or int(roll) > 6 or float(roll) != float(int(roll)):
+				return "INVALID CHARGE ROLL"
+			charge_distance += float(roll)
+	var starting_distance := _position_of(charger).distance_to(_position_of(target))
+	if not is_inf(charge_distance):
+		var target_error := Charge.target_reason(charger, target, int(charger.get("team", -1)), starting_distance, int(charge_distance))
+		if not target_error.is_empty():
+			return target_error
+	var destination_value: Variant = payload.get("to", [])
+	if not (destination_value is Array) or destination_value.size() != 2:
+		return "INVALID CHARGE"
+	var destination := Vector2(float(destination_value[0]), float(destination_value[1]))
+	var external_models: Array = []
+	for index in range(models.size()):
+		if index != charger_index:
+			external_models.append(models[index])
+	var movement_error := Movement.movement_reason(_position_of(charger), destination, 0.0, charge_distance, float(charger.get("radius", charger.get("base_radius", 0.0))), external_models, -1, terrain)
+	if not movement_error.is_empty():
+		return "CHARGE " + movement_error
+	var end_error := Charge.end_reason(destination, _position_of(target), 1.0, float(charger.get("radius", charger.get("base_radius", 0.0))), float(target.get("radius", target.get("base_radius", 0.0))))
+	return end_error
 
 static func _position_of(model: Dictionary) -> Vector2:
 	var position: Variant = model.get("position", Vector2.ZERO)
