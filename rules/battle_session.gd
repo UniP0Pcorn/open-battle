@@ -11,7 +11,7 @@ const ModelState = preload("res://rules/model_state.gd")
 
 const SCHEMA_VERSION := 1
 
-static func create(models: Array, edition: int = 11, first_team: int = 0) -> Dictionary:
+static func create(models: Array, edition: int = 11, first_team: int = 0, terrain: Array = []) -> Dictionary:
 	var ruleset := RulesetCatalog.get_ruleset(edition)
 	if ruleset.is_empty() or first_team not in [0, 1]:
 		return {}
@@ -25,6 +25,7 @@ static func create(models: Array, edition: int = 11, first_team: int = 0) -> Dic
 		"phase_index": 0,
 		"command_points": [0, 0],
 		"models": models.duplicate(true),
+		"terrain": terrain.duplicate(true),
 		"command_log": [],
 		"events": []
 	}
@@ -73,6 +74,8 @@ static func validate_snapshot(state: Dictionary) -> String:
 	var model_errors := ModelState.validate_models(state.models)
 	if not model_errors.is_empty():
 		return model_errors[0]
+	if state.has("terrain") and not (state.terrain is Array):
+		return "INVALID TERRAIN"
 	var phase_state := {"round": int(state.round), "active_team": int(state.active_team), "phase": str(state.phase), "phase_index": int(state.phase_index), "command_points": state.get("command_points", [0, 0])}
 	if not TurnState.is_valid(phase_state):
 		return "INVALID TURN STATE"

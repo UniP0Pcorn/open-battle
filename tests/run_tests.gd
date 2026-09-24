@@ -130,6 +130,10 @@ func run() -> void:
 	session = BattleSession.advance_phase(session).state
 	var accepted_move := BattleSession.submit(session, 0, "MOVE", {"unit_id": "u", "delta": [1, 0]})
 	check(accepted_move.ok and accepted_move.state.command_log.size() == 2 and accepted_move.state.phase == "MOVEMENT", "authoritative session accepts a legal movement command")
+	var terrain_session := BattleSession.create([{"model_id": "session_terrain_m001", "position": Vector2(2, 5), "unit_id": "session_terrain", "team": 0, "radius": 0.5, "movement_inches": 10.0}], 11, 0, [{"id": "session_wall", "x": 4.0, "y": 4.0, "width": 2.0, "height": 2.0}])
+	terrain_session = BattleSession.advance_phase(terrain_session).state
+	var blocked_session_move := BattleSession.submit(terrain_session, 0, "MOVE", {"unit_id": "session_terrain", "delta": [6, 0]})
+	check(not blocked_session_move.ok and blocked_session_move.reason == "TERRAIN BLOCKED", "authoritative session blocks terrain crossing")
 	var wrong_end_turn := BattleSession.submit(accepted_move.state, 1, "END_TURN", {})
 	check(not wrong_end_turn.ok and wrong_end_turn.reason == "NOT ACTIVE TEAM", "authoritative session rejects foreign end turn")
 	var ended_session := BattleSession.submit(accepted_move.state, 0, "END_TURN", {})
@@ -265,6 +269,16 @@ func run() -> void:
 	limited_move_log = CommandLog.append(limited_move_log, 0, "MOVE", {"unit_id": "limited", "delta": [3, 0]})
 	var limited_move_replay := Replay.replay(Replay.initial_state(limited_move_models, "MOVEMENT", 0), limited_move_log)
 	check(not limited_move_replay.ok and limited_move_replay.reason == "MOVE LIMIT EXCEEDED", "replay enforces movement allowance")
+	var terrain_replay_models: Array = [{"model_id": "terrain_m001", "unit_id": "terrain", "team": 0, "position": Vector2(2, 5), "radius": 0.5, "movement_inches": 10.0}, {"model_id": "terrain_enemy_m001", "unit_id": "terrain_enemy", "team": 1, "position": Vector2(20, 20), "radius": 0.5}]
+	var terrain_replay_log: Array = []
+	terrain_replay_log = CommandLog.append(terrain_replay_log, 0, "MOVE", {"unit_id": "terrain", "delta": [6, 0]})
+	var terrain_replay := Replay.replay(Replay.initial_state(terrain_replay_models, "MOVEMENT", 0, [{"id": "wall", "x": 4.0, "y": 4.0, "width": 2.0, "height": 2.0}]), terrain_replay_log)
+	check(not terrain_replay.ok and terrain_replay.reason == "TERRAIN BLOCKED", "replay blocks terrain crossing")
+	var base_replay_models: Array = [{"model_id": "base_m001", "unit_id": "base", "team": 0, "position": Vector2(2, 5), "radius": 0.5, "movement_inches": 10.0}, {"model_id": "base_enemy_m001", "unit_id": "base_enemy", "team": 1, "position": Vector2(5, 5), "radius": 0.5}]
+	var base_replay_log: Array = []
+	base_replay_log = CommandLog.append(base_replay_log, 0, "MOVE", {"unit_id": "base", "delta": [6, 0]})
+	var base_replay := Replay.replay(Replay.initial_state(base_replay_models, "MOVEMENT", 0), base_replay_log)
+	check(not base_replay.ok and base_replay.reason == "PATH BLOCKED", "replay blocks base crossing")
 	var stratagem_state := Replay.initial_state(one_shot_models, "SHOOTING", 0)
 	stratagem_state.command_points = [1, 0]
 	var stratagem_log: Array = []

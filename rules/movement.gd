@@ -15,9 +15,20 @@ static func placement_reason(position: Vector2, radius: float, models: Array, ig
 	if not inside_board(position, radius):
 		return "OUTSIDE TABLE"
 	for i in range(models.size()):
-		if i != ignored_index and position.distance_to(models[i].position) < radius + float(models[i].radius) - EPSILON:
+		var other: Dictionary = models[i]
+		var other_position := _position_of(other)
+		var other_radius := float(other.get("radius", 0.0))
+		if i != ignored_index and position.distance_to(other_position) < radius + other_radius - EPSILON:
 			return "BASE OVERLAP"
 	return ""
+
+static func _position_of(model: Dictionary) -> Vector2:
+	var position: Variant = model.get("position", Vector2.ZERO)
+	if position is Vector2:
+		return position
+	if position is Array and position.size() == 2:
+		return Vector2(float(position[0]), float(position[1]))
+	return Vector2.ZERO
 
 static func path_reason(origin: Vector2, destination: Vector2, radius: float, models: Array, ignored_index: int = -1) -> String:
 	var travel := origin.distance_to(destination)

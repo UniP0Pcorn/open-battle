@@ -4,11 +4,12 @@ extends RefCounted
 
 const CommandSchema = preload("res://rules/command_schema.gd")
 const Engagement = preload("res://rules/engagement.gd")
+const Movement = preload("res://rules/movement.gd")
 const Stratagems = preload("res://rules/stratagems.gd")
 const TurnState = preload("res://rules/turn_state.gd")
 
-static func initial_state(models: Array, phase: String = "MOVEMENT", active_team: int = 0) -> Dictionary:
-	return {"models": models.duplicate(true), "phase": phase, "phase_index": TurnState.phase_index(phase), "active_team": active_team, "round": 1, "command_points": [0, 0], "events": []}
+static func initial_state(models: Array, phase: String = "MOVEMENT", active_team: int = 0, terrain: Array = []) -> Dictionary:
+	return {"models": models.duplicate(true), "phase": phase, "phase_index": TurnState.phase_index(phase), "active_team": active_team, "round": 1, "command_points": [0, 0], "terrain": terrain.duplicate(true), "events": []}
 
 static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 	var next := state.duplicate(true)
@@ -17,7 +18,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 	if not contract_error.is_empty():
 		return {"ok": false, "reason": contract_error, "state": state}
 	var payload: Dictionary = entry.payload
-	var reference_error := _validate_references(next.models, entry, kind, payload)
+	var reference_error := _validate_references(next.models, entry, kind, payload, next.get("terrain", []))
 	if not reference_error.is_empty():
 		return {"ok": false, "reason": reference_error, "state": state}
 	match kind:
@@ -150,7 +151,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 	next.events.append(kind)
 	return {"ok": true, "reason": "", "state": next}
 
-static func _validate_references(models: Array, entry: Dictionary, kind: String, payload: Dictionary) -> String:
+static func _validate_references(models: Array, entry: Dictionary, kind: String, payload: Dictionary, terrain: Array = []) -> String:
 	var actor_team := int(entry.get("team", -1))
 	match kind:
 		"MOVE", "FALL_BACK":
@@ -162,7 +163,7 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 						return "NOT ACTIVE TEAM"
 			if not found:
 				return "UNKNOWN UNIT"
-			return _movement_reference_error(models, str(payload.get("unit_id", "")), payload.delta, str(kind) == "FALL_BACK")
+			return _movement_reference_error(models, str(payload.get("unit_id", "")), payload.delta, str(kind) == "FALL_BACK", terrain)
 		"ADVANCE", "FALL_BACK":
 			var advance_found := false
 			for model in models:
@@ -218,7 +219,7 @@ static func _apply_damage(model: Dictionary, damage: int) -> Dictionary:
 		next.can_control = false
 	return next
 
-static func _movement_reference_error(models: Array, unit_id: String, delta: Array, falling_back: bool) -> String:
+static func _movement_reference_error(models: Array, unit_id: String, delta: Array, falling_back: bool, terrain: Array = []) -> String:
 	var unit_models: Array = []
 	var enemies: Array = []
 	var unit_team := -1
@@ -233,17 +234,26 @@ static func _movement_reference_error(models: Array, unit_id: String, delta: Arr
 	var remains_engaged := false
 	var movement_delta := Vector2(float(delta[0]), float(delta[1]))
 	var movement_distance := movement_delta.length()
+	var external_models: Array = []
+	for model in models:
+		if str(model.get("unit_id", "")) != unit_id:
+			external_models.append(model)
 	for model in unit_models:
 		var allowance := float(model.get("movement_inches", INF))
 		if bool(model.get("advanced", false)):
 			allowance += float(model.get("advance_bonus", 0))
 		if not is_inf(allowance) and float(model.get("spent", 0.0)) + movement_distance > allowance + Engagement.EPSILON:
 			return "MOVE LIMIT EXCEEDED"
+		var origin := _position_of(model)
+		var destination := origin + movement_delta
+		var path_error := Movement.movement_reason(origin, destination, float(model.get("spent", 0.0)), allowance, float(model.get("radius", 0.0)), external_models, -1, terrain)
+		if not path_error.is_empty():
+			return path_error
 		for enemy in enemies:
 			if Engagement.in_engagement(model, enemy):
 				engaged = true
 			var moved: Dictionary = model.duplicate(true)
-			moved.position = model.position + movement_delta
+			moved.position = destination
 			if Engagement.in_engagement(moved, enemy):
 				remains_engaged = true
 	if falling_back:
@@ -253,6 +263,14 @@ static func _movement_reference_error(models: Array, unit_id: String, delta: Arr
 	if engaged:
 		return "ENGAGED UNIT MUST FALL BACK"
 	return "CANNOT END IN ENGAGEMENT" if remains_engaged else ""
+
+static func _position_of(model: Dictionary) -> Vector2:
+	var position: Variant = model.get("position", Vector2.ZERO)
+	if position is Vector2:
+		return position
+	if position is Array and position.size() == 2:
+		return Vector2(float(position[0]), float(position[1]))
+	return Vector2.ZERO
 
 static func _index_for(models: Array, payload: Dictionary, id_key: String, index_key: String) -> int:
 	var model_id := str(payload.get(id_key, ""))
