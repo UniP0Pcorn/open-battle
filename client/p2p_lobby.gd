@@ -186,10 +186,10 @@ func _handle_lobby(peer_id: int, packet: Dictionary) -> void:
 				lobby_changed.emit(room)
 			return
 		var action := str(packet.action)
+		if str(authenticated_peers.get(peer_id, "")) != str(packet.peer_id):
+			transport.send(PeerProtocol.lobby(str(room.id), player_id, _session_id(), "ERROR", {"reason": "AUTH REQUIRED"}), peer_id)
+			return
 		if action == "JOIN":
-			if not authenticated_peers.has(peer_id):
-				transport.send(PeerProtocol.lobby(str(room.id), player_id, _session_id(), "ERROR", {"reason": "AUTH REQUIRED"}), peer_id)
-				return
 			var joined := Room.join(room, str(packet.peer_id), int(packet.payload.get("preferred_team", -1)))
 			if bool(joined.get("ok", false)):
 				room = joined.room
