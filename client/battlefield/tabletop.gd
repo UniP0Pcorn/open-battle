@@ -719,7 +719,7 @@ func fight_selected() -> void:
 		message = "一次性武器已经使用过。"
 		queue_redraw()
 		return
-	var result := Melee.resolve_attack(weapon, models[target_index], combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls), models[target_index].get("keywords", []))
+	var result := Melee.resolve_attack(weapon, models[target_index], combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls), models[target_index].get("keywords", []), attacker_abilities)
 	reroll_next_attack = false
 	if weapon_ids.has("one_shot") and not attacker.get("used_weapon_names", []).has(weapon_name):
 		attacker.used_weapon_names.append(weapon_name)
@@ -812,7 +812,7 @@ func fire_selected() -> void:
 	var weapon_context := WeaponRules.context(weapon, nearest, cover_bonus, target_models, target_for_attack.get("keywords", []), is_zero_approx(float(attacker.get("spent", 0.0))), target_has_line_of_sight)
 	target_for_attack.cover_save_bonus = int(weapon_context.cover_bonus)
 	var attacker_abilities := UnitAbilities.modifiers(attacker.get("ability_ids", []))
-	var result := Combat.resolve_ranged_attack(weapon_context.weapon, target_for_attack, combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls))
+	var result := Combat.resolve_ranged_attack(weapon_context.weapon, target_for_attack, combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls), attacker_abilities)
 	reroll_next_attack = false
 	if weapon_ids.has("one_shot") and not attacker.get("used_weapon_names", []).has(weapon_name):
 		attacker.used_weapon_names.append(weapon_name)

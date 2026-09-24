@@ -10,9 +10,9 @@ const DEFINITIONS := {
 	"lone_operator": {},
 	"objective_control_plus_1": {"objective_control_bonus": 1},
 	"leadership_plus_1": {"leadership_bonus": 1},
-	"reroll_hit_ones": {"hit_rerolls": 1},
-	"reroll_wound_ones": {"wound_rerolls": 1},
-	"reroll_save_ones": {"save_rerolls": 1},
+	"reroll_hit_ones": {"hit_rerolls": 1, "hit_reroll_ones": 1},
+	"reroll_wound_ones": {"wound_rerolls": 1, "wound_reroll_ones": 1},
+	"reroll_save_ones": {"save_rerolls": 1, "save_reroll_ones": 1},
 	"invulnerable_4": {"invulnerable_save": 4},
 	"invulnerable_5": {"invulnerable_save": 5},
 	"feel_no_pain_5": {"feel_no_pain": 5},
@@ -62,7 +62,7 @@ static func validate(ids: Array) -> Array[String]:
 	return errors
 
 static func modifiers(ids: Array) -> Dictionary:
-	var result := {"cover_bonus": 0, "prebattle_move_inches": 0.0, "objective_control_bonus": 0, "leadership_bonus": 0, "hit_rerolls": 0, "wound_rerolls": 0, "save_rerolls": 0, "invulnerable_save": 0, "feel_no_pain": 0, "damage_reduction": 0, "fights_first": false, "advance_and_charge": false}
+	var result := {"cover_bonus": 0, "prebattle_move_inches": 0.0, "objective_control_bonus": 0, "leadership_bonus": 0, "hit_rerolls": 0, "hit_reroll_ones": 0, "wound_rerolls": 0, "wound_reroll_ones": 0, "save_rerolls": 0, "save_reroll_ones": 0, "invulnerable_save": 0, "feel_no_pain": 0, "damage_reduction": 0, "fights_first": false, "advance_and_charge": false}
 	for ability_id in ids:
 		var definition := _definition_for(ability_id)
 		if definition.is_empty():

@@ -235,6 +235,8 @@ func run() -> void:
 	check(UnitAbilities.validate(["隐匿", "斥候6英寸"]).is_empty(), "localized ability aliases validate")
 	var ability_mods := UnitAbilities.modifiers(["stealth", "objective_control_plus_1", "reroll_hit_ones"])
 	check(ability_mods.cover_bonus == 1 and ability_mods.objective_control_bonus == 1 and ability_mods.hit_rerolls == 1, "ability modifiers aggregate")
+	var reroll_mods := UnitAbilities.modifiers(["reroll_wound_ones", "reroll_save_ones"])
+	check(reroll_mods.wound_reroll_ones == 1 and reroll_mods.save_reroll_ones == 1, "ability reroll ones modifiers are executable")
 	var inline_ability := {"id": "local_faction_rule", "modifiers": {"cover_bonus": 2}, "events": {"before_attack": {"when": {"phase": "SHOOTING"}, "modifiers": {"hit_rerolls": 1}, "effects": ["MARKED_TARGET"]}}}
 	check(UnitAbilities.validate([inline_ability]).is_empty(), "inline faction ability schema validates")
 	var inline_event := UnitAbilities.event_modifiers([inline_ability], "before_attack", {"phase": "SHOOTING"})

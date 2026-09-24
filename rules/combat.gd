@@ -49,7 +49,7 @@ static func save_target(armor_save: int, armor_penetration: int = 0, invulnerabl
 static func save_passes(roll: int, target: int) -> bool:
 	return target <= 6 and roll >= target
 
-static func resolve_ranged_attack(weapon: Dictionary, target: Dictionary, rng: RandomNumberGenerator, hit_rerolls: int = 0) -> Dictionary:
+static func resolve_ranged_attack(weapon: Dictionary, target: Dictionary, rng: RandomNumberGenerator, hit_rerolls: int = 0, modifiers: Dictionary = {}) -> Dictionary:
 	var attacks_roll := Dice.roll_expression(rng, weapon.get("attacks", 1))
 	var attacks := int(attacks_roll.total) if attacks_roll.valid else 0
 	var hit_on := int(weapon.get("hit_on", 4))
@@ -67,14 +67,22 @@ static func resolve_ranged_attack(weapon: Dictionary, target: Dictionary, rng: R
 	var devastating_wounds := 0
 	var sustained_hits := 0
 	var rerolls_left := maxi(0, hit_rerolls)
+	var hit_ones_left := maxi(0, int(modifiers.get("hit_reroll_ones", 0)))
+	var wound_rerolls_left := maxi(0, int(modifiers.get("wound_rerolls", 0)))
+	var wound_ones_left := maxi(0, int(modifiers.get("wound_reroll_ones", 0)))
+	var save_rerolls_left := maxi(0, int(modifiers.get("save_rerolls", 0)))
+	var save_ones_left := maxi(0, int(modifiers.get("save_reroll_ones", 0)))
 	var twin_linked := bool(weapon.get("twin_linked", false))
 	var lethal_hits := bool(weapon.get("lethal_hits", false))
 	var sustained_bonus := maxi(0, int(weapon.get("sustained_hits", 0)))
 	for _i in range(attacks):
 		var unmodified_hit_roll := rng.randi_range(1, 6)
 		var hit_roll := unmodified_hit_roll
-		if hit_roll < hit_on and rerolls_left > 0:
-			rerolls_left -= 1
+		if hit_roll < hit_on and (rerolls_left > 0 or (unmodified_hit_roll == 1 and hit_ones_left > 0)):
+			if rerolls_left > 0:
+				rerolls_left -= 1
+			else:
+				hit_ones_left -= 1
 			hit_roll = rng.randi_range(1, 6)
 		if hit_roll >= hit_on:
 			var hit_events: Array = [hit_roll]
@@ -91,7 +99,13 @@ static func resolve_ranged_attack(weapon: Dictionary, target: Dictionary, rng: R
 				else:
 					wound_roll = rng.randi_range(1, 6)
 					wound_success = wound_roll >= wounds_needed
-					if not wound_success and twin_linked:
+					if not wound_success and (twin_linked or wound_rerolls_left > 0 or (wound_roll == 1 and wound_ones_left > 0)):
+						if twin_linked:
+							pass
+						elif wound_rerolls_left > 0:
+							wound_rerolls_left -= 1
+						else:
+							wound_ones_left -= 1
 						wound_roll = rng.randi_range(1, 6)
 						wound_success = wound_roll >= wounds_needed
 				if wound_success:
@@ -99,7 +113,16 @@ static func resolve_ranged_attack(weapon: Dictionary, target: Dictionary, rng: R
 					var bypass_save := bool(weapon.get("devastating_wounds", false)) and wound_roll == 6
 					if bypass_save:
 						devastating_wounds += 1
-					if bypass_save or not save_passes(rng.randi_range(1, 6), save_needed):
+					var save_roll := rng.randi_range(1, 6)
+					var save_passed := save_passes(save_roll, save_needed)
+					if not bypass_save and (not save_passed) and (save_rerolls_left > 0 or (save_roll == 1 and save_ones_left > 0)):
+						if save_rerolls_left > 0:
+							save_rerolls_left -= 1
+						else:
+							save_ones_left -= 1
+						save_roll = rng.randi_range(1, 6)
+						save_passed = save_passes(save_roll, save_needed)
+					if bypass_save or not save_passed:
 						failed_saves += 1
 						var damage_roll := Dice.roll_expression(rng, weapon.get("damage", 1))
 						if damage_roll.valid:

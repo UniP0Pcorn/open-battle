@@ -11,6 +11,7 @@ const Melee = preload("res://rules/melee.gd")
 const Movement = preload("res://rules/movement.gd")
 const TurnState = preload("res://rules/turn_state.gd")
 const WeaponRules = preload("res://rules/weapon_rules.gd")
+const UnitAbilities = preload("res://rules/unit_abilities.gd")
 
 const EPSILON := 0.0001
 
@@ -175,7 +176,7 @@ static func _shooting_command(state: Dictionary, team: int, rng: RandomNumberGen
 				if not reason.is_empty():
 					continue
 				var context := WeaponRules.context(weapon, distance, 0, 1, target.get("keywords", []), float(attacker.get("spent", 0.0)) <= EPSILON, true)
-				var result := Combat.resolve_ranged_attack(context.weapon, target, rng, 0)
+				var result := Combat.resolve_ranged_attack(context.weapon, target, rng, 0, UnitAbilities.modifiers(attacker.get("ability_ids", [])))
 				return {"attacker": attacker_index, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": target.get("model_id", ""), "weapon": str(weapon.get("name", "")), "one_shot": WeaponRules.ids_from_weapon(weapon).has("one_shot"), "hits": result.hits, "damage": result.damage}
 	return {}
 
@@ -210,7 +211,7 @@ static func _fight_command(state: Dictionary, team: int, rng: RandomNumberGenera
 				if float(weapon.get("range_inches", weapon.get("range", 0.0))) > 0.0:
 					continue
 				var context := WeaponRules.context(weapon, INF, 0, 1, target.get("keywords", []), false)
-				var result := Melee.resolve_attack(context.weapon, target, rng, 0, target.get("keywords", []))
+				var result := Melee.resolve_attack(context.weapon, target, rng, 0, target.get("keywords", []), UnitAbilities.modifiers(attacker.get("ability_ids", [])))
 				return {"attacker": attacker_index, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": target.get("model_id", ""), "weapon": str(weapon.get("name", "")), "one_shot": WeaponRules.ids_from_weapon(weapon).has("one_shot"), "hits": result.hits, "damage": result.damage}
 	return {}
 
