@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tools.export_profile_review_sheet import rows, source_lookup
+from tools.export_profile_review_sheet import review_flags, rows, source_lookup
 
 
 class ReviewSheetTests(unittest.TestCase):
@@ -30,7 +30,18 @@ class ReviewSheetTests(unittest.TestCase):
             row = next(rows(drafts, source_map))
             self.assertEqual(row["source_id"], "tau_11_cn")
             self.assertEqual(row["faction"], "tau_11_cn")
+            self.assertEqual(row["review_bucket"], "needs_field_review")
+            self.assertIn("missing_points", row["review_flags"])
+            self.assertIn("missing_weapons", row["review_flags"])
             self.assertEqual(row["decision"], "pending_manual_review")
+
+    def test_complete_candidate_only_needs_explicit_base_and_faction(self) -> None:
+        draft = {
+            "models": [{"movement": "6", "toughness": "4", "save": "4+", "wounds": "2", "leadership": "7", "objective_control": "1"}],
+            "weapons": [{"range": "24", "attacks": "2", "skill": "3", "strength": "5", "damage": "2", "ap": "-1"}],
+            "points": [{"models": 5, "points": 100}],
+        }
+        self.assertEqual(review_flags(draft), [])
 
 
 if __name__ == "__main__":

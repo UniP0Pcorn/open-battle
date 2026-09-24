@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import re
 from pathlib import Path
 
 
@@ -19,6 +20,31 @@ def source_lookup(manifest_path: Path) -> dict[str, dict]:
     return {str(entry.get("filename", "")): entry for entry in document.get("sources", [])}
 
 
+def _fixed(value: object, signed: bool = False) -> bool:
+    pattern = r"-?\d+" if signed else r"\d+"
+    return re.fullmatch(pattern, str(value).replace("+", "").replace("”", "").replace('"', "").strip()) is not None
+
+
+def review_flags(draft: dict) -> list[str]:
+    """Return structural flags without deciding whether a profile is approved."""
+    flags: list[str] = []
+    model = (draft.get("models") or [{}])[0]
+    for field in ["movement", "toughness", "save", "wounds", "leadership", "objective_control"]:
+        if not _fixed(model.get(field, "")):
+            flags.append("non_numeric_" + field)
+    if not draft.get("points"):
+        flags.append("missing_points")
+    if not draft.get("weapons"):
+        flags.append("missing_weapons")
+    for weapon in draft.get("weapons", []):
+        for field in ["range", "attacks", "skill", "strength", "damage"]:
+            if not _fixed(weapon.get(field, "")):
+                flags.append("complex_weapon_" + field)
+        if not _fixed(weapon.get("ap", ""), signed=True):
+            flags.append("complex_weapon_ap")
+    return sorted(set(flags))
+
+
 def rows(root: Path, sources: dict[str, dict] | None = None):
     sources = sources or {}
     for path in sorted(root.glob("*.json")):
@@ -27,6 +53,7 @@ def rows(root: Path, sources: dict[str, dict] | None = None):
         source_file = draft.get("provenance", {}).get("source_file", "")
         source = sources.get(source_file, {})
         source_id = str(source.get("id", ""))
+        flags = review_flags(draft)
         yield {
             "draft_file": path.name,
             "id": draft.get("id", ""),
@@ -46,6 +73,8 @@ def rows(root: Path, sources: dict[str, dict] | None = None):
             "wounds": model.get("wounds", ""),
             "base_mm": "",
             "coherency_inches": "2.0",
+            "review_bucket": "needs_field_review" if flags else "ready_for_base_faction_review",
+            "review_flags": "|".join(flags),
             "decision": "pending_manual_review",
         }
 
