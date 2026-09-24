@@ -18,6 +18,8 @@ var ready_button: Button
 var start_button: Button
 var upnp_option: CheckBox
 var nat_status: Label
+var directory_url: LineEdit
+var directory_status: Label
 
 func _ready() -> void:
 	_build_ui()
@@ -28,6 +30,8 @@ func _ready() -> void:
 	lobby.lobby_changed.connect(_on_lobby_changed)
 	lobby.error_occurred.connect(_on_error)
 	lobby.nat_status_changed.connect(_on_nat_status)
+	lobby.directory_rooms_received.connect(_on_directory_rooms)
+	lobby.directory_request_completed.connect(_on_directory_request)
 	var saved := AccountStore.load_identity()
 	if not saved.is_empty():
 		account_id.text = str(saved.account_id)
@@ -89,6 +93,22 @@ func _build_ui() -> void:
 	nat_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	nat_status.text = "UPnP 未启用；局域网或手动端口转发仍可使用。"
 	panel.add_child(nat_status)
+	panel.add_child(_label("公开房间目录（可选）"))
+	directory_url = _line("http://127.0.0.1:8765")
+	panel.add_child(directory_url)
+	var directory_row := HBoxContainer.new()
+	var discover_button := Button.new()
+	discover_button.text = "发现公开房间"
+	discover_button.pressed.connect(_list_public_rooms)
+	directory_row.add_child(discover_button)
+	var publish_button := Button.new()
+	publish_button.text = "发布当前房间"
+	publish_button.pressed.connect(_publish_public_room)
+	directory_row.add_child(publish_button)
+	panel.add_child(directory_row)
+	directory_status = _label("目录未连接。")
+	directory_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	panel.add_child(directory_status)
 	var room_row := HBoxContainer.new()
 	var host_button := Button.new()
 	host_button.text = "创建主机房间"
@@ -199,6 +219,32 @@ func _reconnect_room() -> void:
 		return
 	var error: String = lobby.reconnect()
 	status.text = "正在请求最新权威快照……" if error.is_empty() else error
+
+func _list_public_rooms() -> void:
+	if lobby == null:
+		return
+	var error: String = lobby.list_public_rooms(directory_url.text)
+	directory_status.text = "正在查询目录……" if error.is_empty() else error
+
+func _publish_public_room() -> void:
+	if lobby == null:
+		return
+	var error: String = lobby.publish_public_room(directory_url.text, address.text, int(Time.get_unix_time_from_system()) + 600)
+	directory_status.text = "正在发布房间广告……" if error.is_empty() else error
+
+func _on_directory_rooms(rooms: Array) -> void:
+	if rooms.is_empty():
+		directory_status.text = "目录中没有未过期房间。"
+		return
+	var room_ids: Array[String] = []
+	for room in rooms:
+		if room is Dictionary:
+			room_ids.append(str(room.get("room_id", "")))
+	directory_status.text = "发现 %d 个房间：%s" % [rooms.size(), ", ".join(room_ids)]
+
+func _on_directory_request(ok: bool, payload: Variant) -> void:
+	if not ok:
+		directory_status.text = "目录请求失败：" + str(payload.get("error", "未知错误")) if payload is Dictionary else "目录请求失败。"
 
 func _on_lobby_changed(room: Dictionary) -> void:
 	ready_button.disabled = room.is_empty()
