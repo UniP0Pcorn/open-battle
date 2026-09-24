@@ -6,6 +6,7 @@ const ArmyValidation = preload("res://rules/army_validation.gd")
 const CommandLog = preload("res://rules/command_log.gd")
 const CommandSchema = preload("res://rules/command_schema.gd")
 const BattleSession = preload("res://rules/battle_session.gd")
+const Room = preload("res://rules/room.gd")
 const Deployment = preload("res://rules/deployment.gd")
 const Engagement = preload("res://rules/engagement.gd")
 const UnitValidation = preload("res://rules/unit_validation.gd")
@@ -144,6 +145,32 @@ func run() -> void:
 	var duplicate_snapshot: Dictionary = accepted_move.state.duplicate(true)
 	duplicate_snapshot.models.append(duplicate_snapshot.models[0].duplicate(true))
 	check(BattleSession.validate_snapshot(duplicate_snapshot) == "DUPLICATE MODEL ID u_m001", "authoritative session rejects duplicate model ids")
+	var room := Room.create("room-test", 11, 1000, "control_center", [{"id": "wall", "x": 4.0, "y": 4.0, "width": 2.0, "height": 2.0}])
+	check(not room.is_empty() and Room.validate(room).is_empty() and room.status == Room.WAITING, "room creates waiting lifecycle")
+	var joined_gold := Room.join(room, "player_gold", 0)
+	room = joined_gold.room
+	check(joined_gold.ok and joined_gold.team == 0, "room assigns preferred team")
+	var joined_blue := Room.join(room, "player_blue", 1)
+	room = joined_blue.room
+	check(joined_blue.ok and joined_blue.team == 1 and room.players.size() == 2, "room joins second player")
+	check(not Room.join(room, "spectator", -1).ok, "room rejects third player")
+	room = Room.set_ready(room, "player_gold").room
+	check(not Room.start(room, [{"model_id": "room_m001", "unit_id": "room_unit", "team": 0, "position": Vector2(2, 2)}]).ok, "room waits for both ready players")
+	room = Room.set_ready(room, "player_blue").room
+	var started_room := Room.start(room, [{"model_id": "room_m001", "unit_id": "room_unit", "team": 0, "position": Vector2(2, 2)}])
+	room = started_room.room
+	check(started_room.ok and room.status == Room.ACTIVE and room.session.phase == "COMMAND", "room starts authoritative session")
+	var wrong_room_command := Room.submit(room, "player_blue", "PHASE_ADVANCE", {"from": "COMMAND", "to": "MOVEMENT"})
+	check(not wrong_room_command.ok and wrong_room_command.reason == "NOT ACTIVE TEAM", "room maps player to team")
+	var room_advanced := Room.submit(room, "player_gold", "PHASE_ADVANCE", {"from": "COMMAND", "to": "MOVEMENT"})
+	room = room_advanced.room
+	check(room_advanced.ok and room.session.phase == "MOVEMENT", "room submits legal command")
+	var room_move := Room.submit(room, "player_gold", "MOVE", {"unit_id": "room_unit", "delta": [1, 0]})
+	room = room_move.room
+	check(room_move.ok and room.session.models[0].position == Vector2(3, 2), "room persists authoritative command state")
+	check(not Room.public_snapshot(room).session.has("command_log"), "room public snapshot omits command log")
+	var abandoned_room := Room.leave(room, "player_gold")
+	check(abandoned_room.ok and abandoned_room.room.status == Room.ABANDONED, "room marks active player leave")
 	var invalid_model := {"model_id": "bad_m001", "unit_id": "bad", "team": 0, "position": Vector2(INF, 2)}
 	check(ModelState.validate_models([invalid_model]).has("INVALID MODEL POSITION bad_m001"), "model state rejects non-finite position")
 	check(ModelState.validate_models([{ "model_id": "advance_m001", "unit_id": "advance", "team": 0, "position": Vector2.ZERO, "advance_bonus": 4 }]).is_empty(), "model state accepts advance metadata")
