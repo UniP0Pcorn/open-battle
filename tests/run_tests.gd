@@ -10,6 +10,7 @@ const Room = preload("res://rules/room.gd")
 const PeerProtocol = preload("res://rules/peer_protocol.gd")
 const AccountIdentity = preload("res://rules/account_identity.gd")
 const AccountStore = preload("res://rules/account_store.gd")
+const NatMapping = preload("res://client/nat_mapping.gd")
 const P2PTransport = preload("res://client/p2p_transport.gd")
 const P2PLobby = preload("res://client/p2p_lobby.gd")
 const NetworkSync = preload("res://rules/network_sync.gd")
@@ -46,6 +47,39 @@ const AIPlayer = preload("res://rules/ai_player.gd")
 const Reserves = preload("res://rules/reserves.gd")
 const Attachments = preload("res://rules/attachments.gd")
 const BattleSetup = preload("res://rules/battle_setup.gd")
+class FakeNAT extends RefCounted:
+	var discover_error := 0
+	var mapping_error := 0
+	var renewal_error := 0
+	var cleanup_error := 0
+	var valid := true
+	var gate: Semaphore
+	var added: Array = []
+	var deleted: Array = []
+	func discover(_timeout: int, _ttl: int, _filter: String) -> int:
+		if gate != null:
+			gate.wait()
+		return discover_error
+	func get_gateway() -> Object:
+		return self
+	func is_valid_gateway() -> bool:
+		return valid
+	func add_port_mapping(port: int, internal: int, _description: String, protocol: String, lease: int) -> int:
+		added.append([port, internal, protocol, lease])
+		return renewal_error if added.size() > 1 else mapping_error
+	func query_external_address() -> String:
+		return "203.0.113.1"
+	func delete_port_mapping(port: int, protocol: String) -> int:
+		deleted.append([port, protocol])
+		return cleanup_error
+
+func await_nat_state(mapping: Node, expected: String) -> bool:
+	for attempt in range(200):
+		if str(mapping.status.state) == expected:
+			return true
+		await create_timer(0.01).timeout
+	return false
+
 var failures := 0
 var checks := 0
 
@@ -1361,10 +1395,51 @@ func run() -> void:
 	invalid_ready.import_status = "ready"
 	invalid_ready.keywords = ["unsupported_keyword"]
 	check(not ProfileCatalog.is_ready(invalid_ready), "ready catalog rejects structurally invalid profile")
+	var nat_service := NatMapping.new()
+	root.add_child(nat_service)
+	var fake_nat := FakeNAT.new()
+	check(not nat_service.start_mapping(80, fake_nat).is_empty() and fake_nat.added.is_empty(), "UPnP rejects reserved port before router calls")
+	check(nat_service.start_mapping(24567, fake_nat).is_empty(), "UPnP starts asynchronous mapping worker")
+	check(await await_nat_state(nat_service, "MAPPED"), "UPnP worker publishes mapped endpoint")
+	check(fake_nat.added == [[24567, 24567, "UDP", 600]] and nat_service.status.address == "203.0.113.1", "UPnP maps only ENet UDP with finite lease")
+	check(nat_service.start_mapping(24568, fake_nat) == "UPNP BUSY", "UPnP refuses overlapping mapping ownership")
+	var stale_nat_generation: int = nat_service.generation
+	nat_service.stop_mapping()
+	check(await await_nat_state(nat_service, "CLOSED"), "UPnP closes mapping asynchronously")
+	check(fake_nat.deleted == [[24567, "UDP"]], "UPnP cleanup deletes only acquired UDP mapping")
+	nat_service._publish(stale_nat_generation, {"state": "MAPPED"})
+	check(nat_service.status.state == "CLOSED", "late discovery callback cannot resurrect closed mapping")
+	fake_nat = FakeNAT.new()
+	fake_nat.discover_error = 27
+	nat_service.start_mapping(24567, fake_nat)
+	check(await await_nat_state(nat_service, "ERROR") and fake_nat.added.is_empty() and fake_nat.deleted.is_empty(), "UPnP discovery failure never edits router mappings")
+	fake_nat = FakeNAT.new()
+	fake_nat.mapping_error = 13
+	nat_service.start_mapping(24567, fake_nat)
+	check(await await_nat_state(nat_service, "ERROR") and fake_nat.deleted.is_empty(), "UPnP mapping conflict never deletes another mapping")
+	fake_nat = FakeNAT.new()
+	fake_nat.gate = Semaphore.new()
+	nat_service.start_mapping(24567, fake_nat)
+	nat_service.stop_mapping()
+	fake_nat.gate.post()
+	check(await await_nat_state(nat_service, "CLOSED") and fake_nat.added.is_empty(), "cancel during discovery prevents port mapping")
+	fake_nat = FakeNAT.new()
+	fake_nat.cleanup_error = 23
+	nat_service.start_mapping(24567, fake_nat)
+	await await_nat_state(nat_service, "MAPPED")
+	nat_service.stop_mapping()
+	check(await await_nat_state(nat_service, "ERROR") and nat_service.status.step == "cleanup", "UPnP reports cleanup failure without claiming port closed")
+	fake_nat = FakeNAT.new()
+	fake_nat.renewal_error = 23
+	nat_service._renew_interval_ms = 1
+	nat_service.start_mapping(24567, fake_nat)
+	check(await await_nat_state(nat_service, "ERROR") and nat_service.status.step == "renewal" and fake_nat.added.size() == 2 and fake_nat.deleted.size() == 1, "UPnP failed renewal cleans owned mapping and reports failure")
+	nat_service.queue_free()
 	var lobby_scene = load("res://client/lobby/lobby_screen.tscn").instantiate()
 	root.add_child(lobby_scene)
 	await process_frame
 	check(lobby_scene.status != null and lobby_scene.lobby != null, "lobby screen builds account and P2P controls")
+	check(not lobby_scene.upnp_option.button_pressed and lobby_scene.nat_status != null, "lobby UPnP remains explicitly opt in")
 	var lobby_models := BattleSetup.default_models()
 	check(lobby_models.size() == 20 and lobby_models[0].has("model_id") and lobby_models[0].has("weapons"), "lobby builds a complete shared prototype battle setup")
 	lobby_scene.queue_free()

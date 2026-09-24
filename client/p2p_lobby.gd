@@ -12,6 +12,7 @@ const NetworkSync = preload("res://rules/network_sync.gd")
 signal lobby_changed(room: Dictionary)
 signal battle_snapshot_received(state: Dictionary)
 signal error_occurred(reason: String)
+signal nat_status_changed(result: Dictionary)
 
 var transport: Node
 var room: Dictionary = {}
@@ -29,6 +30,7 @@ func _ready() -> void:
 	transport.packet_received.connect(_on_packet_received)
 	transport.peer_state_changed.connect(_on_peer_state_changed)
 	transport.transport_error.connect(_on_transport_error)
+	transport.nat_status_changed.connect(func(result: Dictionary): nat_status_changed.emit(result))
 	for trusted in AccountStore.load_trusted_identities():
 		trusted_identities[str(trusted.fingerprint)] = trusted.duplicate(true)
 
@@ -48,7 +50,7 @@ func trust_identity(value: Dictionary) -> String:
 	trusted_identities[str(value.fingerprint)] = value.duplicate(true)
 	return AccountStore.save_trusted_identity(value)
 
-func host_room(room_id: String, port: int, edition: int = 11, points_limit: int = 1000, mission_id: String = "control_center", terrain: Array = []) -> String:
+func host_room(room_id: String, port: int, edition: int = 11, points_limit: int = 1000, mission_id: String = "control_center", terrain: Array = [], use_upnp: bool = false) -> String:
 	if identity.is_empty():
 		return "IDENTITY REQUIRED"
 	var mission_config := _load_mission_config(mission_id, terrain)
@@ -56,7 +58,7 @@ func host_room(room_id: String, port: int, edition: int = 11, points_limit: int 
 	if room.is_empty():
 		return "ROOM CREATE FAILED"
 	is_host = true
-	var error: String = transport.host(port, 1)
+	var error: String = transport.host(port, 1, use_upnp)
 	if not error.is_empty():
 		return error
 	var joined := Room.join(room, player_id, 0)
@@ -289,3 +291,12 @@ func _load_mission_config(mission_id: String, terrain_override: Array) -> Dictio
 		elif objective.get("position_inches", []).size() >= 2:
 			config.objectives.append({"id": str(objective.get("id", "")), "position": Vector2(float(objective.position_inches[0]), float(objective.position_inches[1])), "points": int(objective.get("points", 1))})
 	return config
+
+func close_room() -> void:
+	transport.close()
+	room = {}
+	is_host = false
+	pending_join = false
+	authenticated_peers.clear()
+	reconnect_token = ""
+	lobby_changed.emit({})

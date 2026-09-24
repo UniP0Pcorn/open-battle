@@ -154,7 +154,7 @@ Warhammer 40,000、Custodian Guard 等相关名称属于各自权利人，包括
 
 交互方向参考了 [New Recruit](https://www.newrecruit.eu/) 公开介绍的编成校验、跨设备列表同步、分享与离线使用等能力；本项目的大厅和规则数据保持独立。
 
-当前回归：Godot **552 项检查，0 失败**；Python 数据管线 **13 项测试通过**。
+当前回归：Godot **566 项检查，0 失败**；Python 数据管线 **13 项测试通过**。
 
 自定义 REACTION_SHOOT 可在敌方移动后触发，由主机生成骰子结果并写入日志；面板选择射手、武器和触发单位中的目标。旧 fire_overwatch 声明仍不代表完整官方警戒射击。远端普通射击、近战和战斗震慑现在强制通过意图命令交给主机结算。
 
@@ -181,3 +181,11 @@ Warhammer 40,000、Custodian Guard 等相关名称属于各自权利人，包括
 批量入口：`python -m tools.promote_reviewed_profiles work/profile_review.csv --draft-dir work/profile_drafts`。直接转换入口也要求 `--reviewed-by`、`--reviewed-at`、`--draft-sha256`；摘要可用 PowerShell `Get-FileHash -Algorithm SHA256 <草稿路径>` 核对。旧 CSV 需要从原草稿重新导出补充审核字段，不应自动填成已批准。
 
 武器 AP 使用非正整数（如 -1），负 AP 正确提高护甲豁免所需骰面；正数 AP 需要重新审核。
+
+### 可选 UPnP 公网映射
+
+大厅勾选“尝试 UPnP 公网端口映射”后创建主机，程序在后台请求路由器映射所选 UDP 端口（1024–65535）。默认关闭；失败时 ENet 仍保持可用于局域网或手动端口转发。映射状态独立显示，报告的外部地址可交给已配对的玩家连接，但仍需实际验证可达性。点击“关闭房间并移除映射”会关闭 ENet 并请求清理；返回桌面不会关闭正在玩的房间。
+
+租期 600 秒，每 300 秒续租，不回退永久映射。关闭、切换连接和退出时请求清理，失败会明确报告；异常退出依赖路由器按租期过期。UPnP 不解决 CGNAT、双重 NAT、防火墙拦截或公网房间发现；中继仍待实现。请为此游戏选择未被其他服务使用的端口，映射行为取决于路由器。
+
+实现参考 [Godot 4.5 UPNP 文档](https://docs.godotengine.org/en/4.5/classes/class_upnp.html)。自动回归使用模拟网关，覆盖建立、有限租期、冲突、取消、清理、迟到回调和续租失败；没有对真实路由器执行映射，也未宣称跨公网联机验收通过。

@@ -2,16 +2,22 @@
 extends Node
 ## ENet-backed P2P transport for the transport-neutral peer envelopes.
 
+const NatMapping = preload("res://client/nat_mapping.gd")
 const PeerProtocol = preload("res://rules/peer_protocol.gd")
 
 signal packet_received(peer_id: int, packet: Dictionary)
 signal peer_state_changed(peer_id: int, connected: bool)
 signal transport_error(reason: String)
+signal nat_status_changed(result: Dictionary)
 
+var nat_mapping: Node
 var peer: ENetMultiplayerPeer
 var identity: Dictionary = {}
 
 func _ready() -> void:
+	nat_mapping = NatMapping.new()
+	add_child(nat_mapping)
+	nat_mapping.status_changed.connect(func(result: Dictionary): nat_status_changed.emit(result))
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	multiplayer.connected_to_server.connect(_on_connected)
@@ -20,18 +26,24 @@ func _ready() -> void:
 func set_identity(value: Dictionary) -> void:
 	identity = value.duplicate(true)
 
-func host(port: int, max_clients: int = 1) -> String:
+func host(port: int, max_clients: int = 1, use_upnp: bool = false) -> String:
+	close()
 	peer = ENetMultiplayerPeer.new()
 	var error := peer.create_server(port, max_clients)
 	if error != OK:
 		peer = null
 		return "CREATE SERVER FAILED " + str(error)
 	multiplayer.multiplayer_peer = peer
+	if use_upnp:
+		var mapping_error: String = nat_mapping.start_mapping(port)
+		if not mapping_error.is_empty():
+			nat_status_changed.emit({"state": "ERROR", "step": mapping_error})
 	return ""
 
 func connect_to_host(address: String, port: int) -> String:
 	if address.strip_edges().is_empty():
 		return "INVALID ADDRESS"
+	close()
 	peer = ENetMultiplayerPeer.new()
 	var error := peer.create_client(address, port)
 	if error != OK:
@@ -41,6 +53,8 @@ func connect_to_host(address: String, port: int) -> String:
 	return ""
 
 func close() -> void:
+	if nat_mapping != null:
+		nat_mapping.stop_mapping()
 	if peer != null:
 		peer.close()
 		peer = null

@@ -16,6 +16,8 @@ var port: SpinBox
 var status: Label
 var ready_button: Button
 var start_button: Button
+var upnp_option: CheckBox
+var nat_status: Label
 
 func _ready() -> void:
 	_build_ui()
@@ -25,6 +27,7 @@ func _ready() -> void:
 		return
 	lobby.lobby_changed.connect(_on_lobby_changed)
 	lobby.error_occurred.connect(_on_error)
+	lobby.nat_status_changed.connect(_on_nat_status)
 	var saved := AccountStore.load_identity()
 	if not saved.is_empty():
 		account_id.text = str(saved.account_id)
@@ -79,6 +82,13 @@ func _build_ui() -> void:
 	port.max_value = 65535
 	port.value = 24567
 	panel.add_child(port)
+	upnp_option = CheckBox.new()
+	upnp_option.text = "尝试 UPnP 公网端口映射（仅主机，可选）"
+	panel.add_child(upnp_option)
+	nat_status = Label.new()
+	nat_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	nat_status.text = "UPnP 未启用；局域网或手动端口转发仍可使用。"
+	panel.add_child(nat_status)
 	var room_row := HBoxContainer.new()
 	var host_button := Button.new()
 	host_button.text = "创建主机房间"
@@ -102,6 +112,14 @@ func _build_ui() -> void:
 	reconnect_button.pressed.connect(_reconnect_room)
 	room_row.add_child(reconnect_button)
 	panel.add_child(room_row)
+	var close_button := Button.new()
+	close_button.text = "关闭房间并移除映射"
+	close_button.pressed.connect(func():
+		if lobby != null:
+			lobby.close_room()
+	)
+	panel.add_child(close_button)
+
 	status = Label.new()
 	status.text = "先创建或加载账号；主机请先导入对端配对凭据。"
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -156,7 +174,7 @@ func _ensure_identity() -> bool:
 func _host_room() -> void:
 	if not _ensure_identity():
 		return
-	var error: String = lobby.host_room(room_id.text, int(port.value))
+	var error: String = lobby.host_room(room_id.text, int(port.value), 11, 1000, "control_center", [], upnp_option.button_pressed)
 	status.text = "主机已启动：" + room_id.text if error.is_empty() else error
 	ready_button.disabled = error != ""
 
@@ -183,7 +201,8 @@ func _reconnect_room() -> void:
 	status.text = "正在请求最新权威快照……" if error.is_empty() else error
 
 func _on_lobby_changed(room: Dictionary) -> void:
-	ready_button.disabled = false
+	ready_button.disabled = room.is_empty()
+	start_button.disabled = room.is_empty()
 	status.text = "房间 %s：%d/2 名玩家。" % [str(room.get("id", "")), room.get("players", []).size()]
 	if str(room.get("status", "WAITING")) == "ACTIVE":
 		get_tree().change_scene_to_file("res://client/battlefield/tabletop.tscn")
@@ -200,3 +219,16 @@ func _line(placeholder: String) -> LineEdit:
 	var line := LineEdit.new()
 	line.placeholder_text = placeholder
 	return line
+
+func _on_nat_status(result: Dictionary) -> void:
+	match str(result.get("state", "")):
+		"DISCOVERING":
+			nat_status.text = "正在后台查找 UPnP 路由器…"
+		"MAPPED":
+			nat_status.text = "路由器报告 UDP 映射：%s:%s；仍需对端验证可达性。" % [result.get("address", ""), result.get("port", "")]
+		"CLOSING":
+			nat_status.text = "正在移除本次端口映射…"
+		"CLOSED":
+			nat_status.text = "映射已关闭。"
+		"ERROR":
+			nat_status.text = "UPnP 未成功（%s / %s）；可使用局域网或手动 UDP 端口转发。" % [result.get("step", ""), result.get("code", "")]

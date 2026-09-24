@@ -7,6 +7,7 @@ const P2PLobby = preload("res://client/p2p_lobby.gd")
 signal lobby_changed(room: Dictionary)
 signal battle_snapshot_received(state: Dictionary)
 signal error_occurred(reason: String)
+signal nat_status_changed(result: Dictionary)
 
 var lobby: Node
 
@@ -16,6 +17,7 @@ func _ready() -> void:
 	lobby.lobby_changed.connect(func(room: Dictionary): lobby_changed.emit(room))
 	lobby.battle_snapshot_received.connect(func(state: Dictionary): battle_snapshot_received.emit(state))
 	lobby.error_occurred.connect(func(reason: String): error_occurred.emit(reason))
+	lobby.nat_status_changed.connect(func(result: Dictionary): nat_status_changed.emit(result))
 
 func set_identity(identity: Dictionary) -> String:
 	return lobby.set_identity(identity)
@@ -23,8 +25,8 @@ func set_identity(identity: Dictionary) -> String:
 func trust_identity(identity: Dictionary) -> String:
 	return lobby.trust_identity(identity)
 
-func host_room(room_id: String, port: int, edition: int = 11, points_limit: int = 1000, mission_id: String = "control_center", terrain: Array = []) -> String:
-	return lobby.host_room(room_id, port, edition, points_limit, mission_id, terrain)
+func host_room(room_id: String, port: int, edition: int = 11, points_limit: int = 1000, mission_id: String = "control_center", terrain: Array = [], use_upnp: bool = false) -> String:
+	return lobby.host_room(room_id, port, edition, points_limit, mission_id, terrain, use_upnp)
 
 func connect_to_room(room_id: String, address: String, port: int) -> String:
 	return lobby.connect_to_room(room_id, address, port)
@@ -51,3 +53,6 @@ func local_player_team() -> int:
 		if str(player.get("id", "")) == str(lobby.player_id):
 			return int(player.get("team", -1))
 	return -1
+
+func close_room() -> void:
+	lobby.close_room()
