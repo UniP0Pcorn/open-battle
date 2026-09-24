@@ -1053,6 +1053,8 @@ func charge_selected() -> void:
 		return
 	var old_position: Vector2 = attacker.position
 	attacker.position = destination
+	for charged_model in selected_unit_models():
+		charged_model.charged = true
 	charge_payload.from = [old_position.x, old_position.y]
 	command_log = CommandLog.append(command_log, active_team, "CHARGE", charge_payload)
 	message = "冲锋成功：2D6=%d，已进入接战距离。" % roll.distance
@@ -1096,6 +1098,9 @@ func fight_selected() -> void:
 	var attacker_abilities := UnitAbilities.event_modifiers(attacker.get("ability_ids", []), "before_attack", {"phase": "FIGHT", "kind": "FIGHT"})
 	var weapon := weapon_for_model(attacker)
 	var weapon_ids := WeaponRules.ids_from_weapon(weapon)
+	if bool(attacker.get("charged", false)) and weapon_ids.has("lance"):
+		weapon = weapon.duplicate(true)
+		weapon.wound_bonus = 1
 	var weapon_name := str(weapon.get("name", ""))
 	if weapon_ids.has("one_shot") and attacker.get("used_weapon_names", []).has(weapon_name):
 		message = "一次性武器已经使用过。"

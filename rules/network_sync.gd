@@ -73,6 +73,8 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, packet: 
 	if str(command.get("kind", "")) == "FIGHT":
 		var melee_context := WeaponRules.context(weapon, INF, 0, 1, target.get("keywords", []), false)
 		resolved_weapon = melee_context.weapon
+		if bool(attacker.get("charged", false)) and WeaponRules.ids_from_weapon(resolved_weapon).has("lance"):
+			resolved_weapon.wound_bonus = 1
 		result = Melee.resolve_attack(resolved_weapon, target, rng, 0, target.get("keywords", []), UnitAbilities.event_modifiers(attacker.get("ability_ids", []), "before_attack", {"phase": "FIGHT", "kind": "FIGHT"}))
 	else:
 		var distance := _position(attacker).distance_to(_position(target))

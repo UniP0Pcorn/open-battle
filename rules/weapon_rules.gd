@@ -38,7 +38,9 @@ const ALIASES := {
 	"爆炸": "blast",
 	"blast": "blast",
 	"精准": "precision",
-	"precision": "precision"
+	"precision": "precision",
+	"长枪": "lance",
+	"lance": "lance"
 }
 
 static func canonical_id(value: Variant) -> String:
@@ -161,6 +163,8 @@ static func context(weapon: Dictionary, distance: float, cover_bonus: int = 0, t
 		result.attacks = int(result.get("attacks", 1)) + (target_models / 5)
 	if ids.has("precision"):
 		result.precision = true
+	if ids.has("lance"):
+		result.lance = true
 	return {"weapon": result, "cover_bonus": cover_bonus, "keywords": ids}
 
 static func _rapid_suffix_valid(value: String) -> bool:

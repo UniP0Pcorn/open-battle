@@ -378,6 +378,10 @@ func run() -> void:
 	check(heavy_stationary.weapon.hit_on == 3 and heavy_moved.weapon.hit_on == 4, "heavy improves stationary hit and loses the bonus after movement")
 	var precision_context := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["精准"]}, 10.0)
 	check(precision_context.weapon.precision and precision_context.keywords.has("precision"), "precision weapon context is executable")
+	var lance_context := WeaponRules.context({"range_inches": 0.0, "attacks": 1, "hit_on": 4, "strength": 4, "damage": 1, "abilities": ["长枪"]}, INF)
+	lance_context.weapon.wound_bonus = 1
+	var lance_attack := Combat.resolve_ranged_attack(lance_context.weapon, {"toughness": 5, "save_on": 7}, dice_rng)
+	check(lance_context.weapon.lance and lance_attack.wound_on == 4, "lance improves melee wound threshold after a charge")
 	var indirect_context := WeaponRules.context({"range_inches": 60.0, "attacks": 1, "hit_on": 4, "abilities": ["曲射"]}, 30.0, 0, 1, [], true, false)
 	check(indirect_context.weapon.indirect and indirect_context.weapon.hit_on == 5 and indirect_context.cover_bonus == 1, "indirect fire allows blocked targets with hit and cover modifiers")
 	var one_shot_context := WeaponRules.context({"range_inches": 24.0, "attacks": 1, "hit_on": 4, "abilities": ["一次性"]}, 10.0)

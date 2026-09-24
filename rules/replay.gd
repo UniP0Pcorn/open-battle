@@ -161,6 +161,10 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			if model_index < 0 or model_index >= next.models.size():
 				return {"ok": false, "reason": "INVALID CHARGE", "state": state}
 			next.models[model_index].position = Vector2(float(destination[0]), float(destination[1]))
+			var charged_unit_id := Attachments.group_id(next.models[model_index])
+			for charged_model in next.models:
+				if Attachments.group_id(charged_model) == charged_unit_id:
+					charged_model.charged = true
 		"END_TURN":
 			var objective_data: Array = next.get("objectives", []).duplicate(true)
 			if not objective_data.is_empty():
@@ -183,6 +187,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 					model.advanced = false
 					model.advance_bonus = 0
 					model.fell_back = false
+					model.charged = false
 					model.erase("temporary_cover_bonus")
 					model.transport_moved = false
 					model.disembarked = false
@@ -207,6 +212,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 						model.advanced = false
 						model.advance_bonus = 0
 						model.fell_back = false
+						model.charged = false
 						model.erase("temporary_cover_bonus")
 						model.transport_moved = false
 						model.disembarked = false
