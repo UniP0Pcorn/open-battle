@@ -19,7 +19,7 @@ const Attachments = preload("res://rules/attachments.gd")
 const Replay = preload("res://rules/replay.gd")
 const Stratagems = preload("res://rules/stratagems.gd")
 
-static func host_command(room: Dictionary, packet: Dictionary, expected_peer_id: String) -> Dictionary:
+static func host_command(room: Dictionary, packet: Dictionary, expected_peer_id: String, host_rng: RandomNumberGenerator = null) -> Dictionary:
 	var packet_error := PeerProtocol.validate(packet)
 	if not packet_error.is_empty():
 		return {"ok": false, "reason": packet_error, "room": room}
@@ -40,13 +40,22 @@ static func host_command(room: Dictionary, packet: Dictionary, expected_peer_id:
 		return {"ok": false, "reason": "HOST RESOLUTION REQUIRED", "room": room}
 	if str(command.kind) == "HAZARDOUS":
 		return {"ok": false, "reason": "HAZARDOUS REQUIRES HOST ATTACK", "room": room}
+	var expected_sequence := int(room.get("session", {}).get("command_log", []).size())
+	if int(packet.sequence) != expected_sequence:
+		return {"ok": false, "reason": "COMMAND SEQUENCE GAP", "room": room}
+	# The optional RNG is a host-local test seam, never read from a packet or snapshot.
+	# Record outcomes for replay; public session/sequence values must not seed dice.
+	if host_rng == null:
+		host_rng = RandomNumberGenerator.new()
+		var entropy := Crypto.new().generate_random_bytes(8)
+		if entropy.size() != 8:
+			return {"ok": false, "reason": "HOST RANDOM SOURCE UNAVAILABLE", "room": room}
+		host_rng.seed = entropy.decode_s64(0)
 	if str(command.kind) == "ADVANCE":
-		var advance_rng := RandomNumberGenerator.new()
-		advance_rng.seed = (str(packet.session_id) + ":advance:" + str(packet.sequence)).hash()
-		var advance_roll := advance_rng.randi_range(1, 6)
+		var advance_roll := host_rng.randi_range(1, 6)
 		command.payload = {"unit_id": str(command.payload.get("unit_id", "")), "roll": advance_roll, "rolls": [advance_roll]}
 	if str(command.kind) == "CHARGE":
-		var charged := _materialize_charge(room.session, command, packet)
+		var charged := _materialize_charge(room.session, command, host_rng)
 		if not charged.ok:
 			return {"ok": false, "reason": charged.reason, "room": room}
 		command.payload = charged.payload
@@ -58,23 +67,20 @@ static func host_command(room: Dictionary, packet: Dictionary, expected_peer_id:
 				return {"ok": false, "reason": "INVALID REACTION SHOOTING", "room": room}
 			var intent: Dictionary = command.payload.duplicate(true)
 			intent.erase("attack")
-			var reaction_attack := _materialize_attack(room.session, {"team": actor_team, "kind": "SHOOT", "payload": intent}, packet, definition)
+			var reaction_attack := _materialize_attack(room.session, {"team": actor_team, "kind": "SHOOT", "payload": intent}, host_rng, definition)
 			if not reaction_attack.ok:
 				return {"ok": false, "reason": reaction_attack.reason, "room": room}
 			command.payload.attack = reaction_attack.payload
 	if str(command.get("kind", "")) in ["SHOOT", "FIGHT"] and bool(command.get("payload", {}).get("intent", false)):
-		var materialized := _materialize_attack(room.session, command, packet)
+		var materialized := _materialize_attack(room.session, command, host_rng)
 		if not bool(materialized.get("ok", false)):
 			return {"ok": false, "reason": str(materialized.get("reason", "ATTACK REJECTED")), "room": room}
 		command.payload = materialized.payload
 	if str(command.get("kind", "")) == "BATTLE_SHOCK" and bool(command.get("payload", {}).get("intent", false)):
-		var shock_materialized := _materialize_battle_shock(room.session, command, packet)
+		var shock_materialized := _materialize_battle_shock(room.session, command, host_rng)
 		if not bool(shock_materialized.get("ok", false)):
 			return {"ok": false, "reason": str(shock_materialized.get("reason", "BATTLE SHOCK REJECTED")), "room": room}
 		command.payload = shock_materialized.payload
-	var expected_sequence := int(room.get("session", {}).get("command_log", []).size())
-	if int(packet.sequence) != expected_sequence:
-		return {"ok": false, "reason": "COMMAND SEQUENCE GAP", "room": room}
 	var submitted := Room.submit(room, expected_peer_id, str(command.get("kind", "")), command.get("payload", {}))
 	if not bool(submitted.get("ok", false)):
 		return submitted
@@ -82,11 +88,11 @@ static func host_command(room: Dictionary, packet: Dictionary, expected_peer_id:
 	var snapshot := PeerProtocol.snapshot(str(next_room.id), expected_peer_id, str(packet.session_id), int(next_room.session.get("command_log", []).size()) - 1, next_room.session, str(packet.get("reconnect_token", "")))
 	return {"ok": true, "reason": "", "room": next_room, "entry": submitted.entry, "snapshot": snapshot}
 
-static func _materialize_charge(state: Dictionary, command: Dictionary, packet: Dictionary) -> Dictionary:
+static func _materialize_charge(state: Dictionary, command: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
 	var models: Array = state.models
 	var charger := _model_index(models, command.payload, "model_id", "model")
 	var target := _model_index(models, command.payload, "target_id", "target")
-	if charger < 0 or target < 0 or charger == target:
+	if charger < 0 or target < 0 or charger >= models.size() or target >= models.size() or charger == target:
 		return {"ok": false, "reason": "INVALID CHARGE"}
 	var origin := _position(models[charger])
 	var destination := _position(models[target]) - (_position(models[target]) - origin).normalized() * (float(models[charger].get("radius", 0)) + float(models[target].get("radius", 0)) + 1.0)
@@ -94,13 +100,11 @@ static func _materialize_charge(state: Dictionary, command: Dictionary, packet: 
 	var reason := Replay._validate_references(models, command, "CHARGE", payload, state.get("terrain", []))
 	if not reason.is_empty():
 		return {"ok": false, "reason": reason}
-	var rng := RandomNumberGenerator.new()
-	rng.seed = (str(packet.session_id) + ":charge:" + str(packet.sequence)).hash()
 	payload.roll = [rng.randi_range(1, 6), rng.randi_range(1, 6)]
 	payload.failed = origin.distance_to(destination) > float(payload.roll[0] + payload.roll[1]) + 0.00001
 	return {"ok": true, "payload": payload}
 
-static func _materialize_attack(state: Dictionary, command: Dictionary, packet: Dictionary, reaction: Dictionary = {}) -> Dictionary:
+static func _materialize_attack(state: Dictionary, command: Dictionary, rng: RandomNumberGenerator, reaction: Dictionary = {}) -> Dictionary:
 	var payload: Dictionary = command.get("payload", {}).duplicate(true)
 	for derived_field in ["attacker", "target", "hits", "damage", "one_shot", "feel_no_pain_rolls", "hazardous_damage", "hazardous_feel_no_pain_rolls"]:
 		payload.erase(derived_field)
@@ -121,8 +125,6 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, packet: 
 		return {"ok": false, "reason": "UNKNOWN WEAPON"}
 	if not reaction.is_empty():
 		weapon.hit_on = int(reaction.hit_on)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = (str(packet.get("session_id", "")) + ":" + str(packet.get("sequence", 0))).hash()
 	var result: Dictionary
 	var resolved_weapon: Dictionary = weapon.duplicate(true)
 	var ability_modifiers := FactionRules.combat_modifiers(models, attacker, "before_attack", {"phase": str(state.phase), "kind": str(command.kind)})
@@ -174,7 +176,7 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, packet: 
 			payload.hazardous_feel_no_pain_rolls = hazardous_damage_preview.feel_no_pain_rolls
 	return {"ok": true, "reason": "", "payload": payload}
 
-static func _materialize_battle_shock(state: Dictionary, command: Dictionary, packet: Dictionary) -> Dictionary:
+static func _materialize_battle_shock(state: Dictionary, command: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
 	var payload: Dictionary = command.get("payload", {}).duplicate(true)
 	var unit_id := str(payload.get("unit_id", ""))
 	var unit_models: Array = []
@@ -183,8 +185,6 @@ static func _materialize_battle_shock(state: Dictionary, command: Dictionary, pa
 			unit_models.append(model)
 	if unit_models.is_empty():
 		return {"ok": false, "reason": "UNKNOWN UNIT"}
-	var rng := RandomNumberGenerator.new()
-	rng.seed = (str(packet.get("session_id", "")) + ":shock:" + str(packet.get("sequence", 0)) + ":" + unit_id).hash()
 	var rolls: Array = [rng.randi_range(1, 6), rng.randi_range(1, 6)]
 	var total := int(rolls[0]) + int(rolls[1])
 	payload.erase("intent")
@@ -199,6 +199,7 @@ static func _model_index(models: Array, payload: Dictionary, id_key: String, ind
 		for index in range(models.size()):
 			if str(models[index].get("model_id", "")) == model_id:
 				return index
+		return -1
 	return int(payload.get(index_key, -1))
 
 static func _position(model: Dictionary) -> Vector2:

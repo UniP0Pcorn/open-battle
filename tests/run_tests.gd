@@ -57,6 +57,11 @@ func check(condition: bool, description: String) -> void:
 	else:
 		print("PASS: " + description)
 
+func seeded_rng(value: int) -> RandomNumberGenerator:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = value
+	return rng
+
 func _initialize() -> void:
 	call_deferred("run")
 
@@ -232,6 +237,13 @@ func run() -> void:
 	movement_room.session.phase_index = 3
 	var charge_intent := {"sequence": 0, "team": 0, "kind": "CHARGE", "payload": {"intent": true, "model_id": "charger", "target_id": "charge_target", "roll": [99, 99], "to": [50, 40], "failed": true}}
 	var charge_packet := PeerProtocol.command(room.id, "player_gold", peer_session_id, 0, -1, charge_intent, PeerProtocol.hash_snapshot(movement_room.session))
+	var invalid_charge_packet: Dictionary = charge_packet.duplicate(true)
+	invalid_charge_packet.command.payload.erase("model_id")
+	invalid_charge_packet.command.payload.model = 999999
+	check(NetworkSync.host_command(movement_room, invalid_charge_packet, "player_gold").reason == "INVALID CHARGE", "out of bounds charge model index is safely rejected")
+	invalid_charge_packet.command.payload.model_id = "unknown_model"
+	invalid_charge_packet.command.payload.model = 0
+	check(NetworkSync.host_command(movement_room, invalid_charge_packet, "player_gold").reason == "INVALID CHARGE", "unknown stable charge ID cannot fall back to another model")
 	var host_charge := NetworkSync.host_command(movement_room, charge_packet, "player_gold")
 	check(host_charge.ok and not host_charge.entry.payload.failed and host_charge.room.session.models[0].position == Vector2(11, 10), "host computes charge endpoint and ignores uploaded result")
 	check(host_charge.entry.payload.roll.size() == 2 and host_charge.entry.payload.roll[0] >= 1 and host_charge.entry.payload.roll[0] <= 6 and host_charge.entry.payload.roll[1] >= 1 and host_charge.entry.payload.roll[1] <= 6, "host charge records two valid dice")
@@ -251,7 +263,16 @@ func run() -> void:
 			failed_charge_session = candidate_session
 			break
 	charge_packet = PeerProtocol.command(room.id, "player_gold", failed_charge_session, 0, -1, charge_intent, PeerProtocol.hash_snapshot(movement_room.session))
-	var failed_charge := NetworkSync.host_command(movement_room, charge_packet, "player_gold")
+	var seed_probe: Dictionary = charge_packet.duplicate(true)
+	seed_probe.session_id = "client-selected-session"
+	seed_probe.command.payload.seed = 99999
+	seed_probe.command.payload.rng_state = 777
+	var baseline_seed := NetworkSync.host_command(movement_room, charge_packet, "player_gold", seeded_rng(87))
+	var changed_seed := NetworkSync.host_command(movement_room, seed_probe, "player_gold", seeded_rng(87))
+	check(baseline_seed.ok and changed_seed.ok and baseline_seed.entry.payload == changed_seed.entry.payload, "client session and injected seed cannot control host charge dice")
+	var secret_snapshot := JSON.stringify(baseline_seed.snapshot)
+	check(not secret_snapshot.contains("rng_state") and not secret_snapshot.contains("host_rng") and not secret_snapshot.contains("entropy"), "authoritative snapshots contain results without private random state")
+	var failed_charge := NetworkSync.host_command(movement_room, charge_packet, "player_gold", seeded_rng((failed_charge_session + ":charge:0").hash()))
 	check(failed_charge.ok and failed_charge.entry.payload.failed and failed_charge.room.session.models[0].position == Vector2(10, 10) and failed_charge.room.session.models[0].charge_attempted and not failed_charge.room.session.models[0].charged, "failed charge consumes attempt without moving")
 	check(Replay.apply_entry(movement_room.session, failed_charge.entry).state.models == failed_charge.room.session.models, "failed charge replays identically")
 	charge_intent.sequence = 1
@@ -341,7 +362,7 @@ func run() -> void:
 	var shot_waiting := NetworkSync.host_command(shooting_room, shot_trigger, "player_gold")
 	var shot_payload := {"id": "fixture_reaction_shot", "phase": "MOVEMENT", "window_id": "move:0", "attacker_id": "responding", "target_id": "moving", "weapon": "fixture_rifle", "attack": {"damage": 999}, "damage": 999, "hits": 999, "hit_on": 1}
 	var shot_packet := PeerProtocol.command(room.id, "player_blue", peer_session_id, 1, 0, {"sequence": 1, "team": 1, "kind": "STRATAGEM", "payload": shot_payload}, PeerProtocol.hash_snapshot(shot_waiting.room.session))
-	var shot_result := NetworkSync.host_command(shot_waiting.room, shot_packet, "player_blue")
+	var shot_result := NetworkSync.host_command(shot_waiting.room, shot_packet, "player_blue", seeded_rng((peer_session_id + ":1").hash()))
 	check(shot_result.ok and shot_result.entry.payload.attack.damage < 999 and shot_result.room.session.command_points[1] == 0, "reaction shooting overwrites client results and spends authoritative cost")
 	var expected_shot_rng := RandomNumberGenerator.new()
 	expected_shot_rng.seed = (peer_session_id + ":1").hash()
@@ -492,7 +513,7 @@ func run() -> void:
 	var forged_team_packet: Dictionary = intent_packet.duplicate(true)
 	forged_team_packet.command.team = 1
 	check(NetworkSync.host_command(attack_room, forged_team_packet, "attacker").reason == "PLAYER TEAM MISMATCH", "attack modifier team comes from authenticated room identity")
-	check(intent_result.ok and intent_result.entry.payload.damage >= 0 and int(intent_result.entry.payload.damage) != 999 and int(intent_result.entry.payload.hazardous_damage) != 999 and intent_result.entry.payload.has("hazardous_damage") and not bool(intent_result.entry.payload.get("intent", false)), "host materializes network attack intent deterministically")
+	check(intent_result.ok and intent_result.entry.payload.damage >= 0 and int(intent_result.entry.payload.damage) != 999 and int(intent_result.entry.payload.hazardous_damage) != 999 and intent_result.entry.payload.has("hazardous_damage") and not bool(intent_result.entry.payload.get("intent", false)), "host materializes network attack intent with recorded outcomes")
 	var shock_room := Room.create("shock-room")
 	var aura_rule := {"id": "fixture_guidance", "aura": {"radius_inches": 6.0, "event": "before_attack", "include_self": false, "keywords": ["INFANTRY"], "modifiers": {"hit_rerolls": 1}}}
 	var aura_source := {"model_id": "aura_source", "team": 0, "wounds": 3, "radius": 0.5, "position": Vector2(1, 1), "ability_ids": [aura_rule]}
@@ -533,7 +554,7 @@ func run() -> void:
 	aura_room.session.models[0].weapons[0].attacks = 12
 	var aura_packet: Dictionary = intent_packet.duplicate(true)
 	aura_packet.snapshot_hash = PeerProtocol.hash_snapshot(aura_room.session)
-	var aura_host := NetworkSync.host_command(aura_room, aura_packet, "attacker")
+	var aura_host := NetworkSync.host_command(aura_room, aura_packet, "attacker", seeded_rng("network-test:0".hash()))
 	var aura_rng := RandomNumberGenerator.new()
 	aura_rng.seed = "network-test:0".hash()
 	var aura_expected := Combat.resolve_ranged_attack(aura_room.session.models[0].weapons[0], aura_room.session.models[1], aura_rng, 1)
@@ -571,7 +592,7 @@ func run() -> void:
 	var forged_shock: Dictionary = shock_packet.duplicate(true)
 	forged_shock.command.payload = {"unit_id": "shock_unit", "passed": true, "rolls": [1, 1], "total": 2}
 	check(not NetworkSync.host_command(shock_room, forged_shock, "shock_gold").ok, "client cannot submit precomputed battle shock result")
-	check(network_shock_result.ok and not bool(network_shock_result.entry.payload.get("intent", false)) and network_shock_result.entry.payload.get("rolls", []).size() == 2, "host materializes network battle shock intent deterministically")
+	check(network_shock_result.ok and not bool(network_shock_result.entry.payload.get("intent", false)) and network_shock_result.entry.payload.get("rolls", []).size() == 2, "host materializes network battle shock with recorded outcomes")
 	var lobby_probe = P2PLobby.new()
 	root.add_child(lobby_probe)
 	await process_frame
