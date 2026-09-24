@@ -21,6 +21,7 @@ var nat_status: Label
 var directory_url: LineEdit
 var directory_status: Label
 var room_results: VBoxContainer
+var relay_url: LineEdit
 
 func _ready() -> void:
 	_build_ui()
@@ -112,6 +113,19 @@ func _build_ui() -> void:
 	panel.add_child(directory_status)
 	room_results = VBoxContainer.new()
 	panel.add_child(room_results)
+	panel.add_child(_label("可选 WebSocket 中继地址（默认仍使用 ENet）"))
+	relay_url = _line("ws://127.0.0.1:8766")
+	panel.add_child(relay_url)
+	var relay_row := HBoxContainer.new()
+	var relay_host_button := Button.new()
+	relay_host_button.text = "中继创建主机"
+	relay_host_button.pressed.connect(_host_relay)
+	relay_row.add_child(relay_host_button)
+	var relay_join_button := Button.new()
+	relay_join_button.text = "加入中继房间"
+	relay_join_button.pressed.connect(_join_relay)
+	relay_row.add_child(relay_join_button)
+	panel.add_child(relay_row)
 	var room_row := HBoxContainer.new()
 	var host_button := Button.new()
 	host_button.text = "创建主机房间"
@@ -256,6 +270,19 @@ func _join_advertised(room: Dictionary) -> void:
 		return
 	var error: String = lobby.connect_to_room(str(room.get("room_id", "")), str(room.get("address", "")), int(room.get("port", 0)))
 	status.text = "正在连接公开房间……" if error.is_empty() else error
+
+func _host_relay() -> void:
+	if not _ensure_identity():
+		return
+	var error: String = lobby.host_relay(relay_url.text, room_id.text)
+	status.text = "正在通过中继创建房间……" if error.is_empty() else error
+	ready_button.disabled = error != ""
+
+func _join_relay() -> void:
+	if not _ensure_identity():
+		return
+	var error: String = lobby.connect_to_relay(relay_url.text, room_id.text)
+	status.text = "正在连接中继……" if error.is_empty() else error
 
 func _on_directory_request(ok: bool, payload: Variant) -> void:
 	if not ok:
