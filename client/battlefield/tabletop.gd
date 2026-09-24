@@ -386,6 +386,10 @@ func new_phase() -> void:
 	queue_redraw()
 
 func advance_selected() -> void:
+	if selected_unit_in_reserve():
+		message = "预备队单位必须先以深入打击入场。"
+		queue_redraw()
+		return
 	if phase != "MOVEMENT":
 		message = "请在移动阶段宣布前进。"
 		queue_redraw()
@@ -420,6 +424,10 @@ func advance_selected() -> void:
 	queue_redraw()
 
 func fall_back_selected() -> void:
+	if selected_unit_in_reserve():
+		message = "预备队单位必须先以深入打击入场。"
+		queue_redraw()
+		return
 	if phase != "MOVEMENT":
 		message = "请在移动阶段宣布撤退。"
 		queue_redraw()
@@ -750,6 +758,10 @@ func use_command_reroll() -> void:
 	queue_redraw()
 
 func charge_selected() -> void:
+	if selected_unit_in_reserve():
+		message = "预备队单位必须先以深入打击入场。"
+		queue_redraw()
+		return
 	if phase != "CHARGE":
 		message = "请先进入冲锋阶段。"
 		queue_redraw()
@@ -801,6 +813,10 @@ func charge_selected() -> void:
 	queue_redraw()
 
 func fight_selected() -> void:
+	if selected_unit_in_reserve():
+		message = "预备队单位必须先以深入打击入场。"
+		queue_redraw()
+		return
 	if phase != "FIGHT":
 		message = "请先进入战斗阶段。"
 		queue_redraw()
@@ -898,6 +914,10 @@ func fall_back_reason(unit_models: Array, delta: Vector2) -> String:
 	return engagement_reason_for_delta(unit_models, delta, "FALL BACK MUST END OUT OF ENGAGEMENT")
 
 func fire_selected() -> void:
+	if selected_unit_in_reserve():
+		message = "预备队单位必须先以深入打击入场。"
+		queue_redraw()
+		return
 	if phase != "SHOOTING":
 		message = "请先进入射击阶段。"
 		queue_redraw()
@@ -997,6 +1017,8 @@ func pick(point: Vector2) -> int:
 
 func preview_reason() -> String:
 	var model: Dictionary = models[selected]
+	if Reserves.in_reserve(model):
+		return "UNIT IN RESERVE"
 	var unit_models := selected_unit_models()
 	if falling_back:
 		return fall_back_reason(unit_models, preview - model.position)
@@ -1024,6 +1046,12 @@ func selected_unit_models() -> Array:
 		if str(model.get("unit_id", "")) == unit_id:
 			unit_models.append(model)
 	return unit_models
+
+func selected_unit_in_reserve() -> bool:
+	for model in selected_unit_models():
+		if Reserves.in_reserve(model):
+			return true
+	return false
 
 func finish_drag() -> void:
 	if not dragging:
