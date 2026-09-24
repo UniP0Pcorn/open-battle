@@ -65,7 +65,7 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, packet: 
 	if str(command.get("kind", "")) == "FIGHT":
 		var melee_context := WeaponRules.context(weapon, INF, 0, 1, target.get("keywords", []), false)
 		resolved_weapon = melee_context.weapon
-		result = Melee.resolve_attack(resolved_weapon, target, rng, 0, target.get("keywords", []), UnitAbilities.modifiers(attacker.get("ability_ids", [])))
+		result = Melee.resolve_attack(resolved_weapon, target, rng, 0, target.get("keywords", []), UnitAbilities.event_modifiers(attacker.get("ability_ids", []), "before_attack", {"phase": "FIGHT", "kind": "FIGHT"}))
 	else:
 		var distance := _position(attacker).distance_to(_position(target))
 		var cover := Visibility.cover_bonus(_position(attacker), _position(target), state.get("terrain", []))
@@ -76,7 +76,7 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, packet: 
 		var line_of_sight := not Visibility.blocked(_position(attacker), _position(target), state.get("terrain", []))
 		var context := WeaponRules.context(weapon, distance, cover, target_count, target.get("keywords", []), float(attacker.get("spent", 0.0)) <= 0.0001, line_of_sight)
 		resolved_weapon = context.weapon
-		result = Combat.resolve_ranged_attack(resolved_weapon, target, rng, 0, UnitAbilities.modifiers(attacker.get("ability_ids", [])))
+		result = Combat.resolve_ranged_attack(resolved_weapon, target, rng, 0, UnitAbilities.event_modifiers(attacker.get("ability_ids", []), "before_attack", {"phase": "SHOOTING", "kind": "SHOOT"}))
 	payload.intent = false
 	payload.attacker = attacker_index
 	payload.target = target_index

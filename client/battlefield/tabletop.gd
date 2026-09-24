@@ -778,7 +778,7 @@ func fight_selected() -> void:
 		message = "接战距离内没有敌方目标。"
 		queue_redraw()
 		return
-	var attacker_abilities := UnitAbilities.modifiers(attacker.get("ability_ids", []))
+	var attacker_abilities := UnitAbilities.event_modifiers(attacker.get("ability_ids", []), "before_attack", {"phase": "FIGHT", "kind": "FIGHT"})
 	var weapon := weapon_for_model(attacker)
 	var weapon_ids := WeaponRules.ids_from_weapon(weapon)
 	var weapon_name := str(weapon.get("name", ""))
@@ -892,7 +892,7 @@ func fire_selected() -> void:
 			target_models += 1
 	var weapon_context := WeaponRules.context(weapon, nearest, cover_bonus, target_models, target_for_attack.get("keywords", []), is_zero_approx(float(attacker.get("spent", 0.0))), target_has_line_of_sight)
 	target_for_attack.cover_save_bonus = int(weapon_context.cover_bonus)
-	var attacker_abilities := UnitAbilities.modifiers(attacker.get("ability_ids", []))
+	var attacker_abilities := UnitAbilities.event_modifiers(attacker.get("ability_ids", []), "before_attack", {"phase": "SHOOTING", "kind": "SHOOT"})
 	var result := Combat.resolve_ranged_attack(weapon_context.weapon, target_for_attack, combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls), attacker_abilities)
 	var shoot_payload := {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "weapon": weapon_name, "one_shot": weapon_ids.has("one_shot"), "hits": result.hits, "damage": result.damage}
 	if network_active:

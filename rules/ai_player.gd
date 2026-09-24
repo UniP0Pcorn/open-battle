@@ -177,7 +177,7 @@ static func _shooting_command(state: Dictionary, team: int, rng: RandomNumberGen
 				if not reason.is_empty():
 					continue
 				var context := WeaponRules.context(weapon, distance, 0, 1, target.get("keywords", []), float(attacker.get("spent", 0.0)) <= EPSILON, true)
-				var result := Combat.resolve_ranged_attack(context.weapon, target, rng, 0, UnitAbilities.modifiers(attacker.get("ability_ids", [])))
+				var result := Combat.resolve_ranged_attack(context.weapon, target, rng, 0, UnitAbilities.event_modifiers(attacker.get("ability_ids", []), "before_attack", {"phase": "SHOOTING", "kind": "SHOOT"}))
 				return _attack_payload(attacker_index, attacker, target_index, target, weapon, context.weapon, result, rng)
 	return {}
 
@@ -213,7 +213,7 @@ static func _fight_command(state: Dictionary, team: int, rng: RandomNumberGenera
 				if float(weapon.get("range_inches", weapon.get("range", 0.0))) > 0.0:
 					continue
 				var context := WeaponRules.context(weapon, INF, 0, 1, target.get("keywords", []), false)
-				var result := Melee.resolve_attack(context.weapon, target, rng, 0, target.get("keywords", []), UnitAbilities.modifiers(attacker.get("ability_ids", [])))
+				var result := Melee.resolve_attack(context.weapon, target, rng, 0, target.get("keywords", []), UnitAbilities.event_modifiers(attacker.get("ability_ids", []), "before_attack", {"phase": "FIGHT", "kind": "FIGHT"}))
 				return _attack_payload(attacker_index, attacker, target_index, target, weapon, context.weapon, result, rng)
 	return {}
 
