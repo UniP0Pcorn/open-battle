@@ -61,9 +61,11 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, packet: 
 	var rng := RandomNumberGenerator.new()
 	rng.seed = (str(packet.get("session_id", "")) + ":" + str(packet.get("sequence", 0))).hash()
 	var result: Dictionary
+	var resolved_weapon: Dictionary = weapon.duplicate(true)
 	if str(command.get("kind", "")) == "FIGHT":
 		var melee_context := WeaponRules.context(weapon, INF, 0, 1, target.get("keywords", []), false)
-		result = Melee.resolve_attack(melee_context.weapon, target, rng, 0, target.get("keywords", []), UnitAbilities.modifiers(attacker.get("ability_ids", [])))
+		resolved_weapon = melee_context.weapon
+		result = Melee.resolve_attack(resolved_weapon, target, rng, 0, target.get("keywords", []), UnitAbilities.modifiers(attacker.get("ability_ids", [])))
 	else:
 		var distance := _position(attacker).distance_to(_position(target))
 		var cover := Visibility.cover_bonus(_position(attacker), _position(target), state.get("terrain", []))
@@ -73,7 +75,8 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, packet: 
 				target_count += 1
 		var line_of_sight := not Visibility.blocked(_position(attacker), _position(target), state.get("terrain", []))
 		var context := WeaponRules.context(weapon, distance, cover, target_count, target.get("keywords", []), float(attacker.get("spent", 0.0)) <= 0.0001, line_of_sight)
-		result = Combat.resolve_ranged_attack(context.weapon, target, rng, 0, UnitAbilities.modifiers(attacker.get("ability_ids", [])))
+		resolved_weapon = context.weapon
+		result = Combat.resolve_ranged_attack(resolved_weapon, target, rng, 0, UnitAbilities.modifiers(attacker.get("ability_ids", [])))
 	payload.intent = false
 	payload.attacker = attacker_index
 	payload.target = target_index
@@ -81,11 +84,18 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, packet: 
 	payload.target_id = str(target.get("model_id", ""))
 	payload.hits = int(result.get("hits", 0))
 	payload.damage = int(result.get("damage", 0))
-	payload.one_shot = WeaponRules.ids_from_weapon(weapon).has("one_shot")
+	payload.one_shot = WeaponRules.ids_from_weapon(resolved_weapon).has("one_shot")
 	var preview: Array = [target.duplicate(true)]
 	var damage_preview := Damage.allocate_to_unit(preview, int(result.get("damage", 0)), 0, rng)
 	if not damage_preview.feel_no_pain_rolls.is_empty():
 		payload.feel_no_pain_rolls = damage_preview.feel_no_pain_rolls
+	var hazardous_damage := int(result.get("hazardous_failures", 0)) * int(resolved_weapon.get("hazardous_damage", 0))
+	payload.hazardous_damage = maxi(0, hazardous_damage)
+	if hazardous_damage > 0:
+		var hazardous_preview: Array = [attacker.duplicate(true)]
+		var hazardous_damage_preview := Damage.allocate_to_unit(hazardous_preview, hazardous_damage, 0, rng)
+		if not hazardous_damage_preview.feel_no_pain_rolls.is_empty():
+			payload.hazardous_feel_no_pain_rolls = hazardous_damage_preview.feel_no_pain_rolls
 	return {"ok": true, "reason": "", "payload": payload}
 
 static func _model_index(models: Array, payload: Dictionary, id_key: String, index_key: String) -> int:

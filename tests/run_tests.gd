@@ -205,7 +205,7 @@ func run() -> void:
 	attack_room.session.phase_index = TurnState.phase_index("SHOOTING")
 	var intent_packet := PeerProtocol.command("attack-room", "attacker", "network-test", 0, -1, {"sequence": 0, "team": 0, "kind": "SHOOT", "payload": {"attacker": 0, "attacker_id": "net_attacker", "target": 1, "target_id": "net_target", "weapon": "net gun", "intent": true}}, PeerProtocol.hash_snapshot(attack_room.session))
 	var intent_result := NetworkSync.host_command(attack_room, intent_packet, "attacker")
-	check(intent_result.ok and intent_result.entry.payload.damage >= 0 and not bool(intent_result.entry.payload.get("intent", false)), "host materializes network attack intent deterministically")
+	check(intent_result.ok and intent_result.entry.payload.damage >= 0 and intent_result.entry.payload.has("hazardous_damage") and not bool(intent_result.entry.payload.get("intent", false)), "host materializes network attack intent deterministically")
 	var lobby_probe = P2PLobby.new()
 	root.add_child(lobby_probe)
 	await process_frame
@@ -339,11 +339,15 @@ func run() -> void:
 	replay_log = CommandLog.append(replay_log, 0, "MOVE", {"unit_id": "u", "delta": [2, 0]})
 	var replay_result := Replay.replay(Replay.initial_state(replay_models), replay_log)
 	check(replay_result.ok and replay_result.state.models[0].position == Vector2(3, 1), "replay reconstructs movement")
-	var fnp_models: Array = [{"model_id": "fnp_attacker", "unit_id": "fnp_a", "team": 0, "position": Vector2(1, 1)}, {"model_id": "fnp_target", "unit_id": "fnp_t", "team": 1, "position": Vector2(2, 1), "wounds": 5, "feel_no_pain": 5}]
+	var fnp_models: Array = [{"model_id": "fnp_attacker", "unit_id": "fnp_a", "team": 0, "position": Vector2(1, 1), "wounds": 5, "feel_no_pain": 5}, {"model_id": "fnp_target", "unit_id": "fnp_t", "team": 1, "position": Vector2(2, 1), "wounds": 5, "feel_no_pain": 5}]
 	var fnp_log: Array = []
 	fnp_log = CommandLog.append(fnp_log, 0, "SHOOT", {"attacker_id": "fnp_attacker", "target_id": "fnp_target", "damage": 3, "feel_no_pain_rolls": [5, 2, 6]})
 	var fnp_replay := Replay.replay(Replay.initial_state(fnp_models, "SHOOTING", 0), fnp_log)
 	check(fnp_replay.ok and fnp_replay.state.models[1].wounds == 4, "replay verifies feel no pain rolls")
+	var hazardous_replay_log: Array = []
+	hazardous_replay_log = CommandLog.append(hazardous_replay_log, 0, "SHOOT", {"attacker_id": "fnp_attacker", "target_id": "fnp_target", "damage": 1, "feel_no_pain_rolls": [1], "hazardous_damage": 3, "hazardous_feel_no_pain_rolls": [5, 2, 6]})
+	var hazardous_replay := Replay.replay(Replay.initial_state(fnp_models, "SHOOTING", 0), hazardous_replay_log)
+	check(hazardous_replay.ok and hazardous_replay.state.models[0].wounds == 4 and hazardous_replay.state.models[1].wounds == 4, "replay applies hazardous self damage with verified rolls")
 	var advance_replay_log: Array = []
 	advance_replay_log = CommandLog.append(advance_replay_log, 0, "ADVANCE", {"unit_id": "u", "roll": 4})
 	var advance_replay := Replay.replay(Replay.initial_state(replay_models), advance_replay_log)

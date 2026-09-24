@@ -39,10 +39,18 @@ static func validate_payload(kind: String, payload: Dictionary) -> String:
 			if bool(payload.get("intent", false)):
 				if str(payload.get("weapon", "")).is_empty():
 					return "MISSING WEAPON"
+				if payload.has("hazardous_damage") and not _nonnegative_int(payload.hazardous_damage):
+					return "INVALID HAZARDOUS EVENT"
+				if payload.has("hazardous_feel_no_pain_rolls") and not _dice_rolls(payload.hazardous_feel_no_pain_rolls):
+					return "INVALID FEEL NO PAIN RESULT"
 				return ""
 			if not _nonnegative_int(payload.get("damage", -1)):
 				return "INVALID DAMAGE EVENT"
 			if payload.has("feel_no_pain_rolls") and not _dice_rolls(payload.feel_no_pain_rolls):
+				return "INVALID FEEL NO PAIN RESULT"
+			if payload.has("hazardous_damage") and not _nonnegative_int(payload.hazardous_damage):
+				return "INVALID HAZARDOUS EVENT"
+			if payload.has("hazardous_feel_no_pain_rolls") and not _dice_rolls(payload.hazardous_feel_no_pain_rolls):
 				return "INVALID FEEL NO PAIN RESULT"
 		"CHARGE":
 			if not _nonnegative_int(payload.get("model", -1)) or not _nonnegative_int(payload.get("target", -1)) or not _numbers(payload.get("to", []), 2):
