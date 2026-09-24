@@ -54,6 +54,13 @@ static func validate(stratagem: Dictionary) -> String:
 		return "INVALID STRATAGEM"
 	if str(stratagem.effect) not in SUPPORTED_EFFECTS:
 		return "UNSUPPORTED EFFECT"
+	if stratagem.has("usage_limit"):
+		var limit: Variant = stratagem.usage_limit
+		if not (limit is Dictionary) or str(limit.get("scope", "")) not in ["PHASE", "TURN", "BATTLE"]:
+			return "INVALID STRATAGEM USAGE LIMIT"
+		var maximum: Variant = limit.get("max", 0)
+		if typeof(maximum) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(maximum)) or float(maximum) != float(int(maximum)) or int(maximum) < 1:
+			return "INVALID STRATAGEM USAGE LIMIT"
 	for field in ["target_keywords", "excluded_target_keywords"]:
 		if not stratagem.has(field):
 			continue
@@ -109,3 +116,37 @@ static func target_keywords_reason(stratagem: Dictionary, members: Array) -> Str
 		if keyword not in keywords:
 			return "STRATAGEM TARGET MISSING KEYWORD " + str(keyword)
 	return ""
+
+static func validate_usage(usage: Variant) -> String:
+	if not (usage is Array):
+		return "INVALID STRATAGEM USAGE"
+	for record in usage:
+		if not (record is Dictionary) or not (record.get("id") is String) or str(record.id).is_empty():
+			return "INVALID STRATAGEM USAGE"
+		for field in ["team", "active_team", "round"]:
+			var value: Variant = record.get(field)
+			if typeof(value) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(value)) or float(value) != float(int(value)):
+				return "INVALID STRATAGEM USAGE"
+		if int(record.team) not in [0, 1] or int(record.active_team) not in [0, 1] or int(record.round) < 1 or str(record.get("phase", "")) not in ["COMMAND", "MOVEMENT", "SHOOTING", "CHARGE", "FIGHT"]:
+			return "INVALID STRATAGEM USAGE"
+	return ""
+
+static func usage_reason(definition: Dictionary, state: Dictionary, team: int) -> String:
+	if not definition.has("usage_limit"):
+		return ""
+	var limit: Dictionary = definition.usage_limit
+	var used := 0
+	for record in state.get("stratagem_usage", []):
+		if int(record.team) != team or str(record.id) != str(definition.id):
+			continue
+		if str(limit.scope) != "BATTLE" and (int(record.round) != int(state.get("round", 1)) or int(record.active_team) != int(state.active_team)):
+			continue
+		if str(limit.scope) == "PHASE" and str(record.phase) != str(state.phase):
+			continue
+		used += 1
+	return "STRATAGEM USAGE LIMIT REACHED" if used >= int(limit.max) else ""
+
+static func record_use(state: Dictionary, team: int, id: String) -> void:
+	var usage: Array = state.get("stratagem_usage", []).duplicate(true)
+	usage.append({"id": id, "team": team, "active_team": int(state.active_team), "round": int(state.get("round", 1)), "phase": str(state.phase)})
+	state.stratagem_usage = usage

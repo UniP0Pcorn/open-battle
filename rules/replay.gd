@@ -38,6 +38,9 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 		return {"ok": false, "reason": contract_error, "state": state}
 	if kind == "SCOUT" and int(next.get("round", 1)) != 1:
 		return {"ok": false, "reason": "SCOUT WINDOW CLOSED", "state": state}
+	var usage_error := Stratagems.validate_usage(next.get("stratagem_usage", []))
+	if not usage_error.is_empty():
+		return {"ok": false, "reason": usage_error, "state": state}
 	var payload: Dictionary = entry.payload
 	var reference_error := _validate_references(next.models, entry, kind, payload, next.get("terrain", []), next.get("stratagem_effects", []))
 	if not reference_error.is_empty():
@@ -312,6 +315,9 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 			var stratagem_result := Stratagems.use(stratagem, str(next.phase), int(entry.team), next.get("command_points", [0, 0]))
 			if not bool(stratagem_result.get("ok", false)):
 				return {"ok": false, "reason": str(stratagem_result.get("reason", "STRATAGEM REJECTED")), "state": state}
+			var usage_reason := Stratagems.usage_reason(stratagem, next, int(entry.team))
+			if not usage_reason.is_empty():
+				return {"ok": false, "reason": usage_reason, "state": state}
 			var effect_id := str(stratagem_result.get("effect", ""))
 			if effect_id == "REACTION_SHOOT":
 				var attack: Variant = payload.get("attack")
@@ -394,6 +400,7 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 						model.temporary_cover_bonus = maxi(1, int(model.get("temporary_cover_bonus", 0)))
 				if not effect_unit_found:
 					return {"ok": false, "reason": "UNKNOWN UNIT", "state": state}
+			Stratagems.record_use(next, int(entry.team), stratagem_id)
 			next.command_points = stratagem_result.points
 			var effects: Array = next.get("stratagem_effects", []).duplicate(true)
 			effects.append({
@@ -440,6 +447,8 @@ static func _open_move_reaction(state: Dictionary, entry: Dictionary) -> void:
 			if not (definition is Dictionary) or not Stratagems.validate(definition).is_empty():
 				continue
 			if str(definition.timing) != "AFTER_ENEMY_MOVE" or int(definition.cost) > int(state.get("command_points", [0, 0])[responder]):
+				continue
+			if not Stratagems.usage_reason(definition, state, responder).is_empty():
 				continue
 			if not _has_strategy_recipient(state.models, responder, definition):
 				continue

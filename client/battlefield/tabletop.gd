@@ -306,6 +306,8 @@ func show_reaction_controls(state: Dictionary) -> void:
 						target_ids.append(str(model.model_id))
 						targets.add_item("移动目标：" + str(model.model_id))
 				use_button.disabled = shot_choices.is_empty() or target_ids.is_empty()
+		if not Stratagems.usage_reason(definition, state, int(window.team)).is_empty():
+			use_button.disabled = true
 		use_button.tooltip_text = "没有符合当前策略条件的单位或武器。" if use_button.disabled else "射程、视线及其他战斗条件仍由主机校验。"
 	strategy.item_selected.connect(refresh_choices)
 	refresh_choices.call()

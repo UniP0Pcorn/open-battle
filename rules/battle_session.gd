@@ -4,6 +4,7 @@ extends RefCounted
 
 const CommandLog = preload("res://rules/command_log.gd")
 const CommandSchema = preload("res://rules/command_schema.gd")
+const Stratagems = preload("res://rules/stratagems.gd")
 const Replay = preload("res://rules/replay.gd")
 const RulesetCatalog = preload("res://rules/ruleset_catalog.gd")
 const TurnState = preload("res://rules/turn_state.gd")
@@ -78,6 +79,9 @@ static func validate_snapshot(state: Dictionary) -> String:
 		return "RULESET MISMATCH"
 	if int(state.round) < 1 or int(state.active_team) not in [0, 1] or not (state.models is Array) or not (state.command_log is Array):
 		return "INVALID SNAPSHOT"
+	var usage_error := Stratagems.validate_usage(state.get("stratagem_usage", []))
+	if not usage_error.is_empty():
+		return usage_error
 	var model_errors := ModelState.validate_models(state.models)
 	if state.has("reaction_window"):
 		var window: Variant = state.reaction_window

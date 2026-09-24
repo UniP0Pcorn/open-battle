@@ -331,6 +331,41 @@ func run() -> void:
 	filter_definition.target_keywords = []
 	filter_definition.effect = "REROLL_HIT"
 	check(Stratagems.validate(filter_definition) == "INVALID STRATAGEM TARGET FILTER", "unsupported strategy effect cannot silently ignore target filter")
+	var capped_room: Dictionary = grant_room.duplicate(true)
+	capped_room.session.models[0].faction_stratagems[0].usage_limit = {"scope": "PHASE", "max": 1}
+	var capped_packet: Dictionary = grant_packet.duplicate(true)
+	capped_packet.snapshot_hash = PeerProtocol.hash_snapshot(capped_room.session)
+	var capped_first := NetworkSync.host_command(capped_room, capped_packet, "player_gold")
+	check(capped_first.ok and capped_first.room.session.stratagem_usage.size() == 1, "successful strategy records authoritative usage")
+	var capped_second_packet := PeerProtocol.command(room.id, "player_gold", peer_session_id, 3, 2, {"sequence": 3, "team": 0, "kind": "STRATAGEM", "payload": grant_payload}, PeerProtocol.hash_snapshot(capped_first.room.session))
+	capped_second_packet.command.payload.usage_limit = {"scope": "BATTLE", "max": 999}
+	var capped_second := NetworkSync.host_command(capped_first.room, capped_second_packet, "player_gold")
+	check(not capped_second.ok and capped_second.reason == "STRATAGEM USAGE LIMIT REACHED" and capped_second.room == capped_first.room, "same phase strategy repeat rejects atomically despite client override")
+	var capped_definition: Dictionary = capped_room.session.models[0].faction_stratagems[0]
+	var capped_next: Dictionary = capped_first.room.session.duplicate(true)
+	capped_next.phase = "SHOOTING"
+	check(Stratagems.usage_reason(capped_definition, capped_next, 0).is_empty(), "phase usage cap releases at another phase")
+	capped_definition.usage_limit.scope = "TURN"
+	check(not Stratagems.usage_reason(capped_definition, capped_next, 0).is_empty(), "turn usage cap survives phase changes")
+	capped_next.round += 1
+	capped_next.active_team = 1
+	check(Stratagems.usage_reason(capped_definition, capped_next, 0).is_empty(), "turn usage cap releases in another player turn")
+	capped_definition.usage_limit.scope = "BATTLE"
+	check(not Stratagems.usage_reason(capped_definition, capped_next, 0).is_empty(), "battle usage cap survives turn changes")
+	check(Stratagems.usage_reason(capped_definition, capped_next, 1).is_empty(), "strategy usage limits are independent for both players")
+	var capped_replay := Replay.apply_entry(capped_room.session, capped_first.entry)
+	check(capped_replay.ok and capped_replay.state.stratagem_usage == capped_first.room.session.stratagem_usage, "replay reconstructs usage records")
+	var capped_json: Dictionary = JSON.parse_string(PeerProtocol.encode(capped_first.snapshot))
+	var capped_restored := NetworkSync.accept_snapshot({}, capped_json)
+	check(capped_restored.ok and not Stratagems.usage_reason(capped_definition, capped_restored.state, 0).is_empty(), "JSON reconnect preserves consumed strategy allowance")
+	var corrupt_usage: Dictionary = capped_first.room.session.duplicate(true)
+	corrupt_usage.stratagem_usage[0].team = 0.5
+	check(BattleSession.validate_snapshot(corrupt_usage) == "INVALID STRATAGEM USAGE", "snapshot rejects malformed strategy usage metadata")
+	var bad_limit: Dictionary = capped_definition.duplicate(true)
+	bad_limit.usage_limit.max = 1.5
+	check(Stratagems.validate(bad_limit) == "INVALID STRATAGEM USAGE LIMIT", "fractional strategy usage caps rejected")
+	bad_limit.usage_limit = {"scope": "ROUND", "max": 1}
+	check(Stratagems.validate(bad_limit) == "INVALID STRATAGEM USAGE LIMIT", "unknown strategy usage scopes rejected")
 	var grant_replay := Replay.apply_entry(grant_room.session, grant_entry)
 	check(grant_replay.ok and grant_replay.state.models == grant_network.room.session.models, "grant replay matches host model state")
 	var grant_snapshot := NetworkSync.accept_snapshot(grant_room.session, grant_network.snapshot)
@@ -424,6 +459,12 @@ func run() -> void:
 	no_recipient_packet.snapshot_hash = PeerProtocol.hash_snapshot(no_recipient_room.session)
 	var no_recipient_move := NetworkSync.host_command(no_recipient_room, no_recipient_packet, "player_gold")
 	check(no_recipient_move.ok and not no_recipient_move.room.session.has("reaction_window"), "reaction with no keyword eligible recipient does not stall movement")
+	var exhausted_shot_room: Dictionary = shot_result.room.duplicate(true)
+	exhausted_shot_room.session.command_points[1] = 2
+	exhausted_shot_room.session.models[1].faction_stratagems[0].usage_limit = {"scope": "PHASE", "max": 1}
+	var exhausted_move := PeerProtocol.command(room.id, "player_gold", peer_session_id, 2, 1, {"sequence": 2, "team": 0, "kind": "MOVE", "payload": {"unit_id": "moving_unit", "delta": [0, 1]}}, PeerProtocol.hash_snapshot(exhausted_shot_room.session))
+	var exhausted_result := NetworkSync.host_command(exhausted_shot_room, exhausted_move, "player_gold")
+	check(exhausted_result.ok and not exhausted_result.room.session.has("reaction_window"), "exhausted reaction strategy does not reopen a window")
 	var unknown_weapon_packet: Dictionary = shot_packet.duplicate(true)
 	unknown_weapon_packet.command.payload.weapon = "fake"
 	var bad_weapon := NetworkSync.host_command(shot_waiting.room, unknown_weapon_packet, "player_blue")
