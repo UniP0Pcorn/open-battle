@@ -6,6 +6,7 @@ extends RefCounted
 const BattleSession = preload("res://rules/battle_session.gd")
 const Combat = preload("res://rules/combat.gd")
 const Charge = preload("res://rules/charge.gd")
+const Damage = preload("res://rules/damage.gd")
 const Engagement = preload("res://rules/engagement.gd")
 const Melee = preload("res://rules/melee.gd")
 const Movement = preload("res://rules/movement.gd")
@@ -177,7 +178,7 @@ static func _shooting_command(state: Dictionary, team: int, rng: RandomNumberGen
 					continue
 				var context := WeaponRules.context(weapon, distance, 0, 1, target.get("keywords", []), float(attacker.get("spent", 0.0)) <= EPSILON, true)
 				var result := Combat.resolve_ranged_attack(context.weapon, target, rng, 0, UnitAbilities.modifiers(attacker.get("ability_ids", [])))
-				return {"attacker": attacker_index, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": target.get("model_id", ""), "weapon": str(weapon.get("name", "")), "one_shot": WeaponRules.ids_from_weapon(weapon).has("one_shot"), "hits": result.hits, "damage": result.damage}
+				return _attack_payload(attacker_index, attacker, target_index, target, weapon, context.weapon, result, rng)
 	return {}
 
 static func _charge_command(state: Dictionary, team: int, rng: RandomNumberGenerator) -> Dictionary:
@@ -213,8 +214,23 @@ static func _fight_command(state: Dictionary, team: int, rng: RandomNumberGenera
 					continue
 				var context := WeaponRules.context(weapon, INF, 0, 1, target.get("keywords", []), false)
 				var result := Melee.resolve_attack(context.weapon, target, rng, 0, target.get("keywords", []), UnitAbilities.modifiers(attacker.get("ability_ids", [])))
-				return {"attacker": attacker_index, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": target.get("model_id", ""), "weapon": str(weapon.get("name", "")), "one_shot": WeaponRules.ids_from_weapon(weapon).has("one_shot"), "hits": result.hits, "damage": result.damage}
+				return _attack_payload(attacker_index, attacker, target_index, target, weapon, context.weapon, result, rng)
 	return {}
+
+static func _attack_payload(attacker_index: int, attacker: Dictionary, target_index: int, target: Dictionary, weapon: Dictionary, resolved_weapon: Dictionary, result: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
+	var payload := {"attacker": attacker_index, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": target.get("model_id", ""), "weapon": str(weapon.get("name", "")), "one_shot": WeaponRules.ids_from_weapon(resolved_weapon).has("one_shot"), "hits": int(result.get("hits", 0)), "damage": int(result.get("damage", 0))}
+	var target_preview: Array = [target.duplicate(true)]
+	var target_damage := Damage.allocate_to_unit(target_preview, int(result.get("damage", 0)), 0, rng)
+	if not target_damage.feel_no_pain_rolls.is_empty():
+		payload.feel_no_pain_rolls = target_damage.feel_no_pain_rolls
+	var hazardous_damage := int(result.get("hazardous_failures", 0)) * int(resolved_weapon.get("hazardous_damage", 0))
+	payload.hazardous_damage = maxi(0, hazardous_damage)
+	if hazardous_damage > 0:
+		var attacker_preview: Array = [attacker.duplicate(true)]
+		var attacker_damage := Damage.allocate_to_unit(attacker_preview, hazardous_damage, 0, rng)
+		if not attacker_damage.feel_no_pain_rolls.is_empty():
+			payload.hazardous_feel_no_pain_rolls = attacker_damage.feel_no_pain_rolls
+	return payload
 
 static func _unit_engaged(unit_models: Array, all_models: Array) -> bool:
 	for model in unit_models:
