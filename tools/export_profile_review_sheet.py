@@ -126,7 +126,7 @@ def main() -> None:
     source_map = source_lookup(args.manifest)
     first = next(rows(args.draft_dir, source_map), None)
     if first is None:
-        parser.error("no draft JSON files found; build review drafts first")
+        parser.error("no draft JSON files found; extract candidate payloads and build review drafts first")
     fields = list(first.keys())
     with args.output.open("w", newline="", encoding="utf-8-sig") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)

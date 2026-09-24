@@ -55,8 +55,14 @@ def main() -> None:
     args = parser.parse_args()
     promotable: list[dict] = []
     rejected: dict[str, int] = {}
+    candidate_total = 0
+    candidate_payload_total = 0
     for path in sorted(args.candidate_dir.glob("*.json")):
         document = json.loads(path.read_text(encoding="utf-8"))
+        candidate_total += int(document.get("candidate_count", 0) or 0)
+        candidate_payload_total += len(document.get("candidates", []))
+        if int(document.get("candidate_count", 0) or 0) > 0 and not document.get("candidates"):
+            rejected["candidate_payload_missing"] = rejected.get("candidate_payload_missing", 0) + int(document.get("candidate_count", 0))
         for candidate in document.get("candidates", []):
             problems = reason(candidate)
             if problems:
@@ -72,7 +78,7 @@ def main() -> None:
                 "weapon_count": len(candidate.get("weapons", [])),
                 "promotion_status": "needs_explicit_base_and_faction",
             })
-    result = {"schema_version": 1, "promotable_count": len(promotable), "promotable": promotable, "rejected_reasons": rejected}
+    result = {"schema_version": 1, "candidate_count": candidate_total, "candidate_payload_count": candidate_payload_total, "promotable_count": len(promotable), "promotable": promotable, "rejected_reasons": rejected}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"promotable={len(promotable)} rejected={sum(rejected.values())}")

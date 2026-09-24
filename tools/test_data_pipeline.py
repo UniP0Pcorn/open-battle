@@ -10,7 +10,7 @@ from pathlib import Path
 
 from tools.export_profile_review_sheet import review_flags, rows, source_lookup
 from tools.extract_profile_candidates import BASE_MM_RE, COMBINED_KEYWORD_RE, FACTION_KEYWORD_RE, POINT_COMPOSITION_RE, POINT_PAIR_RE, POINT_RE, POINT_SHORT_RE, UNIT_KEYWORD_RE, WEAPON_RE, _weapon_tags
-from tools.index_promotable_candidates import reason, weapon_range_fixed
+from tools.index_promotable_candidates import reason, weapon_range_fixed, main as index_main
 from tools.promote_profile_draft import inches, promote
 from tools.promote_reviewed_profiles import approved_profile
 from tools.weapon_tag_support import unsupported_tags
@@ -78,6 +78,20 @@ class ReviewSheetTests(unittest.TestCase):
                     invalid[field] = value
                     with self.assertRaises(ValueError):
                         approved_profile(invalid, root)
+
+    def test_candidate_summary_without_payload_is_never_promotable(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "summary.json").write_text(json.dumps({"candidate_count": 3, "import_status": "pending_extraction"}), encoding="utf-8")
+            output = root / "index.json"
+            result = subprocess.run([sys.executable, "-m", "tools.index_promotable_candidates", directory, "--output", str(output)], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0)
+            document = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(document["candidate_count"], 3)
+            self.assertEqual(document["candidate_payload_count"], 0)
+            self.assertEqual(document["promotable_count"], 0)
+            self.assertEqual(document["rejected_reasons"]["candidate_payload_missing"], 3)
+            self.assertIn("promotable=0", result.stdout)
 
     def test_empty_review_export_reports_actionable_error(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

@@ -154,7 +154,7 @@ Warhammer 40,000、Custodian Guard 等相关名称属于各自权利人，包括
 
 交互方向参考了 [New Recruit](https://www.newrecruit.eu/) 公开介绍的编成校验、跨设备列表同步、分享与离线使用等能力；本项目的大厅和规则数据保持独立。
 
-当前回归：Godot **567 项检查，0 失败**；Python 数据管线 **13 项测试通过**。
+当前回归：Godot **567 项检查，0 失败**；Python 数据管线 **14 项测试通过**。
 
 自定义 REACTION_SHOOT 可在敌方移动后触发，由主机生成骰子结果并写入日志；面板选择射手、武器和触发单位中的目标。旧 fire_overwatch 声明仍不代表完整官方警戒射击。远端普通射击、近战和战斗震慑现在强制通过意图命令交给主机结算。
 
@@ -195,3 +195,9 @@ Warhammer 40,000、Custodian Guard 等相关名称属于各自权利人，包括
 可用 `python -m tools.test_enet_loopback --godot ..\..\work\godot\Godot_v4.5.1-stable_win64_console.exe` 启动两个独立无窗口 Godot 进程，自动验证身份挑战、加入/准备、主机开局、客户端前进意图、主机掷骰、权威快照哈希、断线和重连。该脚本只绑定 `127.0.0.1` 的临时 UDP 端口，不接触公网路由器。当前回环两端均通过；UPnP 真实公网可达性仍需在支持 UPnP 的网络环境中手动验收。
 
 P2P 命令、重连和快照绑定当前房间会话哈希，转发层不能跨房间复用数据。
+
+### Pending 候选边界
+
+`data/units/pending/*.json` 当前是 30 个来源摘要，共标记 643 条候选；它们只包含 `candidate_count`，没有逐条 `candidates` 载荷。索引器现在明确输出 `candidate_payload_missing: 643`、`candidate_payload_count: 0` 和 `promotable_count: 0`。这表示需要先重新运行来源抽取并保留候选 JSON，不能把摘要数量当作已提取兵牌，也不能生成或确认数值。
+
+建议流程：来源文件存在后运行 `extract_all_sources.py` / `extract_profile_candidates.py`，再运行 `build_profile_drafts.py`、`export_profile_review_sheet.py`。只有带完整来源载荷、补齐 points/weapons/faction keywords、通过结构校验并填写人工审核信息的行，才能进入 promotion；当前仓库没有自动晋升。
