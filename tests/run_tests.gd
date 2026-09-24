@@ -45,6 +45,7 @@ const ModelState = preload("res://rules/model_state.gd")
 const AIPlayer = preload("res://rules/ai_player.gd")
 const Reserves = preload("res://rules/reserves.gd")
 const Attachments = preload("res://rules/attachments.gd")
+const BattleSetup = preload("res://rules/battle_setup.gd")
 var failures := 0
 var checks := 0
 
@@ -807,6 +808,8 @@ func run() -> void:
 	root.add_child(lobby_scene)
 	await process_frame
 	check(lobby_scene.status != null and lobby_scene.lobby != null, "lobby screen builds account and P2P controls")
+	var lobby_models := BattleSetup.default_models()
+	check(lobby_models.size() == 20 and lobby_models[0].has("model_id") and lobby_models[0].has("weapons"), "lobby builds a complete shared prototype battle setup")
 	lobby_scene.queue_free()
 	var scene = load("res://client/battlefield/tabletop.tscn").instantiate()
 	root.add_child(scene)

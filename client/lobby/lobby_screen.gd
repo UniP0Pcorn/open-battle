@@ -4,6 +4,7 @@ extends Control
 
 const AccountIdentity = preload("res://rules/account_identity.gd")
 const AccountStore = preload("res://rules/account_store.gd")
+const BattleSetup = preload("res://rules/battle_setup.gd")
 
 var lobby: Node
 var account_id: LineEdit
@@ -13,6 +14,7 @@ var address: LineEdit
 var port: SpinBox
 var status: Label
 var ready_button: Button
+var start_button: Button
 
 func _ready() -> void:
 	_build_ui()
@@ -79,6 +81,10 @@ func _build_ui() -> void:
 	ready_button.disabled = true
 	ready_button.pressed.connect(_ready_room)
 	room_row.add_child(ready_button)
+	start_button = Button.new()
+	start_button.text = "开始对局（主机）"
+	start_button.pressed.connect(_start_room)
+	room_row.add_child(start_button)
 	panel.add_child(room_row)
 	status = Label.new()
 	status.text = "先创建或加载账号。P2P 主机需要把对端身份加入信任目录。"
@@ -127,6 +133,12 @@ func _join_room() -> void:
 func _ready_room() -> void:
 	var error: String = lobby.set_ready(true)
 	status.text = "已准备。" if error.is_empty() else error
+
+func _start_room() -> void:
+	if lobby == null:
+		return
+	var error: String = lobby.start(BattleSetup.default_models())
+	status.text = "对局已启动，正在同步桌面……" if error.is_empty() else error
 
 func _on_lobby_changed(room: Dictionary) -> void:
 	ready_button.disabled = false
