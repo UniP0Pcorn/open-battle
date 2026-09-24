@@ -746,9 +746,13 @@ func charge_selected() -> void:
 		message = "冲锋落点非法：%s。" % display_reason(move_reason)
 		queue_redraw()
 		return
+	var charge_payload := {"model": selected, "model_id": attacker.get("model_id", ""), "target": target_index, "target_id": target.get("model_id", ""), "roll": roll.rolls, "from": [attacker.position.x, attacker.position.y], "to": [destination.x, destination.y]}
+	if _submit_network_command("CHARGE", charge_payload):
+		return
 	var old_position: Vector2 = attacker.position
 	attacker.position = destination
-	command_log = CommandLog.append(command_log, active_team, "CHARGE", {"model": selected, "model_id": attacker.get("model_id", ""), "target": target_index, "target_id": target.get("model_id", ""), "roll": roll.rolls, "from": [old_position.x, old_position.y], "to": [destination.x, destination.y]})
+	charge_payload.from = [old_position.x, old_position.y]
+	command_log = CommandLog.append(command_log, active_team, "CHARGE", charge_payload)
 	message = "冲锋成功：2D6=%d，已进入接战距离。" % roll.distance
 	queue_redraw()
 
@@ -783,11 +787,18 @@ func fight_selected() -> void:
 		queue_redraw()
 		return
 	var result := Melee.resolve_attack(weapon, models[target_index], combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls), models[target_index].get("keywords", []), attacker_abilities)
+	var fight_payload := {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "weapon": weapon_name, "one_shot": weapon_ids.has("one_shot"), "hits": result.hits, "damage": result.damage}
+	if network_active:
+		var fight_preview: Array = [models[target_index].duplicate(true)]
+		var fight_damage_preview := Damage.allocate_to_unit(fight_preview, int(result.damage), 0, combat_rng)
+		if not fight_damage_preview.feel_no_pain_rolls.is_empty():
+			fight_payload.feel_no_pain_rolls = fight_damage_preview.feel_no_pain_rolls
+	if _submit_network_command("FIGHT", fight_payload):
+		return
 	reroll_next_attack = false
 	if weapon_ids.has("one_shot") and not attacker.get("used_weapon_names", []).has(weapon_name):
 		attacker.used_weapon_names.append(weapon_name)
 	var damage_result := Damage.allocate_to_unit(models, int(result.damage), target_index, combat_rng)
-	var fight_payload := {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "weapon": weapon_name, "one_shot": weapon_ids.has("one_shot"), "hits": result.hits, "damage": result.damage}
 	if not damage_result.feel_no_pain_rolls.is_empty():
 		fight_payload.feel_no_pain_rolls = damage_result.feel_no_pain_rolls
 	command_log = CommandLog.append(command_log, active_team, "FIGHT", fight_payload)
@@ -879,11 +890,18 @@ func fire_selected() -> void:
 	target_for_attack.cover_save_bonus = int(weapon_context.cover_bonus)
 	var attacker_abilities := UnitAbilities.modifiers(attacker.get("ability_ids", []))
 	var result := Combat.resolve_ranged_attack(weapon_context.weapon, target_for_attack, combat_rng, (1 if reroll_next_attack else 0) + int(attacker_abilities.hit_rerolls), attacker_abilities)
+	var shoot_payload := {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "weapon": weapon_name, "one_shot": weapon_ids.has("one_shot"), "hits": result.hits, "damage": result.damage}
+	if network_active:
+		var shoot_preview: Array = [models[target_index].duplicate(true)]
+		var shoot_damage_preview := Damage.allocate_to_unit(shoot_preview, int(result.damage), 0, combat_rng)
+		if not shoot_damage_preview.feel_no_pain_rolls.is_empty():
+			shoot_payload.feel_no_pain_rolls = shoot_damage_preview.feel_no_pain_rolls
+	if _submit_network_command("SHOOT", shoot_payload):
+		return
 	reroll_next_attack = false
 	if weapon_ids.has("one_shot") and not attacker.get("used_weapon_names", []).has(weapon_name):
 		attacker.used_weapon_names.append(weapon_name)
 	var damage_result := Damage.allocate_to_unit(models, int(result.damage), target_index, combat_rng)
-	var shoot_payload := {"attacker": selected, "attacker_id": attacker.get("model_id", ""), "target": target_index, "target_id": models[target_index].get("model_id", ""), "weapon": weapon_name, "one_shot": weapon_ids.has("one_shot"), "hits": result.hits, "damage": result.damage}
 	if not damage_result.feel_no_pain_rolls.is_empty():
 		shoot_payload.feel_no_pain_rolls = damage_result.feel_no_pain_rolls
 	command_log = CommandLog.append(command_log, active_team, "SHOOT", shoot_payload)
