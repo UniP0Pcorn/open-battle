@@ -41,6 +41,9 @@ func connect_invite(invite: String, now: int = 0) -> String:
 func connect_to_relay(url: String, room_id: String) -> String:
 	return lobby.connect_to_relay(url, room_id)
 
+func host_relay(url: String, room_id: String, edition: int = 11, points_limit: int = 1000, mission_id: String = "control_center", terrain: Array = []) -> String:
+	return lobby.host_relay(url, room_id, edition, points_limit, mission_id, terrain)
+
 func set_ready(ready: bool = true) -> String:
 	return lobby.set_ready(ready)
 

@@ -121,6 +121,27 @@ func connect_to_relay(url: String, room_id: String) -> String:
 	pending_join = true
 	return relay_transport.connect_to_host(url, room_id)
 
+func host_relay(url: String, room_id: String, edition: int = 11, points_limit: int = 1000, mission_id: String = "control_center", terrain: Array = []) -> String:
+	if identity.is_empty():
+		return "IDENTITY REQUIRED"
+	var mission_config := _load_mission_config(mission_id, terrain)
+	room = Room.create(room_id, edition, points_limit, mission_id, mission_config.terrain, mission_config.objectives, mission_config.control_radius, mission_config.score_to_win)
+	if room.is_empty():
+		return "ROOM CREATE FAILED"
+	transport.close()
+	transport = relay_transport
+	is_host = true
+	var error: String = relay_transport.host(url, room_id)
+	if not error.is_empty():
+		return error
+	var joined := Room.join(room, player_id, 0)
+	if not bool(joined.get("ok", false)):
+		return str(joined.get("reason", "LOCAL JOIN FAILED"))
+	room = joined.room
+	reconnect_token = str(joined.get("reconnect_token", ""))
+	lobby_changed.emit(Room.public_snapshot(room))
+	return ""
+
 ## Build a shareable public advertisement. The caller supplies the mapped or
 ## relay endpoint; the lobby never guesses a public address from local state.
 func room_invite(address: String, expires_at: int) -> String:
