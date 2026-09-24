@@ -2,6 +2,8 @@
 extends Node
 ## Optional HTTP client for the dependency-free room advertisement directory.
 
+const RoomDirectory = preload("res://rules/room_directory.gd")
+
 signal rooms_received(rooms: Array)
 signal request_completed(ok: bool, payload: Variant)
 
@@ -48,7 +50,12 @@ func _on_request_completed(result: int, response_code: int, _headers: PackedStri
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
 	var ok := result == HTTPRequest.RESULT_SUCCESS and response_code >= 200 and response_code < 300
 	if ok and parsed is Dictionary and parsed.get("rooms", null) is Array:
-		rooms_received.emit(parsed.rooms.duplicate(true))
+		var valid_rooms: Array = []
+		var now := int(Time.get_unix_time_from_system())
+		for room in parsed.rooms:
+			if room is Dictionary and RoomDirectory.validate(room, now).is_empty():
+				valid_rooms.append(room.duplicate(true))
+		rooms_received.emit(valid_rooms)
 	request_completed.emit(ok, parsed if parsed != null else {})
 
 func _base_url(value: String) -> String:
