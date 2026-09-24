@@ -6,6 +6,9 @@ config/name="open-battle"
 run/main_scene="res://client/battlefield/tabletop.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 
+[autoload]
+NetworkBridge="*res://client/network_bridge.gd"
+
 [display]
 window/size/viewport_width=1280
 window/size/viewport_height=860

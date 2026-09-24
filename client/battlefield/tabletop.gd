@@ -69,6 +69,7 @@ var show_roster_panel := false
 var selected_weapon_index := 0
 var starting_unit_sizes: Dictionary = {}
 var turn_state: Dictionary = {}
+var network_active := false
 
 func _ready() -> void:
 	fixture = JSON.parse_string(FileAccess.get_file_as_string("res://data/units/custodian_guard.json"))
@@ -108,6 +109,12 @@ func _ready() -> void:
 	add_button("结束回合  [T]", Vector2(976, 605), end_turn)
 	add_button("单机 AI 回合  [J]", Vector2(976, 325), run_single_player_ai)
 	add_button("联机大厅  [M]", Vector2(976, 365), func(): get_tree().change_scene_to_file("res://client/lobby/lobby_screen.tscn"))
+	var bridge := get_node_or_null("/root/NetworkBridge")
+	if bridge != null:
+		bridge.battle_snapshot_received.connect(apply_network_snapshot)
+		var active_room: Dictionary = bridge.active_room()
+		if not active_room.is_empty() and active_room.get("session", {}) is Dictionary and not active_room.session.is_empty():
+			apply_network_snapshot(active_room.session)
 	add_button("撤销移动  [U]", Vector2(976, 645), undo_last)
 	add_button("进入射击阶段  [SPACE]", Vector2(976, 685), enter_shooting)
 	add_button("射击最近目标  [F]", Vector2(976, 725), fire_selected)
@@ -157,6 +164,25 @@ func reset_table() -> void:
 		var unit_id := str(model.get("unit_id", ""))
 		starting_unit_sizes[unit_id] = int(starting_unit_sizes.get(unit_id, 0)) + 1
 	message = "20 个底座已就绪。当前为本地移动沙盒。"
+	queue_redraw()
+
+func apply_network_snapshot(state: Dictionary) -> void:
+	var error := BattleSession.validate_snapshot(state)
+	if not error.is_empty():
+		message = "网络快照被拒绝：" + error
+		queue_redraw()
+		return
+	models = state.models.duplicate(true)
+	phase = str(state.phase)
+	active_team = int(state.active_team)
+	command_points = state.get("command_points", [0, 0]).duplicate(true)
+	command_log = state.get("command_log", []).duplicate(true)
+	turn_state = {"round": int(state.round), "active_team": active_team, "phase": phase, "phase_index": int(state.phase_index), "command_points": command_points.duplicate(true)}
+	network_active = true
+	selected = -1
+	dragging = false
+	history.clear()
+	message = "已载入联机权威快照：第 %d 回合，%s方。" % [int(state.round), "金" if active_team == 0 else "蓝"]
 	queue_redraw()
 
 func cycle_ready_profile() -> void:

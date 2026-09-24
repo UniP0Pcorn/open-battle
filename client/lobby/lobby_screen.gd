@@ -4,7 +4,6 @@ extends Control
 
 const AccountIdentity = preload("res://rules/account_identity.gd")
 const AccountStore = preload("res://rules/account_store.gd")
-const P2PLobby = preload("res://client/p2p_lobby.gd")
 
 var lobby: Node
 var account_id: LineEdit
@@ -17,8 +16,10 @@ var ready_button: Button
 
 func _ready() -> void:
 	_build_ui()
-	lobby = P2PLobby.new()
-	add_child(lobby)
+	lobby = get_node_or_null("/root/NetworkBridge")
+	if lobby == null:
+		status.text = "网络桥接未加载。"
+		return
 	lobby.lobby_changed.connect(_on_lobby_changed)
 	lobby.error_occurred.connect(_on_error)
 	var saved := AccountStore.load_identity()
