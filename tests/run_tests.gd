@@ -139,6 +139,8 @@ func run() -> void:
 	check(CommandSchema.validate_for_state(attach_entry, {"active_team": 0, "phase": "COMMAND"}).is_empty(), "command schema accepts attachment")
 	var detach_entry := {"sequence": 0, "team": 0, "kind": "DETACH", "payload": {"leader_unit_id": "leader"}}
 	check(CommandSchema.validate_for_state(detach_entry, {"active_team": 0, "phase": "COMMAND"}).is_empty(), "command schema accepts detachment")
+	var battle_shock_intent := {"sequence": 0, "team": 0, "kind": "BATTLE_SHOCK", "payload": {"unit_id": "u", "intent": true}}
+	check(CommandSchema.validate_entry(battle_shock_intent).is_empty(), "command schema accepts host-materialized battle shock intent")
 	var embark_entry := {"sequence": 0, "team": 0, "kind": "EMBARK", "payload": {"unit_id": "u", "transport_id": "transport_m001"}}
 	check(CommandSchema.validate_for_state(embark_entry, {"active_team": 0, "phase": "MOVEMENT"}).is_empty(), "command schema accepts embark")
 	var disembark_entry := {"sequence": 0, "team": 0, "kind": "DISEMBARK", "payload": {"unit_id": "u", "positions": [[10.0, 20.0]]}}
@@ -229,6 +231,17 @@ func run() -> void:
 	var intent_packet := PeerProtocol.command("attack-room", "attacker", "network-test", 0, -1, {"sequence": 0, "team": 0, "kind": "SHOOT", "payload": {"attacker": 0, "attacker_id": "net_attacker", "target": 1, "target_id": "net_target", "weapon": "net gun", "intent": true, "damage": 999, "hazardous_damage": 999, "feel_no_pain_rolls": [6]}}, PeerProtocol.hash_snapshot(attack_room.session))
 	var intent_result := NetworkSync.host_command(attack_room, intent_packet, "attacker")
 	check(intent_result.ok and intent_result.entry.payload.damage >= 0 and int(intent_result.entry.payload.damage) != 999 and int(intent_result.entry.payload.hazardous_damage) != 999 and intent_result.entry.payload.has("hazardous_damage") and not bool(intent_result.entry.payload.get("intent", false)), "host materializes network attack intent deterministically")
+	var shock_room := Room.create("shock-room")
+	shock_room = Room.join(shock_room, "shock_gold", 0).room
+	shock_room = Room.join(shock_room, "shock_blue", 1).room
+	shock_room = Room.set_ready(shock_room, "shock_gold").room
+	shock_room = Room.set_ready(shock_room, "shock_blue").room
+	var shock_started := Room.start(shock_room, [{"model_id": "shock_m001", "unit_id": "shock_unit", "team": 0, "position": Vector2(10, 10), "leadership": 7}, {"model_id": "shock_enemy_m001", "unit_id": "shock_enemy", "team": 1, "position": Vector2(30, 30)}])
+	shock_room = shock_started.room
+	var shock_session_id := PeerProtocol.hash_snapshot({"room_id": shock_room.id, "mission": shock_room.mission_id})
+	var shock_packet := PeerProtocol.command(shock_room.id, "shock_gold", shock_session_id, 0, -1, {"sequence": 0, "team": 0, "kind": "BATTLE_SHOCK", "payload": {"unit_id": "shock_unit", "intent": true}}, PeerProtocol.hash_snapshot(shock_room.session))
+	var network_shock_result := NetworkSync.host_command(shock_room, shock_packet, "shock_gold")
+	check(network_shock_result.ok and not bool(network_shock_result.entry.payload.get("intent", false)) and network_shock_result.entry.payload.get("rolls", []).size() == 2, "host materializes network battle shock intent deterministically")
 	var lobby_probe = P2PLobby.new()
 	root.add_child(lobby_probe)
 	await process_frame

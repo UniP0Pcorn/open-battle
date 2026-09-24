@@ -90,7 +90,9 @@ static func validate_payload(kind: String, payload: Dictionary) -> String:
 			if not _nonnegative_int(payload.get("model", -1)) or not _nonnegative_int(payload.get("target", -1)) or not _numbers(payload.get("to", []), 2):
 				return "INVALID CHARGE"
 		"BATTLE_SHOCK":
-			if str(payload.get("unit_id", "")).is_empty() or typeof(payload.get("passed", null)) != TYPE_BOOL:
+			if str(payload.get("unit_id", "")).is_empty():
+				return "INVALID BATTLE SHOCK"
+			if not bool(payload.get("intent", false)) and typeof(payload.get("passed", null)) != TYPE_BOOL:
 				return "INVALID BATTLE SHOCK"
 		"HAZARDOUS":
 			if not _nonnegative_int(payload.get("attacker", -1)) or not _nonnegative_int(payload.get("damage", -1)):

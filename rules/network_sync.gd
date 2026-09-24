@@ -32,6 +32,11 @@ static func host_command(room: Dictionary, packet: Dictionary, expected_peer_id:
 		if not bool(materialized.get("ok", false)):
 			return {"ok": false, "reason": str(materialized.get("reason", "ATTACK REJECTED")), "room": room}
 		command.payload = materialized.payload
+	if str(command.get("kind", "")) == "BATTLE_SHOCK" and bool(command.get("payload", {}).get("intent", false)):
+		var shock_materialized := _materialize_battle_shock(room.session, command, packet)
+		if not bool(shock_materialized.get("ok", false)):
+			return {"ok": false, "reason": str(shock_materialized.get("reason", "BATTLE SHOCK REJECTED")), "room": room}
+		command.payload = shock_materialized.payload
 	var expected_sequence := int(room.get("session", {}).get("command_log", []).size())
 	if int(packet.sequence) != expected_sequence:
 		return {"ok": false, "reason": "COMMAND SEQUENCE GAP", "room": room}
@@ -100,6 +105,25 @@ static func _materialize_attack(state: Dictionary, command: Dictionary, packet: 
 		var hazardous_damage_preview := Damage.allocate_to_unit(hazardous_preview, hazardous_damage, 0, rng)
 		if not hazardous_damage_preview.feel_no_pain_rolls.is_empty():
 			payload.hazardous_feel_no_pain_rolls = hazardous_damage_preview.feel_no_pain_rolls
+	return {"ok": true, "reason": "", "payload": payload}
+
+static func _materialize_battle_shock(state: Dictionary, command: Dictionary, packet: Dictionary) -> Dictionary:
+	var payload: Dictionary = command.get("payload", {}).duplicate(true)
+	var unit_id := str(payload.get("unit_id", ""))
+	var unit_models: Array = []
+	for model in state.get("models", []):
+		if Attachments.group_id(model) == unit_id and int(model.get("team", -1)) == int(command.get("team", -1)):
+			unit_models.append(model)
+	if unit_models.is_empty():
+		return {"ok": false, "reason": "UNKNOWN UNIT"}
+	var rng := RandomNumberGenerator.new()
+	rng.seed = (str(packet.get("session_id", "")) + ":shock:" + str(packet.get("sequence", 0)) + ":" + unit_id).hash()
+	var rolls: Array = [rng.randi_range(1, 6), rng.randi_range(1, 6)]
+	var total := int(rolls[0]) + int(rolls[1])
+	payload.erase("intent")
+	payload.rolls = rolls
+	payload.total = total
+	payload.passed = total <= int(unit_models[0].get("leadership", 7))
 	return {"ok": true, "reason": "", "payload": payload}
 
 static func _model_index(models: Array, payload: Dictionary, id_key: String, index_key: String) -> int:

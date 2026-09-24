@@ -15,6 +15,8 @@
 `rules/room.gd` 在会话外提供两人房间生命周期和玩家到阵营的映射，传输层可以把它直接包在 WebSocket 或 ENet 上；房间自身不接受未经 `BattleSession` 校验的命令。
 `rules/peer_protocol.gd` 固定 P2P 命令、快照、重连和认证包的版本、序列与快照哈希；`client/p2p_transport.gd` 提供 ENet 对等传输入口，`rules/account_identity.gd` 提供离线账户挑战证明。传输层只负责收发和完整性校验，战斗判定仍由 `BattleSession`/`Replay` 完成。
 `rules/network_sync.gd` 是主机/客户端共用的同步适配器：主机先核对房间、对端、快照哈希和命令序列，再调用 `Room.submit`；客户端只接受通过内容哈希校验的权威快照。
+
+战斗震慑命令支持客户端只提交单位意图；主机按会话标识、命令序列和单位标识生成确定性 2D6 结果，再将完整骰面写入权威日志，桌面可在指挥阶段逐单位提交检定。
 `rules/faction_rules.gd` 统一读取 profile 的 `abilities`、`faction_abilities` 和 `faction_stratagems`，`ArmyBuilder` 会把它们带入模型；阵营导入只需补数据声明，能力和策略的校验/执行器保持共用。条件能力会按攻击阶段合并事件修正，回放会从模型携带的声明中解析阵营自定义策略；通用策略的临时掩体与自动通过战斗震慑效果由回放状态执行并在回合边界清理。
 `rules/faction_rules.gd` 统一读取 profile 的 `abilities`、`faction_abilities` 和 `faction_stratagems`，`ArmyBuilder` 会把它们带入模型；阵营导入只需补数据声明，能力和策略的校验/执行器保持共用。条件能力会按攻击阶段合并事件修正，回放会从模型携带的声明中解析阵营自定义策略；通用策略的临时掩体与自动通过战斗震慑效果由回放状态执行并在回合边界清理，FIGHT 阶段会记录并校验单位近战激活状态。
 `rules/account_store.gd` 将经过校验的身份记录写入 Godot `user://`，只保存派生 credential hash，不保存密码明文；大厅启动后可直接加载该身份参与挑战认证。主机可导入对端身份文件并持久化信任指纹，客户端不会把本机密码发送到网络。

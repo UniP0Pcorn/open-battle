@@ -111,6 +111,7 @@ func _ready() -> void:
 	add_button("新移动阶段  [N]", Vector2(976, 525), new_phase)
 	add_button("重置棋盘  [R]", Vector2(976, 565), reset_table)
 	add_button("结束回合  [T]", Vector2(976, 605), end_turn)
+	add_button("战斗震慑检定  [F7]", Vector2(976, 1165), resolve_network_battle_shock)
 	add_button("单机 AI 回合  [J]", Vector2(976, 325), run_single_player_ai)
 	add_button("联机大厅  [M]", Vector2(976, 365), func(): get_tree().change_scene_to_file("res://client/lobby/lobby_screen.tscn"))
 	var bridge := get_node_or_null("/root/NetworkBridge")
@@ -720,6 +721,39 @@ func end_turn() -> void:
 	var winning_team := MissionRules.winner(score, score_to_win)
 	if winning_team >= 0:
 		message = "%s方达到 %d 分，任务完成！" % ["金" if winning_team == 0 else "蓝", score_to_win]
+	queue_redraw()
+
+func resolve_network_battle_shock() -> void:
+	if phase != "COMMAND":
+		message = "战斗震慑只能在指挥阶段检定。"
+		queue_redraw()
+		return
+	var current_round := int(turn_state.get("round", 1))
+	for model in models:
+		if int(model.get("team", -1)) != active_team:
+			continue
+		var unit_id := Attachments.group_id(model)
+		var already_resolved := false
+		for entry in command_log:
+			if str(entry.get("kind", "")) == "BATTLE_SHOCK" and str(entry.get("payload", {}).get("unit_id", "")) == unit_id and int(entry.get("payload", {}).get("round", -1)) == current_round:
+				already_resolved = true
+				break
+		if already_resolved:
+			continue
+		if _submit_network_command("BATTLE_SHOCK", {"unit_id": unit_id, "intent": true, "round": current_round}):
+			return
+		var unit_models: Array = []
+		for candidate in models:
+			if Attachments.group_id(candidate) == unit_id:
+				unit_models.append(candidate)
+		var result := BattleShock.test(int(unit_models[0].get("leadership", 7)), combat_rng)
+		var payload := {"unit_id": unit_id, "rolls": result.rolls, "total": result.total, "passed": result.passed, "round": current_round}
+		models = BattleShock.apply_to_models(models, unit_id, result)
+		command_log = CommandLog.append(command_log, active_team, "BATTLE_SHOCK", payload)
+		message = "已完成 %s 的战斗震慑检定。" % unit_id
+		queue_redraw()
+		return
+	message = "本回合没有待检定的战斗震慑单位。"
 	queue_redraw()
 
 func run_single_player_ai() -> Dictionary:
@@ -1403,6 +1437,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				embark_selected()
 			KEY_F10:
 				disembark_selected()
+			KEY_F7:
+				resolve_network_battle_shock()
 			KEY_R:
 				reset_table()
 			KEY_T:
