@@ -309,6 +309,8 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 					return "ONE SHOT ALREADY USED"
 			if kind == "FIGHT" and bool(models[attacker].get("fought", false)):
 				return "UNIT ALREADY FOUGHT"
+			if kind == "FIGHT" and _fights_first_blocked(models, attacker):
+				return "FIGHTS FIRST UNIT MUST ACTIVATE"
 		"HAZARDOUS":
 			var hazardous_attacker := _index_for(models, payload, "attacker_id", "attacker")
 			if hazardous_attacker < 0 or hazardous_attacker >= models.size():
@@ -540,6 +542,20 @@ static func _engaged_with_enemy(models: Array, model_index: int) -> bool:
 		if index == model_index or Reserves.in_reserve(models[index]) or int(models[index].get("team", -1)) == int(model.get("team", -1)):
 			continue
 		if Engagement.in_engagement(model, models[index]):
+			return true
+	return false
+
+static func _fights_first_blocked(models: Array, attacker_index: int) -> bool:
+	var attacker: Dictionary = models[attacker_index]
+	if bool(UnitAbilities.modifiers(attacker.get("ability_ids", [])).get("fights_first", false)):
+		return false
+	for index in range(models.size()):
+		var candidate: Dictionary = models[index]
+		if int(candidate.get("team", -1)) != int(attacker.get("team", -1)) or Reserves.in_reserve(candidate) or bool(candidate.get("fought", false)):
+			continue
+		if not bool(UnitAbilities.modifiers(candidate.get("ability_ids", [])).get("fights_first", false)):
+			continue
+		if _engaged_with_enemy(models, index):
 			return true
 	return false
 

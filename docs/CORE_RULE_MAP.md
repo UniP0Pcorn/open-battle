@@ -14,7 +14,7 @@
 | 移动阶段 | `rules/movement.gd` | 已有基础移动、边界、重叠和路径阻挡 |
 | 射击阶段 | `rules/combat.gd` | 已有敌我和射程验证，待补单位/武器选择 |
 | 冲锋阶段 | `rules/charge.gd` | 已有 2D6 冲锋距离、射程和接战落点原型 |
-| 战斗阶段、贴靠、合并和近战攻击 | `rules/melee.gd`、`rules/engagement.gd` | 已有接战距离和近战攻击原型，完整单位合并/分配仍待扩展 |
+| 战斗阶段、贴靠、合并和近战攻击 | `rules/melee.gd`、`rules/engagement.gd`、`rules/replay.gd` | 已有接战距离、首发优先级、每单位一次激活和近战攻击原型，完整单位合并/分配仍待扩展 |
 | 地形、视线、掩体、遮蔽 | `rules/terrain.gd`、`rules/visibility.gd`、`rules/combat.gd` | 已有矩形阻挡、采样视线和 `cover_bonus` 豁免修正，复杂掩体类别待实现 |
 | 目标点和任务胜负 | `rules/mission.gd`、`rules/mission_validation.gd` | 已抽出目标控制、目标分值和胜负判定，任务 JSON 在加载前经过结构校验 |
 | 战略点、核心策略和行动 | `rules/stratagems.gd`、`rules/actions.gd` | 已有可注册策略定义、阶段/资源校验和回放效果记录；完整派系策略仍按数据导入 |

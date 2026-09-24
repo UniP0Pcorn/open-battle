@@ -830,6 +830,10 @@ func fight_selected() -> void:
 		message = "该单位本回合已经完成近战攻击。"
 		queue_redraw()
 		return
+	if fights_first_blocked(attacker):
+		message = "仍有处于接战中的首发单位必须先激活。"
+		queue_redraw()
+		return
 	var target_index := -1
 	var nearest := INF
 	for i in range(models.size()):
@@ -1050,6 +1054,18 @@ func selected_unit_models() -> Array:
 func selected_unit_in_reserve() -> bool:
 	for model in selected_unit_models():
 		if Reserves.in_reserve(model):
+			return true
+	return false
+
+func fights_first_blocked(attacker: Dictionary) -> bool:
+	if bool(UnitAbilities.modifiers(attacker.get("ability_ids", [])).get("fights_first", false)):
+		return false
+	for candidate in models:
+		if int(candidate.get("team", -1)) != int(attacker.get("team", -1)) or bool(candidate.get("fought", false)):
+			continue
+		if not bool(UnitAbilities.modifiers(candidate.get("ability_ids", [])).get("fights_first", false)):
+			continue
+		if model_is_engaged_with_enemy(candidate):
 			return true
 	return false
 

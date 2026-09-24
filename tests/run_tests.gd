@@ -477,6 +477,11 @@ func run() -> void:
 	repeated_melee_log = CommandLog.append(repeated_melee_log, 0, "FIGHT", {"attacker": 0, "attacker_id": "weapon_m001", "target": 1, "target_id": "weapon_target_m001", "weapon": "Test Blade", "damage": 1})
 	var repeated_melee := Replay.replay(Replay.initial_state(melee_replay_models, "FIGHT", 0), repeated_melee_log)
 	check(not repeated_melee.ok and repeated_melee.reason == "UNIT ALREADY FOUGHT", "replay blocks a second fight activation in one phase")
+	var fights_first_models: Array = [{"model_id": "normal_fighter_m001", "unit_id": "normal_fighter", "team": 0, "position": Vector2(5, 5), "radius": 0.5, "weapons": [{"name": "Test Blade"}]}, {"model_id": "first_fighter_m001", "unit_id": "first_fighter", "team": 0, "position": Vector2(5, 5.5), "radius": 0.5, "ability_ids": ["fights_first"], "weapons": [{"name": "Test Blade"}]}, {"model_id": "first_target_m001", "unit_id": "first_target", "team": 1, "position": Vector2(5, 6), "radius": 0.5, "wounds": 3}]
+	var normal_before_first := Replay.replay(Replay.initial_state(fights_first_models, "FIGHT", 0), [{"sequence": 0, "team": 0, "kind": "FIGHT", "payload": {"attacker": 0, "attacker_id": "normal_fighter_m001", "target": 2, "target_id": "first_target_m001", "weapon": "Test Blade", "damage": 1}}])
+	check(not normal_before_first.ok and normal_before_first.reason == "FIGHTS FIRST UNIT MUST ACTIVATE", "replay enforces fights first priority")
+	var first_attack := Replay.replay(Replay.initial_state(fights_first_models, "FIGHT", 0), [{"sequence": 0, "team": 0, "kind": "FIGHT", "payload": {"attacker": 1, "attacker_id": "first_fighter_m001", "target": 2, "target_id": "first_target_m001", "weapon": "Test Blade", "damage": 1}}])
+	check(first_attack.ok and first_attack.state.models[1].fought, "replay allows fights first activation")
 	var stratagem_state := Replay.initial_state(one_shot_models, "SHOOTING", 0)
 	stratagem_state.command_points = [1, 0]
 	var stratagem_log: Array = []

@@ -210,22 +210,23 @@ static func _charge_command(state: Dictionary, team: int, rng: RandomNumberGener
 	return {}
 
 static func _fight_command(state: Dictionary, team: int, rng: RandomNumberGenerator) -> Dictionary:
-	for attacker_index in range(state.models.size()):
-		var attacker: Dictionary = state.models[attacker_index]
-		if int(attacker.get("team", -1)) != team:
-			continue
-		if bool(attacker.get("fought", false)):
-			continue
-		for target_index in range(state.models.size()):
-			var target: Dictionary = state.models[target_index]
-			if not Melee.target_reason(attacker, target, team).is_empty():
+	for priority in [true, false]:
+		for attacker_index in range(state.models.size()):
+			var attacker: Dictionary = state.models[attacker_index]
+			if int(attacker.get("team", -1)) != team or not Reserves.active(attacker):
 				continue
-			for weapon in attacker.get("weapons", []):
-				if float(weapon.get("range_inches", weapon.get("range", 0.0))) > 0.0:
+			if bool(attacker.get("fought", false)) or bool(UnitAbilities.modifiers(attacker.get("ability_ids", [])).get("fights_first", false)) != priority:
+				continue
+			for target_index in range(state.models.size()):
+				var target: Dictionary = state.models[target_index]
+				if not Reserves.active(target) or not Melee.target_reason(attacker, target, team).is_empty():
 					continue
-				var context := WeaponRules.context(weapon, INF, 0, 1, target.get("keywords", []), false)
-				var result := Melee.resolve_attack(context.weapon, target, rng, 0, target.get("keywords", []), UnitAbilities.event_modifiers(attacker.get("ability_ids", []), "before_attack", {"phase": "FIGHT", "kind": "FIGHT"}))
-				return _attack_payload(attacker_index, attacker, target_index, target, weapon, context.weapon, result, rng)
+				for weapon in attacker.get("weapons", []):
+					if float(weapon.get("range_inches", weapon.get("range", 0.0))) > 0.0:
+						continue
+					var context := WeaponRules.context(weapon, INF, 0, 1, target.get("keywords", []), false)
+					var result := Melee.resolve_attack(context.weapon, target, rng, 0, target.get("keywords", []), UnitAbilities.event_modifiers(attacker.get("ability_ids", []), "before_attack", {"phase": "FIGHT", "kind": "FIGHT"}))
+					return _attack_payload(attacker_index, attacker, target_index, target, weapon, context.weapon, result, rng)
 	return {}
 
 static func _attack_payload(attacker_index: int, attacker: Dictionary, target_index: int, target: Dictionary, weapon: Dictionary, resolved_weapon: Dictionary, result: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
