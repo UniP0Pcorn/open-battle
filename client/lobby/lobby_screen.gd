@@ -97,6 +97,10 @@ func _build_ui() -> void:
 	start_button.text = "开始对局（主机）"
 	start_button.pressed.connect(_start_room)
 	room_row.add_child(start_button)
+	var reconnect_button := Button.new()
+	reconnect_button.text = "断线重连"
+	reconnect_button.pressed.connect(_reconnect_room)
+	room_row.add_child(reconnect_button)
 	panel.add_child(room_row)
 	status = Label.new()
 	status.text = "先创建或加载账号；主机请先导入对端配对凭据。"
@@ -171,6 +175,12 @@ func _start_room() -> void:
 		return
 	var error: String = lobby.start(BattleSetup.default_models())
 	status.text = "对局已启动，正在同步桌面……" if error.is_empty() else error
+
+func _reconnect_room() -> void:
+	if lobby == null:
+		return
+	var error: String = lobby.reconnect()
+	status.text = "正在请求最新权威快照……" if error.is_empty() else error
 
 func _on_lobby_changed(room: Dictionary) -> void:
 	ready_button.disabled = false

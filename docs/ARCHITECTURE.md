@@ -24,6 +24,7 @@
 
 建房时主机会把任务 JSON 的目标点、控制半径、胜利分数、地形和任务标识写入房间；`END_TURN` 由 `Replay` 在权威会话中结算比分并记录获胜方，快照和重连恢复使用同一份任务状态，达成胜利后房间进入 `FINISHED` 并拒绝后续命令。
 `client/network_bridge.gd` 作为 Autoload 跨场景保留大厅连接，桌面进入时会订阅权威快照并调用 `apply_network_snapshot`；网络输入命令的逐项替换仍按动作类型推进。
+大厅的“断线重连”按钮复用保存在 Autoload 中的房间、玩家令牌和最后序号；主机返回的快照通过同一 `lobby_changed`/`battle_snapshot_received` 通道驱动桌面恢复。
 射击和近战的网络命令可以只携带攻击意图；`rules/network_sync.gd` 在主机按会话序列派生确定性骰子、解析武器能力、目标伤害、危险武器自伤和两侧 FNP 骰面，再交给 `Room`/`Replay` 记录，客户端不能直接指定伤害结果。
 部署阶段使用 `rules/deployment.gd`，将底座几何检查与阵营部署区分开：部署时限制在任务给出的纵深内，进入移动阶段后仍可在整张桌面移动。
 预备队和深入打击使用 `rules/reserves.gd` 与 `DEPLOY_RESERVE` 命令：单位必须声明 `deep_strike` 并处于 `reserve` 状态，入场时统一检查桌面边界、底座重叠和距敌至少 9 英寸；回放、单机 AI、桌面输入和联机快照共享同一状态字段。

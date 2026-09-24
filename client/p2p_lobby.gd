@@ -161,6 +161,7 @@ func _on_packet_received(peer_id: int, packet: Dictionary) -> void:
 				if bool(snapshot_result.get("ok", false)):
 					room.session = snapshot_result.state
 					battle_snapshot_received.emit(room.session)
+					lobby_changed.emit(Room.public_snapshot(room))
 				else:
 					error_occurred.emit(str(snapshot_result.get("reason", "SNAPSHOT REJECTED")))
 		"RECONNECT":
