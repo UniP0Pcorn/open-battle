@@ -401,6 +401,13 @@ func selected_unit_remaining_movement() -> float:
 	return 0.0 if remaining == INF else remaining
 
 func new_phase() -> void:
+	if network_active:
+		if phase == "COMMAND":
+			_submit_network_command("PHASE_ADVANCE", {"from": "COMMAND", "to": "MOVEMENT"})
+		else:
+			message = "联机对局请按阶段按钮推进，不能手动重置移动额度。"
+			queue_redraw()
+		return
 	dragging = false
 	falling_back = false
 	for model in models:

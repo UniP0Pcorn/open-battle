@@ -175,6 +175,8 @@ func _start_room() -> void:
 func _on_lobby_changed(room: Dictionary) -> void:
 	ready_button.disabled = false
 	status.text = "房间 %s：%d/2 名玩家。" % [str(room.get("id", "")), room.get("players", []).size()]
+	if str(room.get("status", "WAITING")) == "ACTIVE":
+		get_tree().change_scene_to_file("res://client/battlefield/tabletop.tscn")
 
 func _on_error(reason: String) -> void:
 	status.text = "网络错误：" + reason
