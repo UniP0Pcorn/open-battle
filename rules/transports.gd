@@ -119,7 +119,7 @@ static func move_reason(models: Array, transport_id: String, delta: Array, team:
 	for index in range(models.size()):
 		if index != transport_index and active(models[index]):
 			external.append(models[index])
-	return Movement.movement_reason(_position_of(transport), _position_of(transport) + movement_delta, float(transport.get("spent", 0.0)), allowance, float(transport.get("radius", 0.0)), external, -1, terrain)
+	return Movement.movement_reason_for_model(transport, _position_of(transport) + movement_delta, allowance, external, -1, terrain)
 
 static func _base_separation(model: Dictionary, other: Dictionary) -> float:
 	return _base_separation_position(_position_of(model), float(model.get("radius", 0.0)), other)

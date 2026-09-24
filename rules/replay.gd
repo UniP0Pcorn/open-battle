@@ -440,7 +440,7 @@ static func _movement_reference_error(models: Array, unit_id: String, delta: Arr
 			return "MOVE LIMIT EXCEEDED"
 		var origin := _position_of(model)
 		var destination := origin + movement_delta
-		var path_error := Movement.movement_reason(origin, destination, float(model.get("spent", 0.0)), allowance, float(model.get("radius", 0.0)), external_models, -1, terrain)
+		var path_error := Movement.movement_reason_for_model(model, destination, allowance, external_models, -1, terrain)
 		if not path_error.is_empty():
 			return path_error
 		for enemy in enemies:
@@ -510,7 +510,7 @@ static func _scout_reference_error(models: Array, unit_id: String, delta: Array,
 			external.append(model)
 	for model in unit_models:
 		var destination := _position_of(model) + movement_delta
-		var move_error := Movement.movement_reason(_position_of(model), destination, 0.0, allowance, float(model.get("radius", 0.0)), external, -1, [])
+		var move_error := Movement.movement_reason_for_model(model, destination, allowance, external, -1, [])
 		if not move_error.is_empty():
 			return move_error
 		var moved: Dictionary = model.duplicate(true)
@@ -608,7 +608,7 @@ static func _charge_reference_error(models: Array, charger_index: int, target_in
 	for index in range(models.size()):
 		if index != charger_index:
 			external_models.append(models[index])
-	var movement_error := Movement.movement_reason(_position_of(charger), destination, 0.0, charge_distance, float(charger.get("radius", charger.get("base_radius", 0.0))), external_models, -1, terrain)
+	var movement_error := Movement.movement_reason_for_model(charger, destination, charge_distance, external_models, -1, terrain, 0.0)
 	if not movement_error.is_empty():
 		return "CHARGE " + movement_error
 	var end_error := Charge.end_reason(destination, _position_of(target), 1.0, float(charger.get("radius", charger.get("base_radius", 0.0))), float(target.get("radius", target.get("base_radius", 0.0))))

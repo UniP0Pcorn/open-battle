@@ -886,7 +886,7 @@ func charge_selected() -> void:
 		return
 	var direction: Vector2 = (target.position - attacker.position).normalized()
 	var destination: Vector2 = target.position - direction * (attacker.radius + target.radius + 1.0)
-	var move_reason := Rules.movement_reason(attacker.position, destination, 0.0, float(roll.distance), attacker.radius, models, selected)
+	var move_reason := Rules.movement_reason_for_model(attacker, destination, float(roll.distance), models, selected, [], 0.0)
 	if not move_reason.is_empty():
 		message = "冲锋落点非法：%s。" % display_reason(move_reason)
 		queue_redraw()
@@ -1125,7 +1125,7 @@ func preview_reason() -> String:
 		return engagement_reason_for_delta(unit_models, preview - model.position, "CANNOT END IN ENGAGEMENT")
 	if unit_is_engaged(unit_models):
 		return "ENGAGED UNIT MUST FALL BACK"
-	var move_error := Rules.movement_reason(model.position, preview, model.spent, movement_for_model(model), model.radius, models, selected, terrain)
+	var move_error := Rules.movement_reason_for_model(model, preview, movement_for_model(model), models, selected, terrain)
 	if not move_error.is_empty():
 		return move_error
 	return engagement_reason_for_delta(unit_models, preview - model.position, "CANNOT END IN ENGAGEMENT")

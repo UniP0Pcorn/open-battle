@@ -615,6 +615,9 @@ func run() -> void:
 	var obstacles: Array = [{"x": 4.0, "y": 4.0, "width": 2.0, "height": 2.0}]
 	check(Terrain.circle_reason(Vector2(5, 5), 0.5, obstacles) == "TERRAIN BLOCKED", "terrain blocks base placement")
 	check(Terrain.path_reason(Vector2(2, 5), Vector2(8, 5), 0.5, obstacles) == "TERRAIN BLOCKED", "terrain blocks movement path")
+	var flying_model := {"position": Vector2(2, 5), "radius": 0.5, "spent": 0.0, "keywords": ["飞行"]}
+	check(Rules.movement_reason_for_model(flying_model, Vector2(8, 5), 10.0, [], -1, obstacles).is_empty(), "fly unit crosses terrain path")
+	check(Rules.movement_reason_for_model(flying_model, Vector2(5, 5), 10.0, [], -1, obstacles) == "TERRAIN BLOCKED", "fly unit still cannot end inside terrain")
 	check(Visibility.blocked(Vector2(2, 5), Vector2(8, 5), obstacles), "terrain blocks line of sight")
 	check(not Visibility.blocked(Vector2(2, 2), Vector2(8, 2), obstacles), "clear line of sight passes")
 	var covered_obstacle: Array = [{"x": 4.0, "y": 4.0, "width": 2.0, "height": 2.0, "cover_bonus": 1}]

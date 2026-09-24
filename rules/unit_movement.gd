@@ -21,7 +21,7 @@ static func movement_reason(unit: Array, delta: Vector2, spent: float, allowance
 		var destination: Vector2 = model.position + delta
 		var model_spent := float(model.get("spent", spent))
 		var model_allowance := float(model.get("movement_inches", allowance))
-		var reason := Movement.movement_reason(model.position, destination, model_spent, model_allowance, model.radius, external_models, -1, terrain)
+		var reason := Movement.movement_reason_for_model(model, destination, model_allowance, external_models, -1, terrain, model_spent)
 		if not reason.is_empty():
 			return reason
 	var moved: Array = []

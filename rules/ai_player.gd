@@ -177,7 +177,7 @@ static func _unit_move_is_legal(unit_models: Array, delta: Vector2, all_models: 
 			external.append(model)
 	for model in unit_models:
 		var allowance := float(model.get("movement_inches", 0.0)) + float(model.get("advance_bonus", 0))
-		var reason := Movement.movement_reason(_position(model), _position(model) + delta, float(model.get("spent", 0.0)), allowance, float(model.get("radius", 0.0)), external, -1, terrain)
+		var reason := Movement.movement_reason_for_model(model, _position(model) + delta, allowance, external, -1, terrain)
 		if not reason.is_empty():
 			return false
 	return true

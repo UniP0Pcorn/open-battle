@@ -4,6 +4,7 @@ extends RefCounted
 const BOARD_SIZE := Vector2(60.0, 44.0)
 const EPSILON := 0.00001
 const Terrain = preload("res://rules/terrain.gd")
+const UnitKeywords = preload("res://rules/unit_keywords.gd")
 
 static func radius_inches(diameter_mm: float) -> float:
 	return diameter_mm / 25.4 / 2.0
@@ -44,16 +45,22 @@ static func path_reason(origin: Vector2, destination: Vector2, radius: float, mo
 			return "PATH BLOCKED"
 	return ""
 
-static func movement_reason(origin: Vector2, destination: Vector2, spent: float, allowance: float, radius: float, models: Array, ignored_index: int, terrain: Array = []) -> String:
+static func movement_reason(origin: Vector2, destination: Vector2, spent: float, allowance: float, radius: float, models: Array, ignored_index: int, terrain: Array = [], can_fly: bool = false) -> String:
 	if spent + origin.distance_to(destination) > allowance + EPSILON:
 		return "MOVE LIMIT EXCEEDED"
 	var path_error := path_reason(origin, destination, radius, models, ignored_index)
 	if not path_error.is_empty():
 		return path_error
-	var terrain_path_error := Terrain.path_reason(origin, destination, radius, terrain)
-	if not terrain_path_error.is_empty():
-		return terrain_path_error
+	if not can_fly:
+		var terrain_path_error := Terrain.path_reason(origin, destination, radius, terrain)
+		if not terrain_path_error.is_empty():
+			return terrain_path_error
 	var terrain_end_error := Terrain.circle_reason(destination, radius, terrain)
 	if not terrain_end_error.is_empty():
 		return terrain_end_error
 	return placement_reason(destination, radius, models, ignored_index)
+
+static func movement_reason_for_model(model: Dictionary, destination: Vector2, allowance: float, models: Array, ignored_index: int, terrain: Array = [], spent_override: float = -1.0) -> String:
+	var keywords := UnitKeywords.normalize(model.get("keywords", []))
+	var spent := float(model.get("spent", 0.0)) if spent_override < 0.0 else spent_override
+	return movement_reason(_position_of(model), destination, spent, allowance, float(model.get("radius", 0.0)), models, ignored_index, terrain, keywords.has("fly"))
