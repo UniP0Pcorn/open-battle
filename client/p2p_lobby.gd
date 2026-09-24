@@ -21,6 +21,8 @@ var player_id := ""
 var reconnect_token := ""
 var is_host := false
 var pending_join := false
+var server_address := ""
+var server_port := 0
 var trusted_identities: Dictionary = {}
 var authenticated_peers: Dictionary = {}
 
@@ -77,6 +79,8 @@ func connect_to_room(room_id: String, address: String, port: int) -> String:
 		return "ROOM CREATE FAILED"
 	is_host = false
 	pending_join = true
+	server_address = address
+	server_port = port
 	var error: String = transport.connect_to_host(address, port)
 	if not error.is_empty():
 		pending_join = false
@@ -121,6 +125,14 @@ func submit_command(kind: String, payload: Dictionary) -> String:
 func reconnect() -> String:
 	if is_host or room.is_empty() or reconnect_token.is_empty():
 		return "RECONNECT NOT AVAILABLE"
+	if transport.peer == null or transport.peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
+		if server_address.is_empty() or server_port <= 0:
+			return "RECONNECT ADDRESS UNAVAILABLE"
+		pending_join = true
+		var error: String = transport.connect_to_host(server_address, server_port)
+		if not error.is_empty():
+			pending_join = false
+		return error
 	var packet := PeerProtocol.reconnect(str(room.id), player_id, _session_id(), _last_sequence(), PeerProtocol.hash_snapshot(room.session), reconnect_token)
 	return transport.send(packet, 1)
 
@@ -158,6 +170,7 @@ func _on_packet_received(peer_id: int, packet: Dictionary) -> void:
 				if bool(sync_result.get("ok", false)):
 					room = sync_result.room
 					transport.broadcast(sync_result.snapshot)
+					battle_snapshot_received.emit(room.session)
 					lobby_changed.emit(Room.public_snapshot(room))
 				else:
 					error_occurred.emit(str(sync_result.get("reason", "COMMAND REJECTED")))
@@ -169,6 +182,7 @@ func _on_packet_received(peer_id: int, packet: Dictionary) -> void:
 				var snapshot_result := NetworkSync.accept_snapshot(room.session, packet)
 				if bool(snapshot_result.get("ok", false)):
 					room.session = snapshot_result.state
+					room.status = Room.ACTIVE
 					if int(room.session.get("winner", -1)) >= 0:
 						room.status = Room.FINISHED
 						room.winner = int(room.session.winner)
@@ -298,5 +312,7 @@ func close_room() -> void:
 	is_host = false
 	pending_join = false
 	authenticated_peers.clear()
+	server_address = ""
+	server_port = 0
 	reconnect_token = ""
 	lobby_changed.emit({})
