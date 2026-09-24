@@ -14,7 +14,11 @@ const TurnState = preload("res://rules/turn_state.gd")
 const UnitAbilities = preload("res://rules/unit_abilities.gd")
 
 static func initial_state(models: Array, phase: String = "MOVEMENT", active_team: int = 0, terrain: Array = []) -> Dictionary:
-	return {"models": models.duplicate(true), "phase": phase, "phase_index": TurnState.phase_index(phase), "active_team": active_team, "round": 1, "command_points": [0, 0], "terrain": terrain.duplicate(true), "stratagem_effects": [], "events": []}
+	var initial_models: Array = models.duplicate(true)
+	if phase == "FIGHT":
+		for model in initial_models:
+			model.fought = false
+	return {"models": initial_models, "phase": phase, "phase_index": TurnState.phase_index(phase), "active_team": active_team, "round": 1, "command_points": [0, 0], "terrain": terrain.duplicate(true), "stratagem_effects": [], "events": []}
 
 static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 	var next := state.duplicate(true)
@@ -106,6 +110,10 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 						model.advance_bonus = 0
 						model.fell_back = false
 						model.erase("temporary_cover_bonus")
+			if str(next.phase) == "FIGHT":
+				for model in next.models:
+					if int(model.get("team", -1)) == int(next.active_team):
+						model.fought = false
 		"BATTLE_SHOCK":
 			var unit_id := str(payload.get("unit_id", ""))
 			if _has_active_effect(next.get("stratagem_effects", []), "PASS_BATTLE_SHOCK", int(entry.team), unit_id) and not bool(payload.get("passed", false)):
@@ -149,6 +157,13 @@ static func apply_entry(state: Dictionary, entry: Dictionary) -> Dictionary:
 					next.models.remove_at(hazardous_attacker_index)
 				else:
 					next.models[hazardous_attacker_index] = hazardous_result
+			if kind == "FIGHT":
+				var fought_attacker_index := _index_for(next.models, payload, "attacker_id", "attacker")
+				if fought_attacker_index >= 0 and fought_attacker_index < next.models.size():
+					var fought_unit_id := str(next.models[fought_attacker_index].get("unit_id", ""))
+					for model in next.models:
+						if str(model.get("unit_id", "")) == fought_unit_id:
+							model.fought = true
 		"HAZARDOUS":
 			var attacker_index := _index_for(next.models, payload, "attacker_id", "attacker")
 			var hazardous_damage := int(payload.get("damage", -1))
@@ -260,6 +275,8 @@ static func _validate_references(models: Array, entry: Dictionary, kind: String,
 					return "INVALID DAMAGE EVENT"
 				if models[attacker].get("used_weapon_names", []).has(str(payload.get("weapon", ""))):
 					return "ONE SHOT ALREADY USED"
+			if kind == "FIGHT" and bool(models[attacker].get("fought", false)):
+				return "UNIT ALREADY FOUGHT"
 		"HAZARDOUS":
 			var hazardous_attacker := _index_for(models, payload, "attacker_id", "attacker")
 			if hazardous_attacker < 0 or hazardous_attacker >= models.size():

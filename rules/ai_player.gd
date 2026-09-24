@@ -205,6 +205,8 @@ static func _fight_command(state: Dictionary, team: int, rng: RandomNumberGenera
 		var attacker: Dictionary = state.models[attacker_index]
 		if int(attacker.get("team", -1)) != team:
 			continue
+		if bool(attacker.get("fought", false)):
+			continue
 		for target_index in range(state.models.size()):
 			var target: Dictionary = state.models[target_index]
 			if not Melee.target_reason(attacker, target, team).is_empty():

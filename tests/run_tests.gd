@@ -450,6 +450,10 @@ func run() -> void:
 	melee_replay_log = CommandLog.append(melee_replay_log, 0, "FIGHT", {"attacker": 0, "attacker_id": "weapon_m001", "target": 1, "target_id": "weapon_target_m001", "weapon": "Test Blade", "damage": 1})
 	var melee_replay := Replay.replay(Replay.initial_state(melee_replay_models, "FIGHT", 0), melee_replay_log)
 	check(melee_replay.ok and melee_replay.state.models[1].wounds == 2, "replay validates melee engagement")
+	var repeated_melee_log := melee_replay_log.duplicate(true)
+	repeated_melee_log = CommandLog.append(repeated_melee_log, 0, "FIGHT", {"attacker": 0, "attacker_id": "weapon_m001", "target": 1, "target_id": "weapon_target_m001", "weapon": "Test Blade", "damage": 1})
+	var repeated_melee := Replay.replay(Replay.initial_state(melee_replay_models, "FIGHT", 0), repeated_melee_log)
+	check(not repeated_melee.ok and repeated_melee.reason == "UNIT ALREADY FOUGHT", "replay blocks a second fight activation in one phase")
 	var stratagem_state := Replay.initial_state(one_shot_models, "SHOOTING", 0)
 	stratagem_state.command_points = [1, 0]
 	var stratagem_log: Array = []

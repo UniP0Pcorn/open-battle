@@ -356,7 +356,7 @@ func add_model(point: Vector2, side: int, unit_id: String = "", model_data: Dict
 	var objective_control := int(model_data.get("objective_control", 1)) + int(ability_mods.objective_control_bonus)
 	# Retain movement per model; the current catalogue selection is only a default.
 	var movement_inches := float(model_data.get("movement_inches", fixture.get("movement_inches", 6.0)))
-	models.append({"model_id": model_id, "position": point, "radius": Rules.radius_inches(base_mm), "spent": 0.0, "advanced": bool(model_data.get("advanced", false)), "advance_bonus": int(model_data.get("advance_bonus", 0)), "fell_back": bool(model_data.get("fell_back", false)), "used_weapon_names": model_data.get("used_weapon_names", []).duplicate(true), "team": side, "wounds": int(model_data.get("wounds", fixture.get("wounds", 3))), "toughness": int(model_data.get("toughness", fixture.get("toughness", 4))), "save_on": int(model_data.get("save_on", fixture.get("save_on", 7))), "invulnerable_save": int(model_data.get("invulnerable_save", fixture.get("invulnerable_save", 0))), "leadership": int(model_data.get("leadership", fixture.get("leadership", 7))), "objective_control": objective_control, "ability_ids": ability_ids, "keywords": model_data.get("keywords", unit_profile.get("keywords", [])).duplicate(true), "faction_keywords": model_data.get("faction_keywords", unit_profile.get("faction_keywords", [])).duplicate(true), "weapons": model_data.get("weapons", unit_profile.get("weapons", [])).duplicate(true), "unit_id": unit_id, "battle_shocked": false, "can_control": true})
+	models.append({"model_id": model_id, "position": point, "radius": Rules.radius_inches(base_mm), "spent": 0.0, "advanced": bool(model_data.get("advanced", false)), "advance_bonus": int(model_data.get("advance_bonus", 0)), "fell_back": bool(model_data.get("fell_back", false)), "fought": bool(model_data.get("fought", false)), "used_weapon_names": model_data.get("used_weapon_names", []).duplicate(true), "team": side, "wounds": int(model_data.get("wounds", fixture.get("wounds", 3))), "toughness": int(model_data.get("toughness", fixture.get("toughness", 4))), "save_on": int(model_data.get("save_on", fixture.get("save_on", 7))), "invulnerable_save": int(model_data.get("invulnerable_save", fixture.get("invulnerable_save", 0))), "leadership": int(model_data.get("leadership", fixture.get("leadership", 7))), "objective_control": objective_control, "ability_ids": ability_ids, "keywords": model_data.get("keywords", unit_profile.get("keywords", [])).duplicate(true), "faction_keywords": model_data.get("faction_keywords", unit_profile.get("faction_keywords", [])).duplicate(true), "weapons": model_data.get("weapons", unit_profile.get("weapons", [])).duplicate(true), "unit_id": unit_id, "battle_shocked": false, "can_control": true})
 
 	models[-1].movement_inches = movement_inches
 	models[-1].coherency_inches = float(model_data.get("coherency_inches", 2.0))
@@ -378,6 +378,8 @@ func new_phase() -> void:
 		model.advanced = false
 		model.advance_bonus = 0
 		model.fell_back = false
+		if phase == "FIGHT":
+			model.fought = false
 	message = "双方底座的移动额度已重置。"
 	queue_redraw()
 
@@ -455,6 +457,7 @@ func end_turn() -> void:
 			model.advanced = false
 			model.advance_bonus = 0
 			model.fell_back = false
+			model.fought = false
 	command_points = CommandPoints.gain(command_points, active_team)
 	phase = "MOVEMENT"
 	if active_team == 0:
@@ -686,6 +689,9 @@ func enter_fight() -> void:
 	phase = "FIGHT"
 	turn_state.phase = phase
 	turn_state.phase_index = TurnState.phase_index(phase)
+	for model in models:
+		if int(model.get("team", -1)) == active_team:
+			model.fought = false
 	command_log = CommandLog.append(command_log, active_team, "PHASE_ADVANCE", {"from": previous_phase, "to": phase})
 	message = "已进入战斗阶段。选择接战底座后按 X 执行近战攻击。"
 	queue_redraw()
@@ -766,6 +772,10 @@ func fight_selected() -> void:
 		queue_redraw()
 		return
 	var attacker: Dictionary = models[selected]
+	if bool(attacker.get("fought", false)):
+		message = "该单位本回合已经完成近战攻击。"
+		queue_redraw()
+		return
 	var target_index := -1
 	var nearest := INF
 	for i in range(models.size()):
@@ -803,6 +813,9 @@ func fight_selected() -> void:
 	if weapon_ids.has("one_shot") and not attacker.get("used_weapon_names", []).has(weapon_name):
 		attacker.used_weapon_names.append(weapon_name)
 	var damage_result := Damage.allocate_to_unit(models, int(result.damage), target_index, combat_rng)
+	for model in models:
+		if str(model.get("unit_id", "")) == str(attacker.get("unit_id", "")):
+			model.fought = true
 	if not damage_result.feel_no_pain_rolls.is_empty():
 		fight_payload.feel_no_pain_rolls = damage_result.feel_no_pain_rolls
 	command_log = CommandLog.append(command_log, active_team, "FIGHT", fight_payload)
