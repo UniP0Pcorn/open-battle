@@ -7,7 +7,7 @@ import struct
 import threading
 import unittest
 
-from tools.relay_server import create_server
+from tools.relay_server import RelayStore, create_server
 
 
 def connect(port):
@@ -50,6 +50,17 @@ class RelayTests(unittest.TestCase):
         self.server.shutdown()
         self.server.server_close()
         self.thread.join(timeout=2)
+
+    def test_early_frames_drain_once_in_order(self):
+        store = RelayStore()
+        owner = object()
+        store.join("early", "host", owner)
+        store.queue("early", "host", "first")
+        store.queue("early", "host", "second")
+        self.assertEqual(store.drain("early", "host"), ["first", "second"])
+        self.assertEqual(store.drain("early", "host"), [])
+        store.leave("early", "host", owner)
+        self.assertNotIn("early", store.pending)
 
     def test_pairs_and_forwards_opaque_packets(self):
         host = connect(self.server.server_address[1])

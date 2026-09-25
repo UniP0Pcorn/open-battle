@@ -100,7 +100,7 @@ class RelayStore:
 
     def drain(self, room_id: str, role: str) -> list[str]:
         with self.lock:
-            queued = self.pending.get(room_id, {}).get(role, [])
+            queued = list(self.pending.get(room_id, {}).get(role, []))
             self.pending.get(room_id, {}).get(role, []).clear()
             return queued
 
@@ -190,4 +190,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()`r`n
+    main()
