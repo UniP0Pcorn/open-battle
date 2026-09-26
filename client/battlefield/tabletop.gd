@@ -41,6 +41,7 @@ var unit_profile: Dictionary = {}
 var roster: Dictionary = {}
 var models: Array = []
 var selected := -1
+var target_selected := -1
 var dragging := false
 var falling_back := false
 var placing := false
@@ -166,6 +167,7 @@ func reset_table() -> void:
 	network_active = false
 	models.clear()
 	selected = -1
+	target_selected = -1
 	dragging = false
 	falling_back = false
 	placing = false
@@ -233,6 +235,7 @@ func apply_network_snapshot(state: Dictionary) -> void:
 	turn_state = {"round": int(state.round), "active_team": active_team, "phase": phase, "phase_index": int(state.phase_index), "command_points": command_points.duplicate(true)}
 	network_active = true
 	selected = -1
+	target_selected = -1
 	dragging = false
 	falling_back = false
 	placing = false
@@ -1157,10 +1160,12 @@ func charge_selected() -> void:
 		message = "前进后的单位不能冲锋。"
 		queue_redraw()
 		return
-	var target_index := -1
-	var nearest := INF
+	var target_index := target_selected if target_selected >= 0 and target_selected < models.size() else -1
+	var nearest: float = attacker.position.distance_to(models[target_index].position) if target_index >= 0 else INF
 	for i in range(models.size()):
 		if models[i].team != active_team:
+			if target_index >= 0:
+				continue
 			var distance: float = attacker.position.distance_to(models[i].position)
 			if distance < nearest:
 				nearest = distance
@@ -1220,16 +1225,25 @@ func fight_selected() -> void:
 		message = "仍有处于接战中的首发单位必须先激活。"
 		queue_redraw()
 		return
-	var target_index := -1
-	var nearest := INF
+	var target_index := target_selected if target_selected >= 0 and target_selected < models.size() else -1
+	var nearest: float = attacker.position.distance_to(models[target_index].position) if target_index >= 0 else INF
 	for i in range(models.size()):
 		if models[i].team != active_team:
+			if target_index >= 0:
+				continue
 			var distance: float = attacker.position.distance_to(models[i].position)
+			if target_index >= 0:
+				continue
 			if Melee.target_reason(attacker, models[i], active_team).is_empty() and distance < nearest:
 				nearest = distance
 				target_index = i
 	if target_index < 0:
 		message = "接战距离内没有敌方目标。"
+		queue_redraw()
+		return
+	if not Melee.target_reason(attacker, models[target_index], active_team).is_empty():
+		message = "所选目标不在接战范围内；已取消目标选择。"
+		target_selected = -1
 		queue_redraw()
 		return
 	var attacker_abilities := FactionRules.combat_modifiers(models, attacker, "before_attack", {"phase": "FIGHT", "kind": "FIGHT"})
@@ -1267,6 +1281,7 @@ func fight_selected() -> void:
 	if not damage_result.feel_no_pain_rolls.is_empty():
 		fight_payload.feel_no_pain_rolls = damage_result.feel_no_pain_rolls
 	command_log = CommandLog.append(command_log, active_team, "FIGHT", fight_payload)
+	target_selected = -1
 	if int(damage_result.destroyed) > 0:
 		selected = -1 if selected == target_index else selected
 		message = "近战命中 %d，造成 %d 点伤害，目标被淘汰。" % [result.hits, result.damage]
@@ -1329,7 +1344,7 @@ func fire_selected() -> void:
 		message = "一次性武器已经使用过。"
 		queue_redraw()
 		return
-	var target_index := -1
+	var target_index := target_selected if target_selected >= 0 and target_selected < models.size() else -1
 	var nearest := INF
 	var target_has_line_of_sight := true
 	for i in range(models.size()):
@@ -1339,6 +1354,8 @@ func fire_selected() -> void:
 			if not has_line_of_sight and not WeaponRules.ids_from_weapon(weapon).has("indirect"):
 				continue
 			var target_engaged := model_is_engaged_with_enemy(models[i])
+			if target_index >= 0:
+				continue
 			if Combat.target_reason(attacker, models[i], distance, weapon, active_team, attacker_engaged, target_engaged).is_empty() and distance < nearest:
 				nearest = distance
 				target_index = i
@@ -1347,6 +1364,15 @@ func fire_selected() -> void:
 		message = "射程 %.1f 英寸内没有目标。" % float(weapon.range_inches)
 		queue_redraw()
 		return
+	if target_selected >= 0:
+		nearest = attacker.position.distance_to(models[target_index].position)
+		target_has_line_of_sight = not Visibility.blocked(attacker.position, models[target_index].position, terrain)
+		var selected_reason := Combat.target_reason(attacker, models[target_index], attacker.position.distance_to(models[target_index].position), weapon, active_team, attacker_engaged, model_is_engaged_with_enemy(models[target_index]))
+		if not selected_reason.is_empty():
+			message = "所选目标不可攻击：" + display_reason(selected_reason)
+			target_selected = -1
+			queue_redraw()
+			return
 	var target_for_attack: Dictionary = models[target_index].duplicate(true)
 	var target_abilities := FactionRules.combat_modifiers(models, target_for_attack, "before_defend", {"phase": "SHOOTING", "kind": "SHOOT"})
 	var cover_bonus := Visibility.cover_bonus(attacker.position, target_for_attack.position, terrain) + int(target_abilities.cover_bonus) + int(target_for_attack.get("temporary_cover_bonus", 0))
@@ -1378,6 +1404,7 @@ func fire_selected() -> void:
 	if not damage_result.feel_no_pain_rolls.is_empty():
 		shoot_payload.feel_no_pain_rolls = damage_result.feel_no_pain_rolls
 	command_log = CommandLog.append(command_log, active_team, "SHOOT", shoot_payload)
+	target_selected = -1
 	var hazardous_damage := int(result.hazardous_failures) * int(weapon_context.weapon.get("hazardous_damage", 3))
 	var hazardous_result := {"destroyed": 0, "damage": 0}
 	if hazardous_damage > 0 and selected >= 0 and selected < models.size():
@@ -1627,8 +1654,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			selected = pick(point)
 			if selected >= 0:
 				if models[selected].team != active_team:
-					message = "现在轮到%s方，不能操作另一方的底座。" % ("金" if active_team == 0 else "蓝")
-					selected = -1
+					if phase == "SHOOTING" or phase == "FIGHT":
+						target_selected = selected
+						selected = -1
+						message = "已选择敌方目标；请再选择己方攻击单位。"
+					else:
+						message = "现在轮到%s方，不能操作另一方的底座。" % ("金" if active_team == 0 else "蓝")
+						selected = -1
 				elif phase != "MOVEMENT":
 					message = "已选中底座；射击阶段不能移动。按 F 射击最近目标。"
 				else:
