@@ -551,6 +551,7 @@ func new_phase() -> void:
 		placing = false
 		var previous_phase := phase
 		phase = "MOVEMENT"
+		target_selected = -1
 		turn_state.phase = phase
 		turn_state.phase_index = TurnState.phase_index(phase)
 		command_log = CommandLog.append(command_log, active_team, "PHASE_ADVANCE", {"from": previous_phase, "to": phase})
@@ -845,6 +846,7 @@ func end_turn() -> void:
 	command_points = CommandPoints.gain(command_points, active_team)
 	counter_offensive_next = false
 	phase = "COMMAND"
+	target_selected = -1
 	if active_team == 0:
 		turn_state.round = int(turn_state.get("round", 1)) + 1
 	turn_state.active_team = active_team
@@ -1083,6 +1085,7 @@ func enter_shooting() -> void:
 	placing = false
 	var previous_phase := phase
 	phase = "SHOOTING"
+	target_selected = -1
 	turn_state.phase = phase
 	turn_state.phase_index = TurnState.phase_index(phase)
 	command_log = CommandLog.append(command_log, active_team, "PHASE_ADVANCE", {"from": previous_phase, "to": phase})
@@ -1100,6 +1103,7 @@ func enter_charge() -> void:
 	placing = false
 	var previous_phase := phase
 	phase = "CHARGE"
+	target_selected = -1
 	turn_state.phase = phase
 	turn_state.phase_index = TurnState.phase_index(phase)
 	command_log = CommandLog.append(command_log, active_team, "PHASE_ADVANCE", {"from": previous_phase, "to": phase})
@@ -1117,6 +1121,7 @@ func enter_fight() -> void:
 	placing = false
 	var previous_phase := phase
 	phase = "FIGHT"
+	target_selected = -1
 	turn_state.phase = phase
 	turn_state.phase_index = TurnState.phase_index(phase)
 	for model in models:
