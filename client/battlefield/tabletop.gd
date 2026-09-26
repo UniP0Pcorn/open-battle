@@ -75,6 +75,8 @@ var selected_weapon_index := 0
 var starting_unit_sizes: Dictionary = {}
 var turn_state: Dictionary = {}
 var network_active := false
+var action_scroll: ScrollContainer
+var action_box: VBoxContainer
 
 func _ready() -> void:
 	fixture = JSON.parse_string(FileAccess.get_file_as_string("res://data/units/custodian_guard.json"))
@@ -107,6 +109,19 @@ func _ready() -> void:
 	terrain = mission.get("terrain", [])
 	combat_rng.seed = 402000
 	reset_table()
+	action_scroll = ScrollContainer.new()
+	action_scroll.name = "ActionScroll"
+	action_scroll.position = Vector2(968, 520)
+	action_scroll.size = Vector2(300, 315)
+	action_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	add_child(action_scroll)
+	action_box = VBoxContainer.new()
+	action_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	action_scroll.add_child(action_box)
+	var action_header := Label.new()
+	action_header.text = "操作按钮（可滚动）"
+	action_header.add_theme_color_override("font_color", GOLD)
+	action_box.add_child(action_header)
 	add_button("＋ 放置底座  [P]", Vector2(976, 445), func(): placing = not placing; dragging = false; queue_redraw())
 	add_button("切换阵营  [TAB]", Vector2(976, 485), func(): team = 1 - team; queue_redraw())
 	add_button("新移动阶段  [N]", Vector2(976, 525), new_phase)
@@ -138,10 +153,14 @@ func _ready() -> void:
 func add_button(title: String, position_px: Vector2, action: Callable) -> void:
 	var button := Button.new()
 	button.text = title
-	button.position = position_px
-	button.size = Vector2(265, 40)
+	button.custom_minimum_size = Vector2(278, 36)
 	button.pressed.connect(action)
-	add_child(button)
+	if action_box != null:
+		action_box.add_child(button)
+	else:
+		button.position = position_px
+		button.size = Vector2(265, 40)
+		add_child(button)
 
 func reset_table() -> void:
 	network_active = false
@@ -1705,13 +1724,15 @@ func _draw() -> void:
 	var phase_name: String = str({"MOVEMENT": "移动", "SHOOTING": "射击", "CHARGE": "冲锋", "FIGHT": "战斗"}.get(phase, phase))
 	label_at(Vector2(976, 409), "阶段：" + phase_name, 16, GOLD if phase == "MOVEMENT" else RED)
 	label_at(Vector2(976, 441), "模式：" + ("放置" if placing else "选择 / 拖动"), 16)
+	draw_rect(Rect2(968, 500, 300, 340), Color("101b25e8"), true)
+	draw_rect(Rect2(968, 500, 300, 340), BLUE, false, 2)
+	label_at(Vector2(980, 515), "当前阶段建议：" + phase_hint(), 13, WHITE)
 	if selected >= 0:
 		var spent := float(models[selected].spent)
 		if dragging:
 			spent += models[selected].position.distance_to(preview)
 		label_at(Vector2(976, 473), "底座 %02d：%.2f / %.1f 英寸" % [selected + 1, spent, displayed_movement], 17, RED if spent > displayed_movement + Rules.EPSILON else GOLD)
-	label_at(Vector2(976, 824), "I 兵牌；- / = 数量；, / . 上限。", 14)
-	label_at(Vector2(38, 812), "本地沙盒 / 尚无完整任务规则", 14, BLUE)
+	label_at(Vector2(976, 824), "按钮区可滚动；键盘快捷键仍可用。", 13, BLUE)
 	label_at(Vector2(38, 812), message, 17, RED if "非法" in message else WHITE)
 	label_at(Vector2(38, 841), "AGPL-3.0-only  |  非官方社区原型  |  不含官方美术或规则正文", 13, BLUE)
 	if show_roster_panel:
@@ -1727,4 +1748,18 @@ func _draw() -> void:
 			label_at(Vector2(780, row), "%02d  %s  ×%d  (%d点)" % [index + 1, str(entry.get("unit_id", "未知")), int(entry.get("count", 0)), int(entry.get("points_each", 0))], 14)
 			row += 24
 		label_at(Vector2(780, 416), "B 关闭面板", 13, BLUE)
+
+func phase_hint() -> String:
+	match phase:
+		"COMMAND":
+			return "先检定战斗震慑，再按 N 进入移动"
+		"MOVEMENT":
+			return "选择己方底座拖动；完成后按 Space"
+		"SHOOTING":
+			return "选择己方底座，按 F 射击最近目标"
+		"CHARGE":
+			return "选择己方底座，按 G 冲锋；完成后按 V"
+		"FIGHT":
+			return "选择接战底座，按 X 近战；完成后按 T"
+	return "按阶段按钮继续"
 
