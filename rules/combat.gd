@@ -77,6 +77,7 @@ static func resolve_ranged_attack(weapon: Dictionary, target: Dictionary, rng: R
 	var wound_ones_left := maxi(0, int(modifiers.get("wound_reroll_ones", 0)))
 	var save_rerolls_left := maxi(0, int(defense.get("save_rerolls", 0)))
 	var save_ones_left := maxi(0, int(defense.get("save_reroll_ones", 0)))
+	var damage_reduction := maxi(0, int(defense.get("damage_reduction", 0)))
 	var twin_linked := bool(weapon.get("twin_linked", false))
 	var lethal_hits := bool(weapon.get("lethal_hits", false))
 	var sustained_bonus := maxi(0, int(weapon.get("sustained_hits", 0)))
@@ -131,7 +132,7 @@ static func resolve_ranged_attack(weapon: Dictionary, target: Dictionary, rng: R
 						failed_saves += 1
 						var damage_roll := Dice.roll_expression(rng, weapon.get("damage", 1))
 						if damage_roll.valid:
-							damage_total += int(damage_roll.total)
+							damage_total += maxi(0, int(damage_roll.total) - damage_reduction)
 							damage_rolls.append(damage_roll)
 		if bool(weapon.get("hazardous", false)) and unmodified_hit_roll == 1:
 			hazardous_failures += 1

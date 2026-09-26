@@ -119,7 +119,7 @@ static func validate(ids: Array) -> Array[String]:
 				continue
 			for key in values:
 				var aura_event := str(aura.get("event", ""))
-				var supported: Array = ["cover_bonus", "save_rerolls", "save_reroll_ones", "invulnerable_save"] if aura_event == "before_defend" else (["objective_control_bonus"] if aura_event == "objective_control" else (["leadership_bonus"] if aura_event == "battle_shock" else ["hit_rerolls", "hit_reroll_ones", "wound_reroll_ones", "wound_rerolls"]))
+				var supported: Array = ["cover_bonus", "save_rerolls", "save_reroll_ones", "invulnerable_save", "damage_reduction"] if aura_event == "before_defend" else (["objective_control_bonus"] if aura_event == "objective_control" else (["leadership_bonus"] if aura_event == "battle_shock" else ["hit_rerolls", "hit_reroll_ones", "wound_reroll_ones", "wound_rerolls"]))
 				if key not in supported or typeof(values[key]) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(values[key])) or float(values[key]) < 0 or float(values[key]) != float(int(values[key])):
 					errors.append("UNSUPPORTED AURA MODIFIER")
 				elif key == "invulnerable_save" and (int(values[key]) < 2 or int(values[key]) > 6):

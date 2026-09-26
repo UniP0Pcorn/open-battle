@@ -765,6 +765,12 @@ func run() -> void:
 	check(threshold_defense.save_on == 2, "stronger defensive aura improves invulnerable save")
 	var save_aura := {"id": "fixture_save_aura", "aura": {"radius_inches": 6, "event": "before_defend", "modifiers": {"save_rerolls": 20, "invulnerable_save": 4}}}
 	check(UnitAbilities.validate([save_aura]).is_empty(), "defensive aura accepts implemented save modifiers")
+	var reduction_aura := {"id": "fixture_reduction_aura", "aura": {"radius_inches": 6, "event": "before_defend", "modifiers": {"damage_reduction": 1}}}
+	check(UnitAbilities.validate([reduction_aura]).is_empty(), "defensive aura accepts damage reduction")
+	check(FactionRules.combat_modifiers([defend_source, {"model_id": "reduction_source", "team": 0, "wounds": 3, "radius": 0.5, "position": Vector2(5, 7), "ability_ids": [reduction_aura]}], defend_source, "before_defend").damage_reduction == 1, "damage reduction aura reaches recipient")
+	var reduction_plain := Combat.resolve_ranged_attack({"attacks": 12, "hit_on": 2, "strength": 8, "damage": 3}, {"toughness": 4, "save_on": 7, "ability_ids": []}, seeded_rng(91))
+	var reduction_protected := Combat.resolve_ranged_attack({"attacks": 12, "hit_on": 2, "strength": 8, "damage": 3}, {"toughness": 4, "save_on": 7, "ability_ids": []}, seeded_rng(91), 0, {}, {"damage_reduction": 1})
+	check(reduction_protected.damage < reduction_plain.damage, "damage reduction aura lowers resolved damage")
 	var invalid_save_aura: Dictionary = save_aura.duplicate(true)
 	invalid_save_aura.aura.modifiers.invulnerable_save = 1
 	check(not UnitAbilities.validate([invalid_save_aura]).is_empty(), "defensive aura rejects invalid invulnerable threshold")
